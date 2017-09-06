@@ -1,4 +1,4 @@
-# Ucum-java
+# Ucum-Golang
 Golang library providing UCUM Services
 
 The library provides a set of services around UCUM:
