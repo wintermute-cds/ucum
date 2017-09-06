@@ -178,7 +178,7 @@ type CanonicalUnit struct {
 
 func NewCanonicalUnit(base *BaseUnit, exponent int)(*CanonicalUnit, error){
 	v := &CanonicalUnit{}
-	if base != nil {v.base = base}
+	v.base = base
 	v.Exponent = exponent
 	return v, nil
 }
@@ -219,8 +219,8 @@ type Symbol struct {
 
 func NewSymbol(unit Uniter, prefix *Prefix, exponent int)(*Symbol, error){
 	v := &Symbol{}
-	if unit != nil { v.Unit = unit }
-	if prefix != nil { v.Prefix = prefix }
+	v.Unit = unit
+	v.Prefix = prefix
 	v.Exponent = exponent
 	return v,nil
 }
