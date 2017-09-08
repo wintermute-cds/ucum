@@ -1,7 +1,7 @@
 # Ucum-Golang
 Golang library providing UCUM Services
 
-(Inspirated by Graham Grieve's UCUM Java library: https://github.com/FHIR/Ucum-java )
+(inspired by Graham Grieve's UCUM Java library: https://github.com/FHIR/Ucum-java )
 
 The library provides a set of services around UCUM:
 
