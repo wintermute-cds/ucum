@@ -15,23 +15,38 @@ type Decimal struct {
 	Scientific bool
 }
 
-func NewDecimal(value string, precision int)(*Decimal, error){
+func NewDecimal(value string)(*Decimal){
 	d := &Decimal{}
 	value = strings.ToLower(value)
+	if strings.Contains(value, "e"){
+		d.setValueScientific(value)
+	}else{
+		d.setValueDecimal(value)
+	}
+	return d
+}
+
+/**
+	 * There are a few circumstances where a simple value is known to be correct to a high
+	 * precision. For instance, the unit prefix milli is not ~0.001, it is precisely 0.001
+	 * to whatever precision you want to specify. This constructor allows you to specify
+	 * an alternative precision than the one implied by the stated string
+ */
+func NewDecimalAndPrecision(value string, precision int)(*Decimal, error){
 	var err error
+	d := &Decimal{}
+	value = strings.ToLower(value)
 	if strings.Contains(value, "e"){
 		err = d.setValueScientific(value)
 	}else{
 		err = d.setValueDecimal(value)
 	}
-	if err !=nil {
-		return nil, err
-	}
 	d.Precision = precision
-	return d,nil
+	return d, err
 }
 
 func (d *Decimal)setValueDecimal(value string)error{
+	var err error
 	d.Scientific = false
 	dec := -1
 	d.Negative = strings.Index(value, "-") == 0
@@ -64,7 +79,10 @@ func (d *Decimal)setValueDecimal(value string)error{
 		} else {
 			d.Precision = d.countSignificants(value)
 		}
-		d.Digits = d.delete(value, d.Decimal, 1)
+		d.Digits, err = d.delete(value, d.Decimal, 1)
+		if err!= nil {
+			return err
+		}
 		if d.allZeros(d.Digits, 0){
 			d.Precision++
 		}else {
@@ -107,21 +125,22 @@ func (d *Decimal)countSignificants(value string)(int){
 	return len(value)
 }
 
-func (d *Decimal)delete(value string, offset, length int)(string){
+func (d *Decimal)delete(value string, offset, length int)(string, error){
 	if length > len(value) {
-		panic("Length cannot be greater then the length of the value string")
+		return "",fmt.Errorf("Length cannot be greater then the length of the value string")
 	}
 	if offset > len(value) {
-		panic("Offset cannot be greater then the length of the value string")
+		return "",fmt.Errorf("Offset cannot be greater then the length of the value string")
 	}
 	if offset == 0 {
-		return value[length:]
+		return value[length:],nil
 	}else{
-		return value[0:offset]+value[offset+length:]
+		return value[0:offset]+value[offset+length:], nil
 	}
 }
 
-func (d *Decimal)setValueScientific(value string) (err error) {
+func (d *Decimal)setValueScientific(value string)error {
+	var err error
 	i := strings.Index(value, "e")
 	s := value[0:i]
 	e := value[i+1:]
@@ -234,7 +253,7 @@ func (d *Decimal)ComparesTo(other *Decimal)int{
 	}
 }
 
-func (d *Decimal)IsWholeNUmber()(bool){
+func (d *Decimal) IsWholeNumber()(bool){
 	s := d.AsDecimal()
 	b := !strings.Contains(s, ".")
 	return b
@@ -262,7 +281,7 @@ func (d *Decimal)AsDecimal()(string){
 }
 
 func (d *Decimal)AsInteger()(int, error){
-	b := d.IsWholeNUmber()
+	b := d.IsWholeNumber()
 	if !b {
 		return 0, fmt.Errorf("Unable to represent "+d.String()+" as an integer")
 	}
@@ -517,11 +536,11 @@ func (d *Decimal)replaceChar(s string, offset int, c rune)string{
 	return s
 }
 
-func (d *Decimal)multiply(other *Decimal)*Decimal{
+func (d *Decimal)Multiply(other *Decimal)*Decimal{
 	if other == nil {
 		return nil
 	}
-	if d.isZero()||other.isZero() {
+	if d.IsZero()||other.IsZero() {
 		return Zero()
 	}
 	maxi := max(d.Decimal, other.Decimal)
@@ -587,11 +606,11 @@ func (d *Decimal)multiply(other *Decimal)*Decimal{
 	}
 
 	prec := 0
-	if d.IsWholeNUmber() && other.IsWholeNUmber() {
+	if d.IsWholeNumber() && other.IsWholeNumber() {
 		prec = max(max(len(d.Digits), len(other.Digits)), min(d.Precision, other.Precision))
-	}else if d.IsWholeNUmber(){
+	}else if d.IsWholeNumber(){
 		prec = other.Precision
-	}else if other.IsWholeNUmber() {
+	}else if other.IsWholeNumber() {
 		prec = d.Precision
 	}else {
 		prec = min (d.Precision, other.Precision)
@@ -611,5 +630,211 @@ func (d *Decimal)multiply(other *Decimal)*Decimal{
 	result.Scientific = d.Scientific || other.Scientific
 	return result
 }
+
+func (d *Decimal)Divide(other *Decimal)*Decimal {
+	if other == nil {
+		return nil
+	}
+	if d.IsZero() {
+		return Zero()
+	}
+	if other.IsZero() {
+		panic("Attempt to divide "+d.String()+" by zero")
+	}
+
+	s := "0" + other.Digits
+	m := max(len(d.Digits),len(other.Digits)) + 40 //max loops we do
+	tens := make([]string, 10)
+	tens[0] = d.stringAddition(d.stringMultiply('0',len(s)), s)
+	for i := 1; i<10; i++ {
+		tens[i] = d.stringAddition(tens[i-1], s)
+	}
+	v := d.Digits
+	r := ""
+	l := 0
+	di := (len(d.Digits) - d.Decimal + 1) - (len(other.Digits) - other.Decimal + 1)
+
+	for {
+		if len(v) >= len(tens[0]) {
+			break
+		}
+		v = v + "0"
+		di++
+	}
+
+	w := ""
+	vi := 0
+	if strings.Compare(v[0:len(other.Digits)], other.Digits) < 0 {
+		if len(v) == len(tens[0]) {
+			v = v + "0"
+			di++
+		}
+		w = v[0:len(other.Digits)+1]
+		vi = len(w)
+	} else {
+		w = "0" + v[0:len(other.Digits)]
+		vi = len(w) + 1
+	}
+
+	handled := false
+	proc := false
+
+	for {
+		if !(!(handled && ((l > m) || (( vi >= len(v)) && ((w == "" || d.allZeros(w, 0))))))) {
+			break
+		}
+		l++
+		handled = true
+		proc = false
+		for i := 8; i >= 0; i-- {
+			if strings.Compare(tens[i], w) <= 0 {
+				proc = true
+				r = r + string(cdig(int32(i+1)))
+				w = d.trimLeadingZeros(d.stringSubtraction(w, tens[i]))
+				if !(handled && ((l > m) || (( vi >= len(v)) && ((w == "" || d.allZeros(w, 0)))))) {
+					if vi < len(v) {
+						w = w + string(v[vi])
+						vi++
+						handled = false
+					} else {
+						w = w + "0"
+						di++
+					}
+					for {
+						if !(len(w) < len(tens[0])) {
+							break
+						}
+						w = "0" + w
+					}
+				}
+				break
+			}
+		}
+		if !proc {
+			if w[0]=='0' {
+				panic("w should not start with 0")
+			}
+			w = d.delete(w, 0, 1)
+			r = r + "0"
+			if !(handled && ((l > m) || (( vi >= len(v)) && ((w == "" || d.allZeros(w, 0)))))) {
+				if vi < len(v) {
+					w = w + string(v[vi])
+					vi++
+					handled = false
+				} else {
+					w = w + "0"
+					di++
+				}
+				for {
+					if !(len(w) < len(tens[0])) {
+						break
+					}
+					w = "0" + w
+				}
+			}
+		}
+	}
+
+	prec := 0
+
+	if d.IsWholeNumber() && other.IsWholeNumber() && l < m {
+		for i := 0; i < di; i++ {
+			if strings.HasSuffix(r, "0"){
+				r = d.delete(r, len(r) - 1, 1)
+				di--
+			}
+		}
+		prec = 100
+	}else{
+		if d.IsWholeNumber() && other.IsWholeNumber() {
+			prec = max(len(d.Digits), len(other.Digits))
+		}else if d.IsWholeNumber(){
+			prec = max(other.Precision, len(r) - di)
+		}else if other.IsWholeNumber(){
+			prec = max(d.Precision, len(r) - di)
+		}else{
+			prec = max(min(d.Precision, other.Precision), len(r) - di)
+		}
+		for{
+			if !(len(r) > prec){
+				break
+			}
+			up := strings.HasSuffix(r, "5")
+			r = d.delete(r, len(r), 1)
+			if up {
+				i := len(r) - 1
+				for{
+					if !(up && i > 0){
+						break
+					}
+					up = r[i] == '9'
+					if up {
+						r = r[0:i] + "0" + r[i+1:]
+					} else {
+						r = r[0:i] + string(cdig(dig(rune(r[i]))+1)) + r[i+1:]
+					}
+					i--
+				}
+				if up {
+					r = "1" + r
+					di++
+				}else {
+					r = r
+				}
+			}
+			di--
+		}
+	}
+	result := &Decimal{}
+	result.setValueDecimal(r)
+	result.Decimal = len(r) - di
+	result.Negative = d.Negative != other.Negative
+	result.Precision = prec
+	result.Scientific = d.Scientific || other.Scientific
+	return result
+}
+
+func (d *Decimal)trimLeadingZeros(s string)string{
+	if s == ""{
+		return ""
+	}
+	for{
+		if strings.HasPrefix(s, "0"){
+			s = s[1:]
+		}else{
+			break
+		}
+	}
+	return s
+}
+
+func (d *Decimal)DivInt(other *Decimal)*Decimal{
+	if other == nil {
+		return nil
+	}
+	t := d.Divide(other)
+	return t.Trunc()
+}
+
+func (d *Decimal)Modulo(other *Decimal)*Decimal{
+	if other == nil {
+		return nil
+	}
+	t := d.DivInt(other)
+	t2 := t.Multiply(other)
+	return d.Subtract(t2)
+}
+
+func (d *Decimal)Equal(value, maxDifference *Decimal)bool{
+	diff := d.Subtract(value).absolute()
+	return diff.ComparesTo(maxDifference) <= 0
+}
+
+func (d *Decimal)absolute()*Decimal{
+	di := d.copy()
+	di.Negative = false
+	return di
+}
+
 
 

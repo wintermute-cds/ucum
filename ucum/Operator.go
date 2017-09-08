@@ -3,6 +3,7 @@ package ucum
 type Operator int
 
 const(
-	MULTIPLICATION Operator = iota
+	_ Operator = iota
+	MULTIPLICATION
 	DIVISION
 )

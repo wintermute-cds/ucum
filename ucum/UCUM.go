@@ -3,12 +3,13 @@ package ucum
 import (
 	"strings"
 	"strconv"
+	"sort"
 )
 
 // Concept
 type Concepter interface {
 	GetDescription() string
-	String()
+	String() string
 }
 
 type Concept struct{
@@ -28,12 +29,12 @@ func NewConcept(kind ConceptKind, code string, codeUC string)(*Concept,error){
 	return c, nil
 }
 
-func (c *Concept)GetDescription()string {
+func (c Concept)GetDescription()string {
 	description := strings.ToLower(c.Kind.String()) + " " + c.Code + " ('" + c.Names[0] + "')"
 	return description
 }
 
-func (c *Concept)String()string{
+func (c Concept)String()string{
 	return c.Code + " = " + c.GetDescription()
 }
 
@@ -55,11 +56,11 @@ func NewUnit(kind ConceptKind, code string, codeUC string)(*Unit,error){
 	return u, nil
 }
 
-func (u *Unit)GetDescription()string {
+func (u Unit)GetDescription()string {
 	return strings.ToLower(u.Kind.String()) + " " + u.Code + " ('" + u.Names[0] + "')" + " (" + u.Property + ")"
 }
 
-func (u *Unit)String()string{
+func (u Unit)String()string{
 	return u.Code + " = " + u.GetDescription()
 }
 
@@ -94,14 +95,14 @@ func NewDefinedUnit(kind ConceptKind, code string, codeUC string)(*DefinedUnit,e
 	return b, nil
 }
 
-func (d *DefinedUnit)GetDescription()string {
+func (d DefinedUnit)GetDescription()string {
 	return strings.ToLower(d.Kind.String()) + " " + d.Code + " ('" + d.Names[0] + "')" + " (" + d.Property + ")" + " = " + d.Value.GetDescription()
 }
 
 //Prefix
 type Prefix struct{
 	Concept
-	Value float64
+	Value *Decimal
 }
 
 func NewPrefix(kind ConceptKind, code string, codeUC string)(*Prefix,error){
@@ -112,8 +113,8 @@ func NewPrefix(kind ConceptKind, code string, codeUC string)(*Prefix,error){
 	return b, nil
 }
 
-func (p *Prefix)GetDescription()string {
-	return strings.ToLower(p.Kind.String()) + " " + p.Code + " ('" + p.Names[0] + "')" + " = " + strconv.FormatFloat(p.Value, 'E', -1, 64)
+func (p Prefix)GetDescription()string {
+	return strings.ToLower(p.Kind.String()) + " " + p.Code + " ('" + p.Names[0] + "')" + " = " + p.Value.String()
 }
 
 //Value
@@ -121,10 +122,10 @@ type Value struct{
 	Text string
 	Unit string
 	UnitUC string
-	Value float64
+	Value *Decimal
 }
 
-func NewValue(unit, unitUC string, value float64)(*Value, error){
+func NewValue(unit, unitUC string, value *Decimal)(*Value, error){
 	v := &Value{}
 	v.Unit = unit
 	v.UnitUC = unitUC
@@ -132,20 +133,36 @@ func NewValue(unit, unitUC string, value float64)(*Value, error){
 	return v, nil
 }
 
-func (v *Value)GetDescription()string {
-	if v.Value == 0.0 {
+func (v Value)GetDescription()string {
+	if v.Value == nil {
 		return v.Unit
 	}
-	return strconv.FormatFloat(v.Value, 'E', -1, 64) + v.Unit
+	return v.Value.String()
 }
 
 //Canonical
 type Canonical struct {
 	Units []*CanonicalUnit
-	Value float64
+	Value *Decimal
 }
 
-func NewCanonical(value float64)(*Canonical, error){
+func (c *Canonical)RemoveFromUnits(i int){
+	c.Units[i] = c.Units[len(c.Units)-1]
+	c.Units[len(c.Units)-1] = nil
+	c.Units = c.Units[:len(c.Units)-1]
+}
+
+type ByCode []*CanonicalUnit
+
+func (a ByCode) Len() int           { return len(a) }
+func (a ByCode) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByCode) Less(i, j int) bool { return a[i].base.Code < a[j].base.Code }
+
+func (c *Canonical)SortUnits(){
+	sort.Sort(ByCode(c.Units))
+}
+
+func NewCanonical(value *Decimal)(*Canonical, error){
 	v := &Canonical{
 		Value:value,
 		Units : make([]*CanonicalUnit, 0),
@@ -153,20 +170,20 @@ func NewCanonical(value float64)(*Canonical, error){
 	return v, nil
 }
 
-func (c *Canonical)MultiplyValueDecimal(multiplicand float64){
-	c.Value = c.Value * multiplicand
+func (c *Canonical)MultiplyValueDecimal(multiplicand *Decimal){
+	c.Value = c.Value.Multiply(multiplicand)
 }
 
 func (c *Canonical)MultiplyValueInt(multiplicand int){
-	c.Value = c.Value * float64(multiplicand)
+	c.Value = c.Value.Multiply(NewDecimal(strconv.Itoa(multiplicand)))
 }
 
-func (c *Canonical)DivideValueDecimal(divisor float64){
-	c.Value = c.Value / divisor
+func (c *Canonical)DivideValueDecimal(divisor *Decimal){
+	c.Value = c.Value.Divide(divisor)
 }
 
 func (c *Canonical)DivideValueInt(divisor int){
-	c.Value = c.Value / float64(divisor)
+	c.Value = c.Value.Divide(NewDecimal(strconv.Itoa(divisor)))
 }
 
 
@@ -237,7 +254,7 @@ func (s *Symbol)InvertExponent(){
 type Term struct {
 	Component
 	Comp Componenter
-	Op *Operator
+	Op Operator
 	Term *Term
 }
 
@@ -251,7 +268,7 @@ func (t *Term)SetTermCheckOp(term *Term){
 		t.Op = term.Op
 	}else{
 		t.Term = nil
-		t.Op = nil
+		t.Op = 0
 	}
 }
 
