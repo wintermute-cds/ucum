@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-// Concept
+// Concept=====================================================
 type Concepter interface {
 	GetDescription() string
 	String() string
@@ -51,9 +51,10 @@ func (c Concept)GetKind()ConceptKind{
 func (c Concept)GetNames()[]string{
 	return c.Names
 }
-//Unit
+//Unit=====================================================
 type Uniter interface{
 	Concepter
+	GetProperty() string
 }
 
 type Unit struct{
@@ -77,7 +78,11 @@ func (u Unit)String()string{
 	return u.Code + " = " + u.GetDescription()
 }
 
-//BaseUnit
+func (u Unit)GetProperty()string{
+	return u.Property
+}
+
+//BaseUnit=====================================================
 type BaseUnit struct{
 	Unit
 	Dim rune
@@ -91,7 +96,7 @@ func NewBaseUnit(kind ConceptKind, code string, codeUC string)(*BaseUnit,error){
 	return b, nil
 }
 
-//DefinedUnit
+//DefinedUnit=====================================================
 type DefinedUnit struct{
 	Unit
 	Class string
@@ -112,7 +117,7 @@ func (d DefinedUnit)GetDescription()string {
 	return strings.ToLower(d.Kind.String()) + " " + d.Code + " ('" + d.Names[0] + "')" + " (" + d.Property + ")" + " = " + d.Value.GetDescription()
 }
 
-//Prefix
+//Prefix=====================================================
 type Prefix struct{
 	Concept
 	Value *Decimal
@@ -130,7 +135,7 @@ func (p Prefix)GetDescription()string {
 	return strings.ToLower(p.Kind.String()) + " " + p.Code + " ('" + p.Names[0] + "')" + " = " + p.Value.String()
 }
 
-//Value
+//Value=====================================================
 type Value struct{
 	Text string
 	Unit string
@@ -153,7 +158,7 @@ func (v Value)GetDescription()string {
 	return v.Value.String()
 }
 
-//Canonical
+//Canonical=====================================================
 type Canonical struct {
 	Units []*CanonicalUnit
 	Value *Decimal
@@ -210,7 +215,7 @@ func (c *Canonical)DivideValueInt(divisor int)error{
 }
 
 
-//CanonicalUnit
+//CanonicalUnit=====================================================
 type CanonicalUnit struct {
 	base *BaseUnit
 	Exponent int
@@ -227,7 +232,7 @@ func (c *CanonicalUnit)Base()(*BaseUnit){
 	return c.base
 }
 
-//Component
+//Component=====================================================
 type Componenter interface{
 
 }
@@ -236,7 +241,7 @@ type Component struct{
 
 }
 
-//Factor
+//Factor=====================================================
 type Factor struct {
 	Component
 	Value int
@@ -273,7 +278,7 @@ func (s *Symbol)InvertExponent(){
 	s.Exponent = -s.Exponent
 }
 
-//Term
+//Term=====================================================
 type Term struct {
 	Component
 	Comp Componenter
@@ -293,5 +298,18 @@ func (t *Term)SetTermCheckOp(term *Term){
 		t.Term = nil
 		t.Op = 0
 	}
+}
+
+//Pair=====================================================
+type Pair struct{
+	Value *Decimal
+	Code string
+}
+
+func NewPair(value *Decimal, code string)*Pair{
+	p := &Pair{}
+	p.Value = value
+	p.Code = code
+	return p
 }
 
