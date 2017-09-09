@@ -31,7 +31,7 @@ func PadLeft(src string, c rune, l int)string{
 	}
 }
 
-func max(a, b int)int{
+func MaxInt(a, b int)int{
 	if a>=b {
 		return a
 	}else {
@@ -39,7 +39,7 @@ func max(a, b int)int{
 	}
 }
 
-func min(a, b int)int{
+func MinInt(a, b int)int{
 	if a<=b {
 		return a
 	}else {
@@ -47,4 +47,6 @@ func min(a, b int)int{
 	}
 }
 
-
+func IsAsciiChar(ch rune) bool {
+	return ch >= ' ' && ch <= '~';
+}

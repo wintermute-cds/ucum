@@ -11,16 +11,17 @@ const _ConceptKind_name = "PREFIXBASEUNITUNIT"
 var _ConceptKind_index = [...]uint8{0, 6, 14, 18}
 
 func (i ConceptKind) String() string {
+	i -= 1
 	if i < 0 || i >= ConceptKind(len(_ConceptKind_index)-1) {
-		return fmt.Sprintf("ConceptKind(%d)", i)
+		return fmt.Sprintf("ConceptKind(%d)", i+1)
 	}
 	return _ConceptKind_name[_ConceptKind_index[i]:_ConceptKind_index[i+1]]
 }
 
 var _ConceptKindNameToValue_map = map[string]ConceptKind{
-	_ConceptKind_name[0:6]:   0,
-	_ConceptKind_name[6:14]:  1,
-	_ConceptKind_name[14:18]: 2,
+	_ConceptKind_name[0:6]:   1,
+	_ConceptKind_name[6:14]:  2,
+	_ConceptKind_name[14:18]: 3,
 }
 
 func ConceptKindString(s string) (ConceptKind, error) {

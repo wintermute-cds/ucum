@@ -11,15 +11,16 @@ const _Operator_name = "MULTIPLICATIONDIVISION"
 var _Operator_index = [...]uint8{0, 14, 22}
 
 func (i Operator) String() string {
+	i -= 1
 	if i < 0 || i >= Operator(len(_Operator_index)-1) {
-		return fmt.Sprintf("Operator(%d)", i)
+		return fmt.Sprintf("Operator(%d)", i+1)
 	}
 	return _Operator_name[_Operator_index[i]:_Operator_index[i+1]]
 }
 
 var _OperatorNameToValue_map = map[string]Operator{
-	_Operator_name[0:14]:  0,
-	_Operator_name[14:22]: 1,
+	_Operator_name[0:14]:  1,
+	_Operator_name[14:22]: 2,
 }
 
 func OperatorString(s string) (Operator, error) {

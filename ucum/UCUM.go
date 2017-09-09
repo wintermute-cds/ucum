@@ -234,11 +234,11 @@ type Factor struct {
 	Value int
 }
 
-func NewFactor(value int)(*Factor, error){
+func NewFactor(value int)(*Factor){
 	v := &Factor{
 		Value:value,
 	}
-	return v,nil
+	return v
 }
 
 //Symbol

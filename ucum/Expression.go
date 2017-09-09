@@ -3,6 +3,7 @@ package ucum
 import (
 	"bytes"
 	"strconv"
+	"fmt"
 )
 
 type ExpressionComposer struct{
@@ -85,8 +86,261 @@ func (e *ExpressionComposer)composeCanonical(buffer *bytes.Buffer, can *Canonica
 	}
 }
 
-
-
 type ExpressionParser struct {
+	Model *UcumModel
+}
 
+func NewExpressionParser(model *UcumModel)*ExpressionParser{
+	e := &ExpressionParser{}
+	e.Model = model
+	return e
+}s
+
+func (p *ExpressionParser)Parse(code string)(*Term, error){
+	l := NewLexer(code)
+	l.Consume()
+	res, err := p.parseTerm(l, true)
+	if err!=nil{
+		return nil, err
+	}
+	if !l.Finished(){
+		return nil, fmt.Errorf("Expression was not parsed completely. Syntax Error?")
+	}
+	return res, nil
+}
+
+func (p *ExpressionParser)parseTerm(l *Lexer, first bool)(*Term, error){
+	var err error
+	res := &Term{}
+	if first && l.TokenType == NONE{
+		res.Comp = NewFactor(1)
+	}else if l.TokenType == SOLIDUS {
+		res.Op = DIVISION
+		l.Consume()
+		res.Term, err = p.parseTerm(l, false)
+		if err!=nil{
+			return nil, err
+		}
+	}else{
+		if l.TokenType == ANNOTATION {
+			res.Comp = NewFactor(1)
+			l.Consume()
+		}else{
+			res.Comp, err = p.parseComp(l)
+			if err!=nil{
+				return nil, err
+			}
+		}
+		if l.TokenType!=NONE && l.TokenType!=CLOSE {
+			if l.TokenType==SOLIDUS{
+				res.Op = DIVISION
+				l.Consume()
+			}else if l.TokenType == PERIOD{
+				res.Op = MULTIPLICATION
+				l.Consume()
+			}else if l.TokenType== ANNOTATION {
+				res.Op = MULTIPLICATION
+			}else{
+				return nil, fmt.Errorf("Error processing unit '"+l.Source+"': "+"Expected '/' or '.'"+"' at position "+strconv.Itoa(l.Start))
+			}
+			res.Term,err = p.parseTerm(l, false)
+		}
+	}
+}
+
+func (p *ExpressionParser)parseComp(l *Lexer)(Componenter, error){
+	if l.TokenType == NUMBER {
+		fact := NewFactor(l.TokenAsInt())
+		l.Consume()
+		return fact, nil
+	}else if l.TokenType == SYMBOL {
+		return p.parseSymbol(l)
+	}
+}
+
+const NO_CHAR = 0
+
+type Lexer struct{
+	Source string
+	Index int
+	Token string
+	TokenType TokenType
+	Start int
+}
+
+func NewLexer(source string)*Lexer{
+	l := &Lexer{}
+	l.Source = source
+	l.Index = 0
+	return l
+}
+
+func (l *Lexer)Consume()error{
+	l.Token = ""
+	l.TokenType = NONE
+	l.Start = l.Index
+	if l.Index < len(l.Source){
+		ch := l.nextChar()
+		annotation, err := l.checkAnnotation(ch)
+		checkNumber, err := l.checkNumber(ch)
+		checkNumberOrSymbol, err := l.checkNumberOrSymbol(ch)
+		if err != nil {
+			return err
+		}
+		if !(
+			l.checkSingleChar(ch, '/', SOLIDUS) || l.checkSingleChar(ch, '.', PERIOD)||
+				l.checkSingleChar(ch, '(', OPEN)|| l.checkSingleChar(ch, ')', CLOSE)|| annotation||
+					checkNumber || checkNumberOrSymbol ){
+			return fmt.Errorf("Error processing unit '"+l.Source+"': unexpected character '"+string(ch)+"' at position "+strconv.Itoa(l.Start))
+		}
+	}
+	return nil
+}
+
+func (l *Lexer)nextChar()rune{
+	var r rune
+	if l.Index < len(l.Source){
+		r = []rune(l.Source)[l.Index]
+	}else {
+		r = NO_CHAR
+	}
+	l.Index++
+	return r
+}
+
+func (l *Lexer)checkSingleChar(ch rune, test rune, tokenType TokenType)bool{
+	if ch==test {
+		l.Token = string(ch)
+		l.TokenType = tokenType
+		return true
+	}
+	return false
+}
+
+func (l *Lexer)checkAnnotation(ch rune)(bool, error){
+	if ch == '{'{
+		b := ""
+		for{
+			if ch=='}'{
+				break
+			}
+			ch = l.nextChar()
+			if !IsAsciiChar(ch){
+				return false, fmt.Errorf("Error processing unit'"+l.Source+"': Annotation contains non-ascii characters")
+			}
+			if ch == NO_CHAR{
+				return false, fmt.Errorf("Error processing unit'"+l.Source+"': unterminated annotation")
+			}
+			b = b + string(ch)
+		}
+		l.Token = b
+		l.TokenType = ANNOTATION
+		return true, nil
+	}
+	return false, nil
+}
+
+func (l *Lexer)checkNumber(ch rune)(bool, error){
+	if ch=='+' || ch == '-' {
+		l.Token = string(ch)
+		ch = l.peekChar()
+		for{
+			if !( ch>='0' && ch <= '9'){
+				break
+			}
+			l.Token = l.Token + string(ch)
+			l.Index++
+			ch = l.peekChar()
+		}
+		if len(l.Token)==1{
+			return false, fmt.Errorf("Error processing unit'"+l.Source+"': unexpected character '"+string(ch)+"' at position "+strconv.Itoa(l.Start)+": a + or - must be followed by at least one digit")
+		}
+		l.TokenType = NUMBER
+		return true, nil
+	}
+	return false, nil
+}
+
+func (l *Lexer)checkNumberOrSymbol(ch rune)(bool, error){
+	var err error
+	isSymbol := false
+	isInBrackets := false
+	if l.isValidSymbolChar(ch, true, false){
+		l.Token = string(ch)
+		isSymbol = !( ch>='0' && ch <= '9')
+		isInBrackets, err = l.checkBrackets(ch, isInBrackets)
+		if err!=nil{
+			return false, err
+		}
+		ch = l.peekChar()
+		isInBrackets, err = l.checkBrackets(ch, isInBrackets)
+		if err!=nil{
+			return false, err
+		}
+		for{
+			if !(l.isValidSymbolChar(ch, !isSymbol || isInBrackets, isInBrackets)){
+				break
+			}
+			l.Token = l.Token + string(ch)
+			isSymbol = isSymbol || (ch!=NO_CHAR && !( ch>='0' && ch <= '9'))
+			l.Index++
+			ch = l.peekChar()
+			isInBrackets, err = l.checkBrackets(ch, isInBrackets)
+			if err!=nil{
+				return false, err
+			}
+		}
+		if isSymbol{
+			l.TokenType = SYMBOL
+		}else{
+			l.TokenType = NUMBER
+		}
+		return true, nil
+	}
+	return false, nil
+}
+
+func (l *Lexer)checkBrackets(ch rune, isInBrackets bool)(bool, error) {
+	if ch == '[' {
+		if isInBrackets {
+			return false, fmt.Errorf("Error processing unit '"+l.Source+"': "+"Nested ["+"' at position "+strconv.Itoa(l.Start))
+		}
+	} else {
+		return true, nil
+	}
+	if ch == ']' {
+		if !isInBrackets {
+			return false, fmt.Errorf("Error processing unit '"+l.Source+"': "+"] without ["+"' at position "+strconv.Itoa(l.Start))
+		}
+	}else {
+		return false, nil
+	}
+	return isInBrackets, nil
+}
+
+func (l *Lexer)isValidSymbolChar(ch rune, allowDigits, isInBrackets bool) bool{
+	return 	allowDigits && ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch == '[' ||
+		ch == ']' || ch == '%' || ch == '*' || ch == '^' || ch == '\'' || ch == '"' || ch == '_' || isInBrackets && ch == '.';
+}
+
+func (l *Lexer)peekChar()rune{
+	var r rune
+	if l.Index < len(l.Source){
+		r = []rune(l.Source)[l.Index]
+	}else {
+		r = NO_CHAR
+	}
+	return r
+}
+
+func (l *Lexer)Finished()bool{
+	return l.Index == len(l.Source)
+}
+
+func (l *Lexer)TokenAsInt()int{
+	if l.Token[0]=='+' {
+		return int([]rune(l.Token)[1])
+	} else {
+		return int([]rune(l.Token)[0])
+	}
 }

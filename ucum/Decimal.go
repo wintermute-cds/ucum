@@ -238,7 +238,7 @@ func (d *Decimal)ComparesTo(other *Decimal)int{
 	}else if !d.Negative && other.Negative {
 		return 1
 	}else {
-		max := max(d.Decimal, other.Decimal)
+		max := MaxInt(d.Decimal, other.Decimal)
 		s1 := d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
 		s2 := d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
 		if len(s1) < len(s2) {
@@ -374,7 +374,7 @@ func (d *Decimal)Subtract(other *Decimal)*Decimal{
 }
 
 func (d *Decimal)doAdd(other *Decimal)*Decimal{
-	max := max(d.Decimal, other.Decimal)
+	max := MaxInt(d.Decimal, other.Decimal)
 	s1 := d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
 	s2 := d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
 	if len(s1) < len(s2) {
@@ -409,7 +409,7 @@ func (d *Decimal)doAdd(other *Decimal)*Decimal{
 	}else if other.Decimal < d.Decimal {
 		result.Precision = other.Precision
 	}else{
-		result.Precision = min(d.Precision, other.Precision)
+		result.Precision = MinInt(d.Precision, other.Precision)
 	}
 	return result
 }
@@ -423,7 +423,7 @@ func cdig(i int32)rune{
 }
 
 func (d *Decimal)doSubtract(other *Decimal)*Decimal{
-	max := max(d.Decimal, other.Decimal)
+	max := MaxInt(d.Decimal, other.Decimal)
 	s1 := d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
 	s2 := d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
 	if len(s1) < len(s2) {
@@ -468,7 +468,7 @@ func (d *Decimal)doSubtract(other *Decimal)*Decimal{
 	}else if other.Decimal < d.Decimal {
 		result.Precision = other.Precision
 	}else{
-		result.Precision = min(d.Precision, other.Precision)
+		result.Precision = MinInt(d.Precision, other.Precision)
 	}
 	return result
 }
@@ -544,7 +544,7 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 	if d.IsZero()||other.IsZero() {
 		return Zero()
 	}
-	maxi := max(d.Decimal, other.Decimal)
+	maxi := MaxInt(d.Decimal, other.Decimal)
 	s1 := d.stringMultiply('0', maxi - d.Decimal + 1) + d.Digits
 	s2 := d.stringMultiply('0', maxi - other.Decimal + 1) + other.Digits
 	if len(s1) < len(s2) {
@@ -579,7 +579,7 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 
 	t := 0
 	for _,sv := range s {
-		t = max(t, len(sv))
+		t = MaxInt(t, len(sv))
 	}
 	for i := 0; i < len(s); i++ {
 		s[i] = d.stringMultiply('0', t-len(s1)) + s[i]
@@ -608,13 +608,13 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 
 	prec := 0
 	if d.IsWholeNumber() && other.IsWholeNumber() {
-		prec = max(max(len(d.Digits), len(other.Digits)), min(d.Precision, other.Precision))
+		prec = MaxInt(MaxInt(len(d.Digits), len(other.Digits)), MinInt(d.Precision, other.Precision))
 	}else if d.IsWholeNumber(){
 		prec = other.Precision
 	}else if other.IsWholeNumber() {
 		prec = d.Precision
 	}else {
-		prec = min (d.Precision, other.Precision)
+		prec = MinInt(d.Precision, other.Precision)
 	}
 	res = d.delete(res, len(res)-1, 1)
 
@@ -644,7 +644,7 @@ func (d *Decimal)Divide(other *Decimal)*Decimal {
 	}
 
 	s := "0" + other.Digits
-	m := max(len(d.Digits),len(other.Digits)) + 40 //max loops we do
+	m := MaxInt(len(d.Digits),len(other.Digits)) + 40 //MaxInt loops we do
 	tens := make([]string, 10)
 	tens[0] = d.stringAddition(d.stringMultiply('0',len(s)), s)
 	for i := 1; i<10; i++ {
@@ -748,13 +748,13 @@ func (d *Decimal)Divide(other *Decimal)*Decimal {
 		prec = 100
 	}else{
 		if d.IsWholeNumber() && other.IsWholeNumber() {
-			prec = max(len(d.Digits), len(other.Digits))
+			prec = MaxInt(len(d.Digits), len(other.Digits))
 		}else if d.IsWholeNumber(){
-			prec = max(other.Precision, len(r) - di)
+			prec = MaxInt(other.Precision, len(r) - di)
 		}else if other.IsWholeNumber(){
-			prec = max(d.Precision, len(r) - di)
+			prec = MaxInt(d.Precision, len(r) - di)
 		}else{
-			prec = max(min(d.Precision, other.Precision), len(r) - di)
+			prec = MaxInt(MinInt(d.Precision, other.Precision), len(r) - di)
 		}
 		for{
 			if !(len(r) > prec){
