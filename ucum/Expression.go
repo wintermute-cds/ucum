@@ -12,7 +12,7 @@ import (
 type ExpressionComposer struct{
 }
 
-func Compose(item interface{}, canonicalValue bool)string{
+func ComposeExpression(item interface{}, canonicalValue bool)string{
 	if item == nil {
 		return "1"
 	}
@@ -86,6 +86,63 @@ func (e *ExpressionComposer)composeCanonical(buffer *bytes.Buffer, can *Canonica
 		if c.Exponent != 1 {
 			buffer.WriteString(strconv.Itoa(c.Exponent))
 		}
+	}
+}
+
+// FORMALSTRUCTTURECOMPOSER==================================================================================================
+
+type FormalStructureComposer struct{
+}
+
+func ComposeFormalStructure(term *Term)string{
+	var buffer *bytes.Buffer
+	ec := &FormalStructureComposer{}
+	ec.composeTerm(buffer, term)
+	return buffer.String()
+}
+
+func (e *FormalStructureComposer)composeTerm(buffer *bytes.Buffer, term *Term){
+	if term.Comp!=nil{
+		e.composeComp(buffer, term.Comp.(Component))
+	}
+	if term.Op > 0 {
+		e.composeOp(buffer, term.Op)
+	}
+	if term.Term!=nil{
+		e.composeTerm(buffer, term)
+	}
+}
+func (e *FormalStructureComposer)composeComp(buffer *bytes.Buffer, comp Componenter){
+	if _,instanceof := comp.(*Factor); instanceof {
+		e.composeFactor(buffer, comp.(*Factor))
+	}else if _,instanceof := comp.(*Symbol); instanceof {
+		e.composeSymbol(buffer, comp.(*Symbol))
+	}else if _,instanceof := comp.(*Term); instanceof {
+		e.composeTerm(buffer, comp.(*Term))
+	}else {
+		buffer.WriteString("?")
+	}
+}
+func (e *FormalStructureComposer)composeSymbol(buffer *bytes.Buffer, symbol *Symbol){
+	buffer.WriteString("(")
+	if symbol.Prefix!=nil{
+		buffer.WriteString(symbol.Prefix.Names[0])
+	}
+	buffer.WriteString(symbol.Unit.GetNames()[0])
+	if symbol.Exponent!=1{
+		buffer.WriteString("^")
+		buffer.WriteString(strconv.Itoa(symbol.Exponent))
+	}
+	buffer.WriteString(")")
+}
+func (e *FormalStructureComposer)composeFactor(buffer *bytes.Buffer, factor *Factor){
+	buffer.WriteString(strconv.Itoa(factor.Value))
+}
+func (e *FormalStructureComposer)composeOp(buffer *bytes.Buffer, op Operator){
+	if op==DIVISION{
+		buffer.WriteString(" / ")
+	}else{
+		buffer.WriteString(" * ")
 	}
 }
 

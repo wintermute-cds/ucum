@@ -12,6 +12,7 @@ type Concepter interface {
 	String() string
 	GetCode() string
 	GetKind() ConceptKind
+	GetNames() []string
 }
 
 type Concept struct{
@@ -47,7 +48,9 @@ func (c Concept)GetCode()string{
 func (c Concept)GetKind()ConceptKind{
 	return c.Kind
 }
-
+func (c Concept)GetNames()[]string{
+	return c.Names
+}
 //Unit
 type Uniter interface{
 	Concepter
