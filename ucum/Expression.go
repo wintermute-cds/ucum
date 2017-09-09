@@ -4,7 +4,10 @@ import (
 	"bytes"
 	"strconv"
 	"fmt"
+	"strings"
 )
+
+// COMPOSER==================================================================================================
 
 type ExpressionComposer struct{
 }
@@ -86,6 +89,8 @@ func (e *ExpressionComposer)composeCanonical(buffer *bytes.Buffer, can *Canonica
 	}
 }
 
+// PARSER==================================================================================================
+
 type ExpressionParser struct {
 	Model *UcumModel
 }
@@ -94,7 +99,7 @@ func NewExpressionParser(model *UcumModel)*ExpressionParser{
 	e := &ExpressionParser{}
 	e.Model = model
 	return e
-}s
+}
 
 func (p *ExpressionParser)Parse(code string)(*Term, error){
 	l := NewLexer(code)
@@ -146,6 +151,7 @@ func (p *ExpressionParser)parseTerm(l *Lexer, first bool)(*Term, error){
 			res.Term,err = p.parseTerm(l, false)
 		}
 	}
+	return res, nil
 }
 
 func (p *ExpressionParser)parseComp(l *Lexer)(Componenter, error){
@@ -155,8 +161,65 @@ func (p *ExpressionParser)parseComp(l *Lexer)(Componenter, error){
 		return fact, nil
 	}else if l.TokenType == SYMBOL {
 		return p.parseSymbol(l)
+	}else if l.TokenType == NONE {
+		return nil, fmt.Errorf("Error processing unit '"+l.Source+"': "+"unexpected end of expression looking for a symbol or a number"+"' at position "+strconv.Itoa(l.Start))
+	}else if l.TokenType == OPEN {
+		l.Consume()
+		res, err := p.parseTerm(l, true)
+		if err!=nil{
+			return nil, err
+		}
+		if l.TokenType == CLOSE {
+			l.Consume()
+		} else{
+			return nil, fmt.Errorf("Error processing unit '"+l.Source+"': "+"Unexpected Token Type '" + l.TokenType.String() + "' looking for a close bracket"+"' at position "+strconv.Itoa(l.Start))
+		}
+		return res, nil
+	}else{
+		return nil, fmt.Errorf("Error processing unit '"+l.Source+"': "+"unexpected token looking for a symbol or a number"+"' at position "+strconv.Itoa(l.Start))
 	}
+	return nil, nil
 }
+
+func (p *ExpressionParser)parseSymbol(l *Lexer)(Componenter, error){
+	symbol := &Symbol{}
+	sym := l.Token
+
+	// now, can we pick a prefix that leaves behind a metric unit?
+	var selected *Prefix
+	var unit Uniter
+	for _,prefix := range p.Model.Prefixes {
+		if strings.HasPrefix(sym, prefix.Code){
+			unit = p.Model.GetUnit(sym[len(prefix.Code):])
+			if unit != nil && (unit.GetKind() == BASEUNIT || unit.(DefinedUnit).Metric){
+				selected = prefix
+				break
+			}
+		}
+	}
+	if selected != nil {
+		symbol.Prefix = selected
+		symbol.Unit = unit
+	}else{
+		unit = p.Model.GetUnit(sym)
+		if unit!=nil{
+			symbol.Unit = unit
+		}else if sym!="1"{
+			return nil, fmt.Errorf("Error processing unit '"+l.Source+"': "+"The unit '" + sym + "' is unknown"+"' at position "+strconv.Itoa(l.Start))
+		}
+	}
+
+	l.Consume()
+	if l.TokenType == NUMBER {
+		symbol.Exponent = l.TokenAsInt()
+		l.Consume()
+	}else{
+		symbol.Exponent = 1
+	}
+	return symbol, nil
+}
+
+// LEXER==================================================================================================
 
 const NO_CHAR = 0
 
