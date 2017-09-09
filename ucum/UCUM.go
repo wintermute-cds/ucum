@@ -10,6 +10,7 @@ import (
 type Concepter interface {
 	GetDescription() string
 	String() string
+	GetCode() string
 }
 
 type Concept struct{
@@ -36,6 +37,10 @@ func (c Concept)GetDescription()string {
 
 func (c Concept)String()string{
 	return c.Code + " = " + c.GetDescription()
+}
+
+func (c Concept)GetCode()string{
+	return c.Code
 }
 
 //Unit
@@ -84,7 +89,7 @@ type DefinedUnit struct{
 	Class string
 	IsSpecial bool
 	Metric bool
-	Value Value
+	Value *Value
 }
 
 func NewDefinedUnit(kind ConceptKind, code string, codeUC string)(*DefinedUnit,error){
@@ -174,16 +179,26 @@ func (c *Canonical)MultiplyValueDecimal(multiplicand *Decimal){
 	c.Value = c.Value.Multiply(multiplicand)
 }
 
-func (c *Canonical)MultiplyValueInt(multiplicand int){
-	c.Value = c.Value.Multiply(NewDecimal(strconv.Itoa(multiplicand)))
+func (c *Canonical)MultiplyValueInt(multiplicand int)error{
+	d, err := NewDecimal(strconv.Itoa(multiplicand))
+	if err!=nil {
+		return err
+	}
+	c.Value = c.Value.Multiply(d)
+	return nil
 }
 
 func (c *Canonical)DivideValueDecimal(divisor *Decimal){
 	c.Value = c.Value.Divide(divisor)
 }
 
-func (c *Canonical)DivideValueInt(divisor int){
-	c.Value = c.Value.Divide(NewDecimal(strconv.Itoa(divisor)))
+func (c *Canonical)DivideValueInt(divisor int)error{
+	d, err := NewDecimal(strconv.Itoa(divisor))
+	if err!=nil {
+		return err
+	}
+	c.Value = c.Value.Divide(d)
+	return nil
 }
 
 

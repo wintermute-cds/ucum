@@ -27,9 +27,9 @@ func unmarshalTerminology(reader io.Reader)(*UcumModel, error){
 
 
 type XMLRoot struct{
-	Version string	`xml:"version"`
-	Revision string		`xml:"revision"`
-	RevisionDate string	`xml:"revision-date"`
+	Version string	`xml:"version,attr"`
+	Revision string		`xml:"revision,attr"`
+	RevisionDate string	`xml:"revision-date,attr"`
 	Prefixes []XMLPrefix	`xml:"prefix"`
 	BaseUnits []XMLBaseUnit	`xml:"base-unit"`
 	DefinedUnits []XMLDefinedUnit	`xml:"unit"`
@@ -49,32 +49,64 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		BaseUnits : make([]*BaseUnit,0),
 		DefinedUnits : make([]*DefinedUnit,0),
 	}
-	for _, xmlPrefix := range x.Prefixes {
+	for _, xmlItem := range x.Prefixes {
 		names := make([]string,1)
-		name := xmlPrefix.Name
+		name := xmlItem.Name
 		names = append(names, name)
-		value, err := NewDecimalAndPrecision(xmlPrefix.Value, 24)
+		value, err := NewDecimalAndPrecision(xmlItem.Value, 24)
 		if err != nil {
 			return nil, err
 		}
 		prefix := &Prefix{}
-		prefix.Code = xmlPrefix.Code
-		prefix.CodeUC = xmlPrefix.CodeUC
+		prefix.Code = xmlItem.Code
+		prefix.CodeUC = xmlItem.CodeUC
 		prefix.Names = names
-		prefix.PrintSymbol = xmlPrefix.PrintSymbol
+		prefix.PrintSymbol = xmlItem.PrintSymbol
 		prefix.Value = value
 		ucumModel.Prefixes = append(ucumModel.Prefixes, prefix)
 	}
-	for _, xmlbaseUnit := range x.BaseUnits {
-		baseUnit := &BaseUnit{
-
+	for _, xmlItem := range x.BaseUnits {
+		names := make([]string,1)
+		name := xmlItem.Name
+		names = append(names, name)
+		if err != nil {
+			return nil, err
 		}
+		baseUnit := &BaseUnit{}
+		baseUnit.Code = xmlItem.Code
+		baseUnit.CodeUC = xmlItem.CodeUC
+		baseUnit.Names = names
+		baseUnit.PrintSymbol = xmlItem.PrintSymbol
+		baseUnit.Property = xmlItem.Property
+		baseUnit.Dim = xmlItem.Dim
 		ucumModel.BaseUnits = append(ucumModel.BaseUnits, baseUnit)
 	}
-	for _, xmlUnit := range x.DefinedUnits {
-		unit := &DefinedUnit{
-
+	for _, xmlItem := range x.DefinedUnits {
+		names := make([]string,1)
+		name := xmlItem.Name
+		names = append(names, name)
+		value := &Value{}
+		xmlItem2 := xmlItem.Value
+		value.Unit = xmlItem2.Unit
+		value.UnitUC = xmlItem2.UnitUC
+		if strings.Contains(xmlItem2.Value, "."){
+			value.Value, err = NewDecimalAndPrecision(xmlItem2.Value, 24)
+		}else{
+			value.Value, err = NewDecimal(xmlItem2.Value)
 		}
+		if err != nil {
+			return nil, err
+		}
+		unit := &DefinedUnit{}
+		unit.Code = xmlItem.Code
+		unit.CodeUC = xmlItem.CodeUC
+		unit.Names = names
+		unit.PrintSymbol = xmlItem.PrintSymbol
+		unit.Property = xmlItem.Property
+		unit.Class = xmlItem.Class
+		unit.IsSpecial = xmlItem.IsSpecial
+		unit.Metric = xmlItem.Metric
+		unit.Value = value
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
 	}
 	return ucumModel,err
@@ -90,14 +122,6 @@ func (x *XMLRoot)ProcessRevisionDate(revisionDate string)(time.Time, error){
 
 type XMLPrefix struct{
 	XMLConcept
-	//private Prefix parsePrefix
-	//prefix.setValue(new Decimal(xpp.getAttributeValue(null, "value"), 24));
-	//<prefix xmlns="" Code="h" CODE="H">
-	//<name>hecto</name>
-	//<printSymbol>h</printSymbol>
-	//<value value="1e2">1 &#215; 10<sup>2</sup>
-	//</value>
-	//</prefix>
 	Value string	`xml:"value"` //"1e2" //precision 24
 }
 
@@ -118,61 +142,26 @@ type XMLDecimal struct{
 
 type XMLUnit struct{
 	XMLConcept
-	Property string
+	Property string	`xml:"property"`
 }
 
 type XMLBaseUnit struct{
 	XMLUnit
-	Dim rune
+	Dim rune		`xml:"dim"`
 }
 
 type XMLDefinedUnit struct{
 	XMLUnit
-	Class string
-	IsSpecial bool
-	Metric bool
-	Value Value
+	Class string	`xml:"class,attr"`
+	IsSpecial bool	`xml:"isSpecial,attr"`
+	Metric bool		`xml:"isMetric,attr"`
+	Value XMLValue	`xml:"value"`
 }
 
 
 type XMLValue struct{
-	Text string
-	Unit string
-	UnitUC string
-	Value *Decimal
-}
-
-type XMLCanonical struct {
-	Units []*XMLCanonicalUnit
-	Value *Decimal
-}
-
-type XMLCanonicalUnit struct {
-	base *XMLBaseUnit
-	Exponent int
-}
-
-type XMLComponent struct{
-
-}
-
-//Factor
-type XMLFactor struct {
-	XMLComponent
-	Value int
-}
-
-type XMLSymbol struct {
-	XMLComponent
-	Unit Uniter
-	Prefix *Prefix
-	Exponent int
-}
-
-type XMLTerm struct {
-	Component
-	Comp Componenter
-	Op Operator
-	Term *Term
+	Unit string		`xml:"Unit,attr"`
+	UnitUC string	`xml:"UNIT,attr"`
+	Value string	`xml:"value,attr"`
 }
 

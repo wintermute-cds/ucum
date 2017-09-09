@@ -15,15 +15,16 @@ type Decimal struct {
 	Scientific bool
 }
 
-func NewDecimal(value string)(*Decimal){
+func NewDecimal(value string)(*Decimal, error){
+	var err error
 	d := &Decimal{}
 	value = strings.ToLower(value)
 	if strings.Contains(value, "e"){
-		d.setValueScientific(value)
+		err = d.setValueScientific(value)
 	}else{
-		d.setValueDecimal(value)
+		err = d.setValueDecimal(value)
 	}
-	return d
+	return d, err
 }
 
 /**
