@@ -195,20 +195,46 @@ func (u *UcumEssenceService)UcumIdentification() *UcumVersionDetails{
 }
 
 func (u *UcumEssenceService)ValidateUCUM() []string{
-
+	return NewUcumValidator(u.Model, u.Handlers).Validate()
 }
-func (u *UcumEssenceService)Search(kind ConceptKind, text string, isRegex bool)[]Concepter{
 
+func (u *UcumEssenceService)Search(kind ConceptKind, text string, isRegex bool)([]Concepter, error){
+	if text == "" {
+		return nil, fmt.Errorf("search", "text", "must not be empty")
+	}
+	return u.Model.Search(kind, text, isRegex), nil
 }
+
 func (u *UcumEssenceService)GetProperties()[]string{
-
+	result := make([]string, 0)
+	for _,unit := range u.Model.DefinedUnits {
+		result = append(result, unit.GetProperty())
+	}
+	return result
 }
-func (u *UcumEssenceService)Validate(unit string)string{
 
+func (u *UcumEssenceService)Validate(unit string)(string, error){
+	if unit == "" {
+		return "", fmt.Errorf("search", "text", "must not be empty")
+	}
+	_, err := NewExpressionParser(u.Model).Parse(unit)
+	if err!=nil {
+		return err.Error(),nil
+	}
+	return "", nil
 }
+
 func (u *UcumEssenceService)Analyse(unit string)(string,error){
-
+	if unit == "" {
+		return "(unity)", nil
+	}
+	term, err := NewExpressionParser(u.Model).Parse(unit)
+	if err!=nil {
+		return "",err
+	}
+	return ComposeFormalStructure(term), nil
 }
+
 func (u *UcumEssenceService)ValidateInProperty(unit, property string)string{
 
 }
@@ -272,6 +298,44 @@ func (v *UcumValidator)checkUnits(){
 			v.checkUnitCode(u.Value.Unit, false)
 		}else if !v.Handlers.Exists(u.Code){
 			v.Result = append(v.Result, "No handler for "+u.Code)
+		}
+	}
+}
+
+func (v *UcumValidator)checkUnitCode(code string, primary bool){
+	term,err := NewExpressionParser(v.Model).Parse(code)
+	if err!=nil {
+		v.Result = append(v.Result, err.Error())
+		return
+	}
+	c := ComposeExpression(term, false)
+	if c != code {
+		v.Result = append(v.Result, "Round trip failed: "+code+" -> "+c)
+	}
+	NewConverter(v.Model, v.Handlers).Convert(term)
+	if primary {
+		isInBrack := false
+		nonDigits := false
+		for i := 0; i < len(code); i++ {
+			ch := code[i]
+			if ch == '[' {
+				if isInBrack {
+					v.Result = append(v.Result, "nested '[' detected")
+				} else {
+					isInBrack = true
+				}
+			}
+			if ch == ']' {
+				if !isInBrack {
+					v.Result = append(v.Result, "']' without '[' detected")
+				}else{
+					isInBrack = false
+				}
+			}
+			nonDigits = nonDigits || !(ch >= '0' && ch <= '9')
+			if (ch >= '0' && ch <= '9' && !isInBrack && nonDigits){
+				v.Result = append(v.Result, "code "+code+" is ambiguous because it has digits outside []")
+			}
 		}
 	}
 }

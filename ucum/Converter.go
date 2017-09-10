@@ -3,6 +3,7 @@ package ucum
 import (
 	"UCUM_Golang/ucum/special"
 	"reflect"
+	"fmt"
 )
 
 type Converter struct{
@@ -17,20 +18,23 @@ func NewConverter(model *UcumModel, handlers *special.Registry)*Converter{
 	return r
 }
 
-func (c *Converter)Convert(term Term)*Canonical{
+func (c *Converter)Convert(term *Term)(*Canonical, error){
 	return c.normaliseTerm(" ", term)
 }
 
-func (c *Converter)normaliseTerm(indent string, term Term)*Canonical{
+func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 	result,_ := NewCanonical(One())
 	div := false
-	t := &term
+	t := term
 	for{
 		if t == nil {
 	  		break
 		}
 		if _,instanceof := t.Comp.(Term); instanceof {
-			temp := c.normaliseTerm( indent + " ", t.Comp.(Term))
+			temp, err := c.normaliseTerm( indent + " ", t.Comp.(*Term))
+			if err!=nil{
+				return nil, err
+			}
 			if div {
 				result.DivideValueDecimal(temp.Value)
 				for _,c := range temp.Units {
@@ -48,7 +52,10 @@ func (c *Converter)normaliseTerm(indent string, term Term)*Canonical{
 			}
 		}else if _,instanceof := t.Comp.(Symbol); instanceof {
 			o := t.Comp.(Symbol)
-			temp := c.normaliseSymbol(indent, o)
+			temp, err := c.normaliseSymbol(indent, o)
+			if err!=nil{
+				return nil, err
+			}
 			if div {
 				result.DivideValueDecimal(temp.Value)
 				for _,c := range temp.Units {
@@ -80,16 +87,19 @@ func (c *Converter)normaliseTerm(indent string, term Term)*Canonical{
 
 	}
 	result.SortUnits()
-	return result
+	return result, nil
 }
 
-func (c *Converter)normaliseSymbol(indent string, sym Symbol)*Canonical {
+func (c *Converter)normaliseSymbol(indent string, sym Symbol)(*Canonical, error) {
 	result,_ :=  NewCanonical(One())
 	if _,instanceof := sym.Unit.(BaseUnit); instanceof {
 		cf,_ := NewCanonicalUnit(&sym.Unit.(BaseUnit), sym.Exponent)
 		result.Units = append(result.Units, cf)
 	}else{
-		can := c.expandDefinedUnit(indent, sym.Unit.(DefinedUnit))
+		can, err := c.expandDefinedUnit(indent, sym.Unit.(DefinedUnit))
+		if err!=nil{
+			return nil, err
+		}
 		for _,c := range can.Units {
 			c.Exponent = c.Exponent * sym.Exponent
 		}
@@ -115,21 +125,27 @@ func (c *Converter)normaliseSymbol(indent string, sym Symbol)*Canonical {
 			}
 		}
 	}
-	return result
+	return result, nil
 }
 
-func (c *Converter)expandDefinedUnit(indent string, unit DefinedUnit)*Canonical{
+func (c *Converter)expandDefinedUnit(indent string, unit DefinedUnit)(*Canonical,error){
 	u := unit.Value.Unit
 	if unit.IsSpecial{
 		if !c.Handlers.Exists(unit.Code){
-			panic("Not handled yet (special unit)")
+			return nil, fmt.Errorf("Not handled yet (special unit)")
 		}else{
 			u = c.Handlers.Get(unit.Code).GetUnits()
 		}
 	}
-	t := NewExpressionParser(model).Parse(u)
-	result := c.normaliseTerm(indent + " ", t)
+	t, err := NewExpressionParser(c.Model).Parse(u)
+	if err!=nil{
+		return nil, err
+	}
+	result, err := c.normaliseTerm(indent + " ", t)
+	if err!=nil{
+		return nil, err
+	}
 	result.MultiplyValueDecimal(unit.Value.Value)
-	return result
+	return result,nil
 }
 
