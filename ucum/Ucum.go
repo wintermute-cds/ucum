@@ -187,9 +187,13 @@ func GetInstanceOfOpenEhrTerminologyService()(*UcumEssenceService, error){
 	return instanceOfOpenEhrTerminologyService, nil
 }
 
-func (u *UcumEssenceService)UcumIdentification() UcumVersionDetails{
-
+func (u *UcumEssenceService)UcumIdentification() *UcumVersionDetails{
+	d := &UcumVersionDetails{}
+	d.ReleaseDate = u.Model.RevisionDate
+	d.Version = u.Model.Version
+	return d
 }
+
 func (u *UcumEssenceService)ValidateUCUM() []string{
 
 }
@@ -231,4 +235,43 @@ func (u *UcumEssenceService)Multiply( o1,  o2 *Pair)(*Pair, error){
 }
 func (u *UcumEssenceService)GetCommonDisplay(code string)string;{
 
+}
+//UcumEssenceService=======================================================
+type UcumValidator struct {
+	Model *UcumModel
+	Result []string
+	Handlers *special.Registry
+}
+
+func NewUcumValidator(model *UcumModel, handlers *special.Registry)*UcumValidator{
+	v := &UcumValidator{}
+	v.Model = model
+	v.Handlers = handlers
+	return v
+}
+
+func (v *UcumValidator)Validate()[]string{
+	v.Result = make([]string,0)
+	v.checkCodes()
+	v.checkUnits()
+	return v.Result
+}
+
+func (v *UcumValidator)checkCodes(){
+	for _,u := range v.Model.BaseUnits{
+		v.checkUnitCode(u.Code, true)
+	}
+	for _,u := range v.Model.DefinedUnits{
+		v.checkUnitCode(u.Code, true)
+	}
+}
+
+func (v *UcumValidator)checkUnits(){
+	for _,u := range v.Model.DefinedUnits {
+		if u.IsSpecial{
+			v.checkUnitCode(u.Value.Unit, false)
+		}else if !v.Handlers.Exists(u.Code){
+			v.Result = append(v.Result, "No handler for "+u.Code)
+		}
+	}
 }

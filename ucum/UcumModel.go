@@ -11,7 +11,7 @@ import (
 type UcumModel struct {
 	Version string
 	Revision string
-	RevisionDate time.Time
+	RevisionDate *time.Time
 	Prefixes []*Prefix
 	BaseUnits []*BaseUnit
 	DefinedUnits []*DefinedUnit
