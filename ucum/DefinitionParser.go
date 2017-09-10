@@ -12,11 +12,7 @@ import (
 type DefinitionParser struct {
 }
 
-func (d *DefinitionParser)Parse(){
-
-}
-
-func unmarshalTerminology(reader io.Reader)(*UcumModel, error){
+func (d *DefinitionParser)UnmarshalTerminology(reader io.Reader)(*UcumModel, error){
 	xmlUCUM := &XMLRoot{}
 	decoder := xml.NewDecoder(reader)
 	if err := decoder.Decode(xmlUCUM); err!=nil {
