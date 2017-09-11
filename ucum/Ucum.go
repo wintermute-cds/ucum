@@ -5,6 +5,7 @@ import (
 	"UCUM_Golang/ucum/special"
 	"os"
 	"fmt"
+	"strings"
 )
 
 type UcumService interface {
@@ -235,32 +236,183 @@ func (u *UcumEssenceService)Analyse(unit string)(string,error){
 	return ComposeFormalStructure(term), nil
 }
 
-func (u *UcumEssenceService)ValidateInProperty(unit, property string)string{
-
+func (u *UcumEssenceService)ValidateInProperty(unit, property string)(string){
+	if unit == "" {
+		return "validateInProperty: unit must not be null or empty"
+	}
+	if property == "" {
+		return "validateInProperty: property must not be null or empty"
+	}
+	term, err := NewExpressionParser(u.Model).Parse(unit)
+	if err != nil {
+		return err.Error()
+	}
+	can, err := NewConverter(u.Model, u.Handlers).Convert(term)
+	if err != nil {
+		return err.Error()
+	}
+	cu := ComposeExpression(can, false)
+	if len(can.Units)==1{
+		if property == can.Units[0].Base().Property {
+			return ""
+		}else{
+			return "unit "+unit+" is of the property type "+can.Units[0].Base().Property+" ("+cu+"), not "+property+" as required."
+		}
+	}
+	if property == "concentration" && (cu == "g/L" || cu == "mol/L"){
+		return ""
+	}
+	return "unit "+unit+" has the base units "+cu+", and are not from the property "+property+" as required."
 }
+
 func (u *UcumEssenceService)ValidateCanonicalUnits(unit,  canonical string)string{
-
+	if unit == "" {
+		return "ValidateCanonicalUnits: unit must not be null or empty"
+	}
+	if canonical == "" {
+		return "ValidateCanonicalUnits: canonical must not be null or empty"
+	}
+	term, err := NewExpressionParser(u.Model).Parse(unit)
+	if err != nil {
+		return err.Error()
+	}
+	can, err := NewConverter(u.Model, u.Handlers).Convert(term)
+	if err != nil {
+		return err.Error()
+	}
+	cu := ComposeExpression(can, false)
+	if canonical != cu {
+		return "unit "+unit+" has the base units "+cu+", not "+canonical+" as required."
+	}
+	return ""
 }
-func (u *UcumEssenceService)GetCanonicalUnits(unit error)(string, error){
 
+func (u *UcumEssenceService)GetCanonicalUnits(unit string)(string, error){
+	if unit == "" {
+		return "", fmt.Errorf("GetCanonicalUnits: unit must not be null or empty")
+	}
+	term, err := NewExpressionParser(u.Model).Parse(unit)
+	if err != nil {
+		return "", err
+	}
+	converter := NewConverter(u.Model, u.Handlers)
+	can, err := converter.Convert(term)
+	if err != nil {
+		return "", err
+	}
+	return ComposeExpression(can, false), nil
 }
+
 func (u *UcumEssenceService)IsComparable( units1,  units2 string)(bool, error){
-
+	if units1 == "" {
+		return false, nil
+	}
+	if units2 == "" {
+		return false, nil
+	}
+	u1, err := u.GetCanonicalUnits(units1)
+	if err != nil {
+		return false, err
+	}
+	u2, err := u.GetCanonicalUnits(units2)
+	if err != nil {
+		return false, err
+	}
+	return u1 == u2, nil
 }
+
 func (u *UcumEssenceService)GetDefinedForms(code string)([]*DefinedUnit,error){
-
+	if code == "" {
+		return nil, fmt.Errorf("getDefinedForms: code must not be null or empty")
+	}
+	result := make([]*DefinedUnit,0)
+	base := u.Model.getBaseUnit(code)
+	if base != nil {
+		for _,du := range u.Model.DefinedUnits {
+			s,err := u.GetCanonicalUnits(du.Code)
+			if err != nil {
+				return nil, err
+			}
+			if du.IsSpecial && code == s{
+				result = append(result, du)
+			}
+		}
+	}
+	return result, nil
 }
+
 func (u *UcumEssenceService)GetCanonicalForm(value *Pair) (*Pair, error){
-
+	if value == nil {
+		return nil, fmt.Errorf("getCanonicalForm: value must not be null")
+	}
+	if value.Code == "" {
+		return nil, fmt.Errorf("getCanonicalForm: value.code must not be empty")
+	}
+	term, err := NewExpressionParser(u.Model).Parse(value.Code)
+	if err != nil {
+		return nil, err
+	}
+	converter := NewConverter(u.Model, u.Handlers)
+	can, err := converter.Convert(term)
+	if err != nil {
+		return nil, err
+	}
+	cu := ComposeExpression(can, false)
+	if value.Value == nil {
+		return NewPair(nil, cu), nil
+	}else{
+		return NewPair(value.Value.Multiply(can.Value), cu), nil
+	}
 }
+
 func (u *UcumEssenceService)Convert(value *Decimal, sourceUnit, destUnit string)(*Decimal, error){
-
+	if value == nil {
+		return nil, fmt.Errorf("Convert: value must not be null")
+	}
+	if sourceUnit == "" {
+		return nil, fmt.Errorf("Convert: sourceUnit must not be empty")
+	}
+	if destUnit == "" {
+		return nil, fmt.Errorf("Convert: destUnit must not be empty")
+	}
+	if sourceUnit==destUnit{
+		return  value, nil
+	}
+	converter := NewConverter(u.Model, u.Handlers)
+	srcEp, err := NewExpressionParser(u.Model).Parse(sourceUnit)
+	if err != nil {
+		return nil, err
+	}
+	drcEp, err := NewExpressionParser(u.Model).Parse(destUnit)
+	if err != nil {
+		return nil, err
+	}
+	src, err := converter.Convert(srcEp)
+	if err != nil {
+		return nil, err
+	}
+	dst, err := converter.Convert(drcEp)
+	if err != nil {
+		return nil, err
+	}
+	s := ComposeExpression(src, false)
+	d := ComposeExpression(dst, false)
+	if s != d {
+		return nil, fmt.Errorf("Unable to convert between units "+sourceUnit+" and "+destUnit+" as they do not have matching canonical forms ("+s+" and "+d+" respectively)")
+	}
+	canValue := value.Multiply(src.Value)
+	return canValue.Divide(dst.Value), nil
 }
+
 func (u *UcumEssenceService)Multiply( o1,  o2 *Pair)(*Pair, error){
-
+	res := NewPair(o1.Value.Multiply(o2.Value), o1.Code+"."+o2.Code)
+	return u.GetCanonicalForm(res)
 }
-func (u *UcumEssenceService)GetCommonDisplay(code string)string;{
 
+func (u *UcumEssenceService)GetCommonDisplay(code string)string{
+	code = strings.Replace( code,"[", "" ,-1)
+	code = strings.Replace( code,"]", "", -1)
+	return code
 }
 //UcumEssenceService=======================================================
 type UcumValidator struct {

@@ -63,6 +63,15 @@ func (u *UcumModel)searchPrefixes(text string, isRegex bool)[]Concepter{
 	return concepts
 }
 
+func (u *UcumModel)getBaseUnit(code string)*BaseUnit {
+	for _, unit := range u.BaseUnits{
+		if unit.Code == code {
+			return unit;
+		}
+		return nil;
+	}
+}
+
 func (u *UcumModel)searchUnits(text string, isRegex bool, kind ConceptKind)[]Concepter{
 	concepts := make([]Concepter,0)
 	if kind == BASEUNIT {
