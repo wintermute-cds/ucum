@@ -1,9 +1,8 @@
-package special
+package ucum
 
-import "UCUM_Golang/ucum"
 
 type SpecialUnitHandlerer interface{
 	GetCode() string
 	GetUnits() string
-	GetValue() *ucum.Decimal
+	GetValue() (*Decimal)
 }

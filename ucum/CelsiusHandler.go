@@ -1,6 +1,4 @@
-package special
-
-import "UCUM_Golang/ucum"
+package ucum
 
 type CelsiusHandler struct{
 }
@@ -13,7 +11,7 @@ func ( c * CelsiusHandler)GetUnits() string{
 	return "K"
 }
 
-func ( c * CelsiusHandler)GetValue() *ucum.Decimal{
-	return ucum.One()
+func ( c * CelsiusHandler)GetValue() (*Decimal){
+	return One()
 }
 

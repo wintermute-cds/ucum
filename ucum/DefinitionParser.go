@@ -2,8 +2,6 @@ package ucum
 
 import (
 	"strings"
-	"sort"
-	"strconv"
 	"io"
 	"encoding/xml"
 	"time"
@@ -109,11 +107,11 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 }
 
 func (x *XMLRoot)ProcessRevisionDate(revisionDate string)(time.Time, error){
-	time,err := time.Parse("2013-10-21 21:24:43 -0700", revisionDate)
+	time_,err := time.Parse("2013-10-21 21:24:43 -0700", revisionDate)
 	if err!=nil {
-		return time.Time{}, err
+		return time.Now(), err
 	}
-	return time, nil
+	return time_, nil
 }
 
 type XMLPrefix struct{

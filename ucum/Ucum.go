@@ -2,7 +2,6 @@ package ucum
 
 import (
 	"time"
-	"UCUM_Golang/ucum/special"
 	"os"
 	"fmt"
 	"strings"
@@ -150,11 +149,11 @@ type UcumService interface {
 
 // UcumVersionDetails======================================================
 type UcumVersionDetails struct{
-	ReleaseDate *time.Time
+	ReleaseDate time.Time
 	Version string
 }
 
-func NewUcumVersionDetails(releaseDate *time.Time, version string)*UcumVersionDetails{
+func NewUcumVersionDetails(releaseDate time.Time, version string)*UcumVersionDetails{
 	r := &UcumVersionDetails{}
 	r.ReleaseDate = releaseDate
 	r.Version = version
@@ -166,7 +165,7 @@ var xmlFileName = "../terminology_data/ucum-essence.xml"
 
 type UcumEssenceService struct{
 	Model *UcumModel
-	Handlers *special.Registry
+	Handlers *Registry
 }
 
 var instanceOfOpenEhrTerminologyService *UcumEssenceService
@@ -418,10 +417,10 @@ func (u *UcumEssenceService)GetCommonDisplay(code string)string{
 type UcumValidator struct {
 	Model *UcumModel
 	Result []string
-	Handlers *special.Registry
+	Handlers *Registry
 }
 
-func NewUcumValidator(model *UcumModel, handlers *special.Registry)*UcumValidator{
+func NewUcumValidator(model *UcumModel, handlers *Registry)*UcumValidator{
 	v := &UcumValidator{}
 	v.Model = model
 	v.Handlers = handlers

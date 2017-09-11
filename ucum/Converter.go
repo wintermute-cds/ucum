@@ -1,17 +1,16 @@
 package ucum
 
 import (
-	"UCUM_Golang/ucum/special"
 	"reflect"
 	"fmt"
 )
 
 type Converter struct{
 	Model *UcumModel
-	Handlers *special.Registry
+	Handlers *Registry
 }
 
-func NewConverter(model *UcumModel, handlers *special.Registry)*Converter{
+func NewConverter(model *UcumModel, handlers *Registry)*Converter{
 	r := &Converter{}
 	r.Model = model
 	r.Handlers = handlers
@@ -92,8 +91,8 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 
 func (c *Converter)normaliseSymbol(indent string, sym Symbol)(*Canonical, error) {
 	result,_ :=  NewCanonical(One())
-	if _,instanceof := sym.Unit.(BaseUnit); instanceof {
-		cf,_ := NewCanonicalUnit(&sym.Unit.(BaseUnit), sym.Exponent)
+	if _,instanceof := sym.Unit.(*BaseUnit); instanceof {
+		cf,_ := NewCanonicalUnit(sym.Unit.(*BaseUnit), sym.Exponent)
 		result.Units = append(result.Units, cf)
 	}else{
 		can, err := c.expandDefinedUnit(indent, sym.Unit.(DefinedUnit))

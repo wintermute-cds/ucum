@@ -1,6 +1,4 @@
-package special
-
-import "UCUM_Golang/ucum"
+package ucum
 
 type FahrenheitHandler struct{
 }
@@ -13,8 +11,9 @@ func ( c * FahrenheitHandler)GetUnits() string{
 	return "K"
 }
 
-func ( c * FahrenheitHandler)GetValue() *ucum.Decimal{
-	d := ucum.NewDecimal("5")
-	return d.Divide(ucum.NewDecimal("9"))
+func ( c * FahrenheitHandler)GetValue() (*Decimal){
+	d5, _ := NewDecimal("5")
+	d9, _ := NewDecimal("9")
+	return d5.Divide(d9)
 }
 

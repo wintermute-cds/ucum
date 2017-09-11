@@ -78,12 +78,12 @@ func (d *Decimal)setValueDecimal(value string)error{
 		if d.allZeros(value, 1){
 			d.Precision = len(value) - 1
 		} else {
-			d.Precision = d.countSignificants(value)
+			d.Precision, err = d.countSignificants(value)
+			if err!=nil {
+				return err
+			}
 		}
-		d.Digits, err = d.delete(value, d.Decimal, 1)
-		if err!= nil {
-			return err
-		}
+		d.Digits = d.delete(value, d.Decimal, 1)
 		if d.allZeros(d.Digits, 0){
 			d.Precision++
 		}else {
@@ -111,7 +111,7 @@ func (d *Decimal)allZeros(s string, start int)bool{
 	return true
 }
 
-func (d *Decimal)countSignificants(value string)(int){
+func (d *Decimal)countSignificants(value string)(int, error){
 	i := strings.Index(value, ".")
 	if i > -1 {
 		value = d.delete(value, i, 1)
@@ -123,20 +123,20 @@ func (d *Decimal)countSignificants(value string)(int){
 		}
 		value = value[1:]
 	}
-	return len(value)
+	return len(value), nil
 }
 
-func (d *Decimal)delete(value string, offset, length int)(string, error){
-	if length > len(value) {
-		return "",fmt.Errorf("Length cannot be greater then the length of the value string")
+func (d *Decimal)delete(value string, offset, length int)(string){
+	if length + offset > len(value) {
+		return value
 	}
 	if offset > len(value) {
-		return "",fmt.Errorf("Offset cannot be greater then the length of the value string")
+		return value
 	}
 	if offset == 0 {
-		return value[length:],nil
+		return value[length:]
 	}else{
-		return value[0:offset]+value[offset+length:], nil
+		return value[0:offset]+value[offset+length:]
 	}
 }
 

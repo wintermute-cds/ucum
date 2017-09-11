@@ -29,6 +29,7 @@ func PadLeft(src string, c rune, l int)string{
 	for i := 0; i < l - len(src); i++ {
 		s = s + string(c)
 	}
+	return s
 }
 
 func MaxInt(a, b int)int{

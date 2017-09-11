@@ -11,7 +11,7 @@ import (
 type UcumModel struct {
 	Version string
 	Revision string
-	RevisionDate *time.Time
+	RevisionDate time.Time
 	Prefixes []*Prefix
 	BaseUnits []*BaseUnit
 	DefinedUnits []*DefinedUnit
@@ -68,8 +68,8 @@ func (u *UcumModel)getBaseUnit(code string)*BaseUnit {
 		if unit.Code == code {
 			return unit;
 		}
-		return nil;
 	}
+	return nil;
 }
 
 func (u *UcumModel)searchUnits(text string, isRegex bool, kind ConceptKind)[]Concepter{

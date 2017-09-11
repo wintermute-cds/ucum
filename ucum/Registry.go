@@ -1,6 +1,4 @@
-package special
-
-import "UCUM_Golang/ucum"
+package ucum
 
 type Registry struct{
 	handlers map[string]SpecialUnitHandlerer
@@ -18,13 +16,15 @@ func NewRegistry()*Registry{
 	r.register(NewHoldingHandler("[pH]", "mol/l",nil))
 	r.register(NewHoldingHandler("Np", "1",nil))
 	r.register(NewHoldingHandler("B", "1",nil))
-	r.register(NewHoldingHandler("B[SPL]", "10*-5.Pa", ucum.NewDecimal("2")))
+	d, _ := NewDecimal("2")
+	r.register(NewHoldingHandler("B[SPL]", "10*-5.Pa", d))
 	r.register(NewHoldingHandler("B[V]", "V",nil))
 	r.register(NewHoldingHandler("B[mV]", "mV",nil))
 	r.register(NewHoldingHandler("B[uV]", "uV",nil))
 	r.register(NewHoldingHandler("B[W]", "W",nil))
 	r.register(NewHoldingHandler("B[kW]", "kW",nil))
 	r.register(NewHoldingHandler("bit_s", "1",nil))
+	return r
 }
 
 func (r *Registry)register(handler SpecialUnitHandlerer){

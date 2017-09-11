@@ -1,11 +1,9 @@
-package special
-
-import "UCUM_Golang/ucum"
+package ucum
 
 type HoldingHandler struct{
 	Code string
 	Units string
-	Value *ucum.Decimal
+	Value *Decimal
 }
 
 func ( c * HoldingHandler)GetCode() string{
@@ -16,11 +14,11 @@ func ( c * HoldingHandler)GetUnits() string{
 	return c.Units
 }
 
-func ( c * HoldingHandler)GetValue() *ucum.Decimal{
+func ( c * HoldingHandler)GetValue() *Decimal{
 	return c.Value
 }
 
-func NewHoldingHandler(code, units string, value *ucum.Decimal)*HoldingHandler{
+func NewHoldingHandler(code, units string, value *Decimal)*HoldingHandler{
 	result := &HoldingHandler{}
 	result.Code = code
 	result.Units = units
