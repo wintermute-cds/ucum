@@ -7,6 +7,10 @@ import (
 	"strconv"
 )
 
+const MAX_INT = 1<<31 - 1
+const MIN_INT = -1 << 31
+
+
 type Decimal struct {
 	Decimal int
 	Digits string
@@ -27,6 +31,12 @@ func NewDecimal(value string)(*Decimal, error){
 	return d, err
 }
 
+func NewDecimalInt(value int)(*Decimal, error){
+	var err error
+	d := &Decimal{}
+	err = d.setValueDecimal(strconv.Itoa(value))
+	return d, err
+}
 /**
 	 * There are a few circumstances where a simple value is known to be correct to a high
 	 * precision. For instance, the unit prefix milli is not ~0.001, it is precisely 0.001
@@ -58,6 +68,7 @@ func (d *Decimal)setValueDecimal(value string)error{
 		if !(strings.Index(value, "0") == 0 && len(value) > 1) {
 			break
 		}
+		value = value[1:]
 	}
 	for i,c := range value{
 		if c == '.' && dec == -1 {
@@ -286,12 +297,17 @@ func (d *Decimal)AsInteger()(int, error){
 	if !b {
 		return 0, fmt.Errorf("Unable to represent "+d.String()+" as an integer")
 	}
-	dec := new(Decimal)
-	dec.setValueDecimal(strconv.Itoa(-0x80000000))
+	dec, err := NewDecimalInt(MIN_INT)
+	if err!=nil {
+		return 0, err
+	}
 	if d.ComparesTo(dec)<0 {
 		return 0, fmt.Errorf("Unable to represent "+dec.String()+" as a signed 8 byte integer")
 	}
-	dec.setValueDecimal(strconv.Itoa(0x7fffffff))
+	dec, err = NewDecimalInt(MAX_INT)
+	if err!=nil {
+		return 0, err
+	}
 	if d.ComparesTo(dec)>0 {
 		return 0, fmt.Errorf("Unable to represent "+dec.String()+" as a signed 8 byte integer")
 	}
