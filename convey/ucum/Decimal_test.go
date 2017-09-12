@@ -8,535 +8,229 @@ import (
 	"github.com/smartystreets/assertions/should"
 )
 
-func TestRoundtripIntegerDecimal(t *testing.T){
-	convey.Convey("TestRoundtripIntegerDecimal", t, func(){
-		d,err := ucum.NewDecimal(strconv.Itoa(0))
-		convey.So(err, should.BeNil)
-		i,err := d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, 0)
-		d,err = ucum.NewDecimal(strconv.Itoa(1))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, 1)
-		d,err = ucum.NewDecimal(strconv.Itoa(2))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, 2)
-		d,err = ucum.NewDecimal(strconv.Itoa(64))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, 64)
-		d,err = ucum.NewDecimal(strconv.Itoa(ucum.MAX_INT))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, ucum.MAX_INT)
-		d,err = ucum.NewDecimal(strconv.Itoa(-1))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, -1)
-		d,err = ucum.NewDecimal(strconv.Itoa(-2))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, -2)
-		d,err = ucum.NewDecimal(strconv.Itoa(-64))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, -64)
-		d,err = ucum.NewDecimal(strconv.Itoa(ucum.MIN_INT))
-		convey.So(err, should.BeNil)
-		i,err = d.AsInteger()
-		convey.So(err, should.BeNil)
-		convey.So(i, should.Equal, ucum.MIN_INT)
+
+
+func TestStringAsIntegerDecimal(t *testing.T){
+	var integerTable = []int{
+		0, 1, 2, 64, ucum.MAX_INT, -1, -2, -64, ucum.MIN_INT,
+	}
+	convey.Convey("TestStringAsIntegerDecimal", t, func() {
+		for _, integer := range integerTable {
+			d, err := ucum.NewDecimal(strconv.Itoa(integer))
+			convey.So(err, should.BeNil)
+			i, err := d.AsInteger()
+			convey.So(err, should.BeNil)
+			convey.So(i, should.Equal, integer)
+		}
 	})
 }
 
-func TestDecimalToScientific(t *testing.T) {
+func TestDecimalAsScientific(t *testing.T) {
+	var DecimalScientificMap = map[string]string{
+		"1": "1e0",
+		"0":  "0e0",
+		"-0":  "0e0",
+		"10":  "1.0e1",
+		"99":  "9.9e1",
+		"-1": "-1e0",
+		"-10": "-1.0e1",
+		"-99": "-9.9e1",
+		"1.1": "1.1e0",
+		"-1.1":  "-1.1e0",
+		"11.1":  "1.11e1",
+		"1.11": "1.11e0",
+		"1.111": "1.111e0",
+		"0.1": "1e-1",
+		"00.1": "1e-1",
+		".1": "1e-1",
+		"1.0": "1.0e0",
+		"1.00": "1.00e0",
+		"1.000000000000000000000000000000000000000": "1.000000000000000000000000000000000000000e0",
+		"-11.1": "-1.11e1",
+		"-1.11": "-1.11e0",
+		"-1.111":  "-1.111e0",
+		"-0.1":  "-1e-1",
+		"-00.1":  "-1e-1",
+		"-.1": "-1e-1",
+		"-1.0":  "-1.0e0",
+		"-1.00": "-1.00e0",
+		"-1.000000000000000000000000000000000000000":  "-1.000000000000000000000000000000000000000e0",
+		"0.0": "0.0e0",
+		"0.0000":  "0.0000e0",
+		"0.100": "1.00e-1",
+		"100": "1.00e2",
+		"0.01": "1e-2",
+		"0.001": "1e-3",
+		"0.0001": "1e-4",
+		"00.0001":  "1e-4",
+		"000.0001": "1e-4",
+		"-0.01": "-1e-2",
+		"10.01":  "1.001e1",
+		"0.00001": "1e-5",
+		"0.000001": "1e-6",
+		"0.0000001": "1e-7",
+		"0.000000001": "1e-9",
+		"0.00000000001":  "1e-11",
+		"0.0000000000001": "1e-13",
+		"0.000000000000001": "1e-15",
+		"0.00000000000000001":  "1e-17",
+		"10.1": "1.01e1",
+		"100.1":  "1.001e2",
+		"1000.1":  "1.0001e3",
+		"10000.1": "1.00001e4",
+		"100000.1": "1.000001e5",
+		"1000000.1":  "1.0000001e6",
+		"10000000.1":  "1.00000001e7",
+		"100000000.1":  "1.000000001e8",
+		"1000000000.1":  "1.0000000001e9",
+		"10000000000.1":  "1.00000000001e10",
+		"100000000000.1":  "1.000000000001e11",
+		"1000000000000.1": "1.0000000000001e12",
+		"10000000000000.1":  "1.00000000000001e13",
+		"100000000000000.1":  "1.000000000000001e14",
+	}
 	convey.Convey("TestDecimalToScientific", t, func() {
-		d,err := ucum.NewDecimal("1")
-		convey.So(err, should.BeNil)
-		s := d.AsScientific()
-		convey.So(s, should.Equal, "1e0")
-		d,err = ucum.NewDecimal("0")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "0e0")
-		d,err = ucum.NewDecimal("-0")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "0e0")
-		d,err = ucum.NewDecimal("10")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.0e1")
-		d,err = ucum.NewDecimal("99")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "9.9e1")
-		d,err = ucum.NewDecimal("-1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-1e0")
-		d,err = ucum.NewDecimal("-10")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-1.0e1")
-		d,err = ucum.NewDecimal("-99")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-9.9e1")
-		d,err = ucum.NewDecimal("1.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.1e0")
-		d,err = ucum.NewDecimal("-1.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "-1.1e0")
-		d,err = ucum.NewDecimal("11.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.11e1")
-		d,err = ucum.NewDecimal("1.11")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.11e0")
-		d,err = ucum.NewDecimal("1.111")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.111e0")
-		d,err = ucum.NewDecimal("0.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-1")
-		d,err = ucum.NewDecimal("00.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-1")
-		d,err = ucum.NewDecimal(".1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-1")
-		d,err = ucum.NewDecimal("1.0")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.0e0")
-		d,err = ucum.NewDecimal("1.00")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.00e0")
-		d,err = ucum.NewDecimal("1.000000000000000000000000000000000000000")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.000000000000000000000000000000000000000e0")
-		d,err = ucum.NewDecimal("-11.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-1.11e1")
-		d,err = ucum.NewDecimal("-1.11")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-1.11e0")
-		d,err = ucum.NewDecimal("-1.111")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "-1.111e0")
-		d,err = ucum.NewDecimal("-0.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "-1e-1")
-		d,err = ucum.NewDecimal("-00.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "-1e-1")
-		d,err = ucum.NewDecimal("-.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-1e-1")
-		d,err = ucum.NewDecimal("-1.0")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "-1.0e0")
-		d,err = ucum.NewDecimal("-1.00")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-1.00e0")
-		d,err = ucum.NewDecimal("-1.000000000000000000000000000000000000000")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "-1.000000000000000000000000000000000000000e0")
-		d,err = ucum.NewDecimal("0.0")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "0.0e0")
-		d,err = ucum.NewDecimal("0.0000")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "0.0000e0")
-		d,err = ucum.NewDecimal("0.100")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.00e-1")
-		d,err = ucum.NewDecimal("100")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.00e2")
-		d,err = ucum.NewDecimal("0.01")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-2")
-		d,err = ucum.NewDecimal("0.001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-3")
-		d,err = ucum.NewDecimal("0.0001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-4")
-		d,err = ucum.NewDecimal("00.0001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1e-4")
-		d,err = ucum.NewDecimal("000.0001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-4")
-		d,err = ucum.NewDecimal("-0.01")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "-1e-2")
-		d,err = ucum.NewDecimal("10.01")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.001e1")
-		d,err = ucum.NewDecimal("0.00001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-5")
-		d,err = ucum.NewDecimal("0.000001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-6")
-		d,err = ucum.NewDecimal("0.0000001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-7")
-		d,err = ucum.NewDecimal("0.000000001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-9")
-		d,err = ucum.NewDecimal("0.00000000001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1e-11")
-		d,err = ucum.NewDecimal("0.0000000000001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-13")
-		d,err = ucum.NewDecimal("0.000000000000001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1e-15")
-		d,err = ucum.NewDecimal("0.00000000000000001")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1e-17")
-		d,err = ucum.NewDecimal("10.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.01e1")
-		d,err = ucum.NewDecimal("100.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.001e2")
-		d,err = ucum.NewDecimal("1000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.0001e3")
-		d,err = ucum.NewDecimal("10000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.00001e4")
-		d,err = ucum.NewDecimal("100000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.000001e5")
-		d,err = ucum.NewDecimal("1000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.0000001e6")
-		d,err = ucum.NewDecimal("10000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.00000001e7")
-		d,err = ucum.NewDecimal("100000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.000000001e8")
-		d,err = ucum.NewDecimal("1000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.0000000001e9")
-		d,err = ucum.NewDecimal("10000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.00000000001e10")
-		d,err = ucum.NewDecimal("100000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.000000000001e11")
-		d,err = ucum.NewDecimal("1000000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal, "1.0000000000001e12")
-		d,err = ucum.NewDecimal("10000000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.00000000000001e13")
-		d,err = ucum.NewDecimal("100000000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.AsScientific()
-		convey.So(s, should.Equal,  "1.000000000000001e14")
+		for k,v := range DecimalScientificMap {
+			d,err := ucum.NewDecimal(k)
+			convey.So(err, should.BeNil)
+			s := d.AsScientific()
+			convey.So(s, should.Equal, v)
+		}
 	})
 }
 
-func TestScientificToDecimal(t *testing.T) {
-	convey.Convey("TestDecimalToString", t, func() {
-		d, err := ucum.NewDecimal("1e0")
-		convey.So(err, should.BeNil)
-		s := d.AsDecimal()
-		convey.So(s, should.Equal, "1")
-		d, err = ucum.NewDecimal("0e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0")
-		d, err = ucum.NewDecimal("1e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal,  "1")
-		d, err = ucum.NewDecimal("0e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0")
-		d, err = ucum.NewDecimal("1.0e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "10")
-		d, err = ucum.NewDecimal("9.9e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "99")
-		d, err = ucum.NewDecimal("-1e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-1")
-		d, err = ucum.NewDecimal("-1.0e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-10")
-		d, err = ucum.NewDecimal("-9.9e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-99")
-		d, err = ucum.NewDecimal("1.1e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1.1")
-		d, err = ucum.NewDecimal("-1.1e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-1.1")
-		d, err = ucum.NewDecimal("1.11e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "11.1")
-		d, err = ucum.NewDecimal("1.11e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1.11")
-		d, err = ucum.NewDecimal("1.111e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1.111")
-		d, err = ucum.NewDecimal("1e-1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.1")
-		d, err = ucum.NewDecimal("1.0e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1.0")
-		d, err = ucum.NewDecimal("1.00e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1.00")
-		d, err = ucum.NewDecimal("1.000000000000000000000000000000000000000e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1.000000000000000000000000000000000000000")
-		d, err = ucum.NewDecimal("-1.11e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-11.1")
-		d, err = ucum.NewDecimal("-1.11e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-1.11")
-		d, err = ucum.NewDecimal("-1.111e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-1.111")
-		d, err = ucum.NewDecimal("-1e-1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-0.1")
-		d, err = ucum.NewDecimal("-1.0e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-1.0")
-		d, err = ucum.NewDecimal("-1.00e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-1.00")
-		d, err = ucum.NewDecimal("-1.000000000000000000000000000000000000000e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-1.000000000000000000000000000000000000000")
-		d, err = ucum.NewDecimal("0.0e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.0")
-		d, err = ucum.NewDecimal("0.0000e0")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.0000")
-		d, err = ucum.NewDecimal("1.00e-1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.100")
-		d, err = ucum.NewDecimal("1.00e2")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "100")
-		d, err = ucum.NewDecimal("1e-2")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.01")
-		d, err = ucum.NewDecimal("1e-3")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.001")
-		d, err = ucum.NewDecimal("1e-4")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.0001")
-		d, err = ucum.NewDecimal("-1e-2")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "-0.01")
-		d, err = ucum.NewDecimal("1.001e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "10.01")
-		d, err = ucum.NewDecimal("1e-5")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.00001")
-		d, err = ucum.NewDecimal("1e-6")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal,  "0.000001")
-		d, err = ucum.NewDecimal("1e-7")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.0000001")
-		d, err = ucum.NewDecimal("1e-9")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.000000001")
-		d, err = ucum.NewDecimal("1e-11")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.00000000001")
-		d, err = ucum.NewDecimal("1e-13")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.0000000000001")
-		d, err = ucum.NewDecimal("1e-15")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal,  "0.000000000000001")
-		d, err = ucum.NewDecimal("1e-17")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "0.00000000000000001")
-		d, err = ucum.NewDecimal("1.01e1")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal,  "10.1")
-		d, err = ucum.NewDecimal("1.001e2")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal,  "100.1")
-		d, err = ucum.NewDecimal("1.0001e3")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1000.1")
-		d, err = ucum.NewDecimal("1.00001e4")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "10000.1")
-		d, err = ucum.NewDecimal("1.000001e5")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "100000.1")
-		d, err = ucum.NewDecimal("1.0000001e6")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1000000.1")
-		d, err = ucum.NewDecimal("1.00000001e7")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal,  "10000000.1")
-		d, err = ucum.NewDecimal("1.000000001e8")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "100000000.1")
-		d, err = ucum.NewDecimal("1.0000000001e9")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1000000000.1")
-		d, err = ucum.NewDecimal("1.00000000001e10")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "10000000000.1")
-		d, err = ucum.NewDecimal("1.000000000001e11")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "100000000000.1")
-		d, err = ucum.NewDecimal("1.0000000000001e12")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "1000000000000.1")
-		d, err = ucum.NewDecimal("1.00000000000001e13")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal, "10000000000000.1")
-		d, err = ucum.NewDecimal("1.000000000000001e14")
-		convey.So(err, should.BeNil)
-		s = d.AsDecimal()
-		convey.So(s, should.Equal,  "100000000000000.1")
-	})
+func TestScientificAsDecimal(t *testing.T) {
+	var ScientificDecimalMap = map[string]string{
+		"1e0":"1",
+		"0e0":"0",
+		"1.0e1":"10",
+		"9.9e1":"99",
+		"-1e0":"-1",
+		"-1.0e1":"-10",
+		"-9.9e1":"-99",
+		"1.1e0":"1.1",
+		"-1.1e0":"-1.1",
+		"1.11e1":"11.1",
+		"1.11e0":"1.11",
+		"1.111e0":"1.111",
+		"1e-1":"0.1",
+		"1.0e0":"1.0",
+		"1.00e0":"1.00",
+		"1.000000000000000000000000000000000000000e0":"1.000000000000000000000000000000000000000",
+		"-1.11e1":"-11.1",
+		"-1.11e0":"-1.11",
+		"-1.111e0":"-1.111",
+		"-1e-1":"-0.1",
+		"-1.0e0":"-1.0",
+		"-1.00e0":"-1.00",
+		"-1.000000000000000000000000000000000000000e0":"-1.000000000000000000000000000000000000000",
+		"0.0e0":"0.0",
+		"0.0000e0":"0.0000",
+		"1.00e-1":"0.100",
+		"1.00e2":"100",
+		"1e-2":"0.01",
+		"1e-3":"0.001",
+		"1e-4":"0.0001",
+		"-1e-2":"-0.01",
+		"1.001e1":"10.01",
+		"1e-5":"0.00001",
+		"1e-6": "0.000001",
+		"1e-7":"0.0000001",
+		"1e-9":"0.000000001",
+		"1e-11":"0.00000000001",
+		"1e-13":"0.0000000000001",
+		"1e-15": "0.000000000000001",
+		"1e-17":"0.00000000000000001",
+		"1.01e1": "10.1",
+		"1.001e2": "100.1",
+		"1.0001e3":"1000.1",
+		"1.00001e4":"10000.1",
+		"1.000001e5":"100000.1",
+		"1.0000001e6":"1000000.1",
+		"1.00000001e7": "10000000.1",
+		"1.000000001e8":"100000000.1",
+		"1.0000000001e9":"1000000000.1",
+		"1.00000000001e10":"10000000000.1",
+		"1.000000000001e11":"100000000000.1",
+		"1.0000000000001e12":"1000000000000.1",
+		"1.00000000000001e13":"10000000000000.1",
+		"1.000000000000001e14": "100000000000000.1",
+	}
+
+		convey.Convey("TestDecimalToString", t, func() {
+			for k, v := range ScientificDecimalMap {
+				d, err := ucum.NewDecimal(k)
+				convey.So(err, should.BeNil)
+				s := d.AsDecimal()
+				convey.So(s, should.Equal, v)
+			}
+		})
 }
 
 func TestDecimalToString(t *testing.T) {
+	var DecimalToStringMap = map[string]string{
+		"1": "1",
+		"0": "0",
+		"-0": "0",
+		"10": "10",
+		"99": "99",
+		"-1": "-1",
+		"-10": "-10",
+		"-99": "-99",
+		"1.1": "1.1",
+		"-1.1": "-1.1",
+		"11.1": "11.1",
+		"1.11": "1.11",
+		"1.111": "1.111",
+		"0.1": "0.1",
+		"00.1": "0.1",
+		".1": "0.1",
+		"1.0": "1.0",
+		"1.00": "1.00",
+		"1.000000000000000000000000000000000000000": "1.000000000000000000000000000000000000000",
+		"-11.1": "-11.1",
+		"-1.11": "-1.11",
+		"-1.111": "-1.111",
+		"-0.1": "-0.1",
+		"-00.1": "-0.1",
+		"-.1": "-0.1",
+		"-1.0": "-1.0",
+		"-1.00": "-1.00",
+		"-1.000000000000000000000000000000000000000": "-1.000000000000000000000000000000000000000",
+		"0.0": "0.0",
+		"0.0000": "0.0000",
+		"0.100": "0.100",
+		"100": "100",
+		"0.01": "0.01",
+		"0.001": "0.001",
+		"0.0001": "0.0001",
+		"00.0001": "0.0001",
+		"000.0001": "0.0001",
+		"-0.01": "-0.01",
+		"10.01": "10.01",
+		"0.00001": "0.00001",
+		"0.000001": "0.000001",
+		"0.0000001": "0.0000001",
+		"0.000000001": "0.000000001",
+		"0.00000000001": "0.00000000001",
+		"0.0000000000001": "0.0000000000001",
+		"0.000000000000001": "0.000000000000001",
+		"0.00000000000000001": "0.00000000000000001",
+		"10.1": "10.1",
+		"100.1": "100.1",
+		"1000.1": "1000.1",
+		"10000.1": "10000.1",
+		"100000.1": "100000.1",
+		"1000000.1": "1000000.1",
+		"10000000.1": "10000000.1",
+		"100000000.1": "100000000.1",
+		"1000000000.1": "1000000000.1",
+		"10000000000.1": "10000000000.1",
+		"100000000000.1": "100000000000.1",
+		"1000000000000.1": "1000000000000.1",
+		"10000000000000.1": "10000000000000.1",
+		"100000000000000.1": "100000000000000.1",
+	}
 	convey.Convey("TestDecimalToString", t, func() {
 		d, err := ucum.NewDecimal(strconv.Itoa(ucum.MIN_INT))
 		convey.So(err, should.BeNil)
@@ -546,249 +240,97 @@ func TestDecimalToString(t *testing.T) {
 		convey.So(err, should.BeNil)
 		s = d.String()
 		convey.So(s, should.Equal, strconv.Itoa(ucum.MAX_INT))
-		d, err = ucum.NewDecimal("1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1")
-		d, err = ucum.NewDecimal("0")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0")
-		d, err = ucum.NewDecimal("-0")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0")
-		d, err = ucum.NewDecimal("10")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "10")
-		d, err = ucum.NewDecimal("99")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "99")
-		d, err = ucum.NewDecimal("-1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-1")
-		d, err = ucum.NewDecimal("-10")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-10")
-		d, err = ucum.NewDecimal("-99")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-99")
-		d, err = ucum.NewDecimal("1.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1.1")
-		d, err = ucum.NewDecimal("-1.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-1.1")
-		d, err = ucum.NewDecimal("11.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "11.1")
-		d, err = ucum.NewDecimal("1.11")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1.11")
-		d, err = ucum.NewDecimal("1.111")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1.111")
-		d, err = ucum.NewDecimal("0.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.1")
-		d, err = ucum.NewDecimal("00.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.1")
-		d, err = ucum.NewDecimal(".1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.1")
-		d, err = ucum.NewDecimal("1.0")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1.0")
-		d, err = ucum.NewDecimal("1.00")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1.00")
-		d, err = ucum.NewDecimal("1.000000000000000000000000000000000000000")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1.000000000000000000000000000000000000000")
-		d, err = ucum.NewDecimal("-11.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-11.1")
-		d, err = ucum.NewDecimal("-1.11")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-1.11")
-		d, err = ucum.NewDecimal("-1.111")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-1.111")
-		d, err = ucum.NewDecimal("-0.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-0.1")
-		d, err = ucum.NewDecimal("-00.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-0.1")
-		d, err = ucum.NewDecimal("-.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-0.1")
-		d, err = ucum.NewDecimal("-1.0")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-1.0")
-		d, err = ucum.NewDecimal("-1.00")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-1.00")
-		d, err = ucum.NewDecimal("-1.000000000000000000000000000000000000000")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-1.000000000000000000000000000000000000000")
-		d, err = ucum.NewDecimal("0.0")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.0")
-		d, err = ucum.NewDecimal("0.0000")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.0000")
-		d, err = ucum.NewDecimal("0.100")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.100")
-		d, err = ucum.NewDecimal("100")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "100")
-		d, err = ucum.NewDecimal("0.01")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.01")
-		d, err = ucum.NewDecimal("0.001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.001")
-		d, err = ucum.NewDecimal("0.0001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.0001")
-		d, err = ucum.NewDecimal("00.0001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.0001")
-		d, err = ucum.NewDecimal("000.0001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.0001")
-		d, err = ucum.NewDecimal("-0.01")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "-0.01")
-		d, err = ucum.NewDecimal("10.01")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "10.01")
-		d, err = ucum.NewDecimal("0.00001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.00001")
-		d, err = ucum.NewDecimal("0.000001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.000001")
-		d, err = ucum.NewDecimal("0.0000001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.0000001")
-		d, err = ucum.NewDecimal("0.000000001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.000000001")
-		d, err = ucum.NewDecimal("0.00000000001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.00000000001")
-		d, err = ucum.NewDecimal("0.0000000000001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.0000000000001")
-		d, err = ucum.NewDecimal("0.000000000000001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.000000000000001")
-		d, err = ucum.NewDecimal("0.00000000000000001")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "0.00000000000000001")
-		d, err = ucum.NewDecimal("10.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "10.1")
-		d, err = ucum.NewDecimal("100.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "100.1")
-		d, err = ucum.NewDecimal("1000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1000.1")
-		d, err = ucum.NewDecimal("10000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "10000.1")
-		d, err = ucum.NewDecimal("100000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "100000.1")
-		d, err = ucum.NewDecimal("1000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1000000.1")
-		d, err = ucum.NewDecimal("10000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "10000000.1")
-		d, err = ucum.NewDecimal("100000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "100000000.1")
-		d, err = ucum.NewDecimal("1000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1000000000.1")
-		d, err = ucum.NewDecimal("10000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "10000000000.1")
-		d, err = ucum.NewDecimal("100000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "100000000000.1")
-		d, err = ucum.NewDecimal("1000000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "1000000000000.1")
-		d, err = ucum.NewDecimal("10000000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "10000000000000.1")
-		d, err = ucum.NewDecimal("100000000000000.1")
-		convey.So(err, should.BeNil)
-		s = d.String()
-		convey.So(s, should.Equal, "100000000000000.1")
+		for k, v := range DecimalToStringMap {
+			d, err = ucum.NewDecimal(k)
+			convey.So(err, should.BeNil)
+			s = d.String()
+			convey.So(s, should.Equal, v)
+		}
+	})
+}
+
+func TestTruncate(t *testing.T) {
+	var TruncateMap = map[string]string{
+		"1": "1",
+		"1.01": "1",
+		"-1.01": "-1",
+		"0.01": "0",
+		"-0.01": "0",
+		"0.1": "0",
+		"0.0001": "0",
+		"100.000000000000000000000000000000000000000001": "100",
+	}
+	convey.Convey("TestTruncate", t, func() {
+		for k, v := range TruncateMap {
+			d, err := ucum.NewDecimal(k)
+			convey.So(err, should.BeNil)
+			s := d.Trunc().String()
+			convey.So(s, should.Equal, v)
+		}
+	})
+}
+
+func TestCompare(t *testing.T){
+	type compare struct{
+		compare1, compare2 string
+		outcome int
+	}
+	var list = []compare{
+		{"1", "1",0},
+		{"0", "0",0},
+		{"0", "1",-1},
+		{"1", "0",1},
+		{"10","10",0},
+		{"100","100",0},
+		{"0.1","0.1",0},
+		{"0.01","0.01",0},
+		{"0.01","0.0100",0},
+		{"1","1.00000000",0},
+		{"1.111111","1.111111",0},
+		{"1.111111","1.1111111",-1},
+		{"1.1111111","1.111111",1},
+	}
+	convey.Convey("TestCompare", t, func() {
+		for _,s := range list {
+			d1,_ := ucum.NewDecimal(s.compare1)
+			d2,_ := ucum.NewDecimal(s.compare2)
+			convey.So(d1.ComparesTo(d2),should.Equal,s.outcome)
+		}
+	})
+}
+
+func TestAddition(t *testing.T){
+	type add struct{
+		s1, s2, result string
+	}
+	var list = []add{
+		{"1", "1", "2"},
+		{"0", "1", "1"},
+		{"0", "0", "0"},
+		{"5", "5", "10"},
+		{"10", "1", "11"},
+		{"11", "12", "23"},
+		{"15", "16", "31"},
+		{"150", "160", "310"},
+		{"153", "168", "321"},
+		{"15300000000000000000000000000000000001", "1680", "15300000000000000000000000000000001681"},
+		{"1", ".1", "1.1"},
+		{"1", ".001", "1.001"},
+		{".1", ".1", "0.2"},
+		{".1", ".01", "0.11"},
+		{"5", "6", "11"},
+		{"5", "-6", "-1"},
+		{"-5", "6", "1"},
+		{"-5", "-6", "-11"},
+		{"2", "0.001", "2.001"},
+		{"2.0", "0.001", "2.001"},
+	}
+	convey.Convey("TestAddition", t, func() {
+		for _,s := range list {
+			d1,_ := ucum.NewDecimal(s.s1)
+			d2,_ := ucum.NewDecimal(s.s2)
+			result := d1.Add(d2).String()
+			convey.So(result ,should.Equal, s.result)
+		}
 	})
 }

@@ -1,3 +1,48 @@
+/*******************************************************************************
+ * Crown Copyright (c) 2006 - 2014, Copyright (c) 2006 - 2014 Kestral Computing & Health Intersections P/L.
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *    Kestral Computing P/L - initial implementation (pascal)
+ *    Health Intersections P/L - port to Java
+ *******************************************************************************/
+
+/**
+    Precision aware Decimal implementation. Any size number with any number of significant digits is supported.
+
+    Note that operations are precision aware operations. Note that whole numbers are assumed to have
+    unlimited precision. For example:
+      2 x 2 = 4
+      2.0 x 2.0 = 4.0
+      2.00 x 2.0 = 4.0
+    and
+     10 / 3 = 3.33333333333333333333333333333333333333333333333
+     10.0 / 3 = 3.33
+     10.00 / 3 = 3.333
+     10.00 / 3.0 = 3.3
+     10 / 3.0 = 3.3
+
+    Addition
+      2 + 0.001 = 2.001
+      2.0 + 0.001 = 2.0
+
+    Note that the string representation is precision limited, but the internal representation
+    is not.
+
+
+  * This class is defined to work around the limitations of Java Big Decimal
+ *
+ * @author Grahame
+ *
+ */
+
+ /**
+ Decimal implementation for Golang for use in UCUM Service
+  */
+
 package ucum
 
 import (
@@ -73,7 +118,7 @@ func (d *Decimal)setValueDecimal(value string)error{
 	for i,c := range value{
 		if c == '.' && dec == -1 {
 			dec = i
-		}else if !unicode.IsDigit(c){
+		}else if c < '0' || c > '9' {
 			return fmt.Errorf("'"+value+"'  is not a valid decimal")
 
 		}
@@ -523,7 +568,7 @@ func (d *Decimal)stringSubtraction(s1, s2 string)string{
 	}
 	c := int32(0)
 	for i := len(s1) - 1; i>=0; i-- {
-		t := c + dig(rune(s1[i])) + dig(rune(s2[i]))
+		t := c + dig(rune(s1[i])) - dig(rune(s2[i]))
 		if t < 0 {
 			t = t + 10
 			if i==0{
@@ -531,8 +576,8 @@ func (d *Decimal)stringSubtraction(s1, s2 string)string{
 			}else{
 				s1 = d.replaceChar( s1, i-1, cdig(dig(rune(s1[i-1])) - 1))
 			}
-			result[i] = cdig(t)
 		}
+		result[i] = cdig(t)
 	}
 	if c!=0 {
 		panic("c should be 0")
