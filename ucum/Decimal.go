@@ -294,14 +294,7 @@ func (d *Decimal)ComparesTo(other *Decimal)int{
 	}else if !d.Negative && other.Negative {
 		return 1
 	}else {
-		max := MaxInt(d.Decimal, other.Decimal)
-		s1 := d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
-		s2 := d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
-		if len(s1) < len(s2) {
-			s1 = s1 + d.stringMultiply( '0', len(s2) - len(s1))
-		}else if len(s2) < len(s1){
-			s2 = s2 + d.stringMultiply('0', len(s1)-len(s2))
-		}
+		s1, s2, _ := d.makeEqualLength(other)
 		result := strings.Compare(s1, s2)
 		if d.Negative {
 			result = -result
@@ -419,7 +412,7 @@ func (d *Decimal)Subtract(other *Decimal)*Decimal{
 		return nil
 	}
 	result := d
-	if d.Negative == !other.Negative {
+	if d.Negative && !other.Negative {
 		result = d.doAdd(other)
 		result.Negative = true
 	} else if !d.Negative && other.Negative {
@@ -434,16 +427,20 @@ func (d *Decimal)Subtract(other *Decimal)*Decimal{
 	return result
 }
 
-func (d *Decimal)doAdd(other *Decimal)*Decimal{
-	max := MaxInt(d.Decimal, other.Decimal)
-	s1 := d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
-	s2 := d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
+func (d *Decimal)makeEqualLength(other *Decimal)(s1, s2 string, max int){
+	max = MaxInt(d.Decimal, other.Decimal)
+	s1 = d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
+	s2 = d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
 	if len(s1) < len(s2) {
 		s1 = s1 + d.stringMultiply( '0', len(s2) - len(s1))
 	}else if len(s2) < len(s1){
 		s2 = s2 + d.stringMultiply('0', len(s1)-len(s2))
 	}
+	return
+}
 
+func (d *Decimal)doAdd(other *Decimal)*Decimal{
+	s1, s2, max := d.makeEqualLength(other)
 	s3 := d.stringAddition(s1, s2)
 
 	if s3[0] == '1' {
@@ -484,15 +481,7 @@ func cdig(i int32)rune{
 }
 
 func (d *Decimal)doSubtract(other *Decimal)*Decimal{
-	max := MaxInt(d.Decimal, other.Decimal)
-	s1 := d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
-	s2 := d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
-	if len(s1) < len(s2) {
-		s1 = s1 + d.stringMultiply( '0', len(s2) - len(s1))
-	}else if len(s2) < len(s1){
-		s2 = s2 + d.stringMultiply('0', len(s1)-len(s2))
-	}
-
+	s1, s2, max := d.makeEqualLength(other)
 	s3 := ""
 
 	neg := strings.Compare(s1, s2)<0
@@ -562,7 +551,7 @@ func (d *Decimal)stringSubtraction(s1, s2 string)string{
 	if len(s1)!=len(s2){
 		panic("string length assertion failed")
 	}
-	result := make([]int32,len(s2))
+	result := make([]rune,len(s2))
 	for i := 0; i < len(s2);i++ {
 		result[i]= '0'
 	}
@@ -605,14 +594,7 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 	if d.IsZero()||other.IsZero() {
 		return Zero()
 	}
-	maxi := MaxInt(d.Decimal, other.Decimal)
-	s1 := d.stringMultiply('0', maxi - d.Decimal + 1) + d.Digits
-	s2 := d.stringMultiply('0', maxi - other.Decimal + 1) + other.Digits
-	if len(s1) < len(s2) {
-		s1 = s1 + d.stringMultiply( '0', len(s2) - len(s1))
-	}else if len(s2) < len(s1){
-		s2 = s2 + d.stringMultiply('0', len(s1)-len(s2))
-	}
+	s1, s2, max := d.makeEqualLength(other)
 	s3 := ""
 	if  strings.Compare(s2, s1)>0 {
 		s3 = s2
@@ -625,7 +607,7 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 		s[i] = d.stringMultiply('0', len(s2) - (i+1))
 		c := int32(0)
 		for j := len(s1) - 1; j >= 0; j-- {
-			tr = c + dig(rune(s1[j])) + dig(rune(s2[j]))
+			tr = c + dig(rune(s1[j])) * dig(rune(s2[i]))
 			s[i] = d.insert(string(cdig( tr % 10)), s[i], 0)
 			c = tr / 10
 		}
@@ -643,7 +625,7 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 		t = MaxInt(t, len(sv))
 	}
 	for i := 0; i < len(s); i++ {
-		s[i] = d.stringMultiply('0', t-len(s1)) + s[i]
+		s[i] = d.stringMultiply('0', t-len(s[i])) + s[i]
 	}
 	res := ""
 	c := int32(0)
@@ -658,13 +640,14 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 		panic("internal logic error")
 	}
 
-	dec := len(res) - ((len(s1)-(maxi+1))*2)
+	dec := len(res) - ((len(s1)-(max+1))*2)
 
 	for {
-		if res != "" && res != "0" && res[0] == '0' {
-			res = res[1:]
-			dec--
+		if !(res != "" && res != "0" && res[0] == '0') {
+			break
 		}
+		res = res[1:]
+		dec--
 	}
 
 	prec := 0
@@ -677,15 +660,16 @@ func (d *Decimal)Multiply(other *Decimal)*Decimal{
 	}else {
 		prec = MinInt(d.Precision, other.Precision)
 	}
-	res = d.delete(res, len(res)-1, 1)
 
 	for {
-		if !(len(res)>prec && res[len(res)]=='0') {
+		if !(len(res)>prec && res[len(res)-1]=='0') {
 			break
 		}
+		res = d.delete(res, len(res)-1, 1)
 	}
 
 	result := &Decimal{}
+	result.setValueDecimal(res)
 	result.Precision = prec
 	result.Decimal = dec
 	result.Negative = d.Negative != other.Negative
@@ -717,7 +701,7 @@ func (d *Decimal)Divide(other *Decimal)*Decimal {
 	di := (len(d.Digits) - d.Decimal + 1) - (len(other.Digits) - other.Decimal + 1)
 
 	for {
-		if len(v) >= len(tens[0]) {
+		if !(len(v) < len(tens[0])) {
 			break
 		}
 		v = v + "0"
@@ -735,7 +719,7 @@ func (d *Decimal)Divide(other *Decimal)*Decimal {
 		vi = len(w)
 	} else {
 		w = "0" + v[0:len(other.Digits)]
-		vi = len(w) + 1
+		vi = len(w) - 1
 	}
 
 	handled := false
@@ -773,7 +757,7 @@ func (d *Decimal)Divide(other *Decimal)*Decimal {
 			}
 		}
 		if !proc {
-			if w[0]=='0' {
+			if w[0]!='0' {
 				panic("w should not start with 0")
 			}
 			w = d.delete(w, 0, 1)
@@ -822,7 +806,7 @@ func (d *Decimal)Divide(other *Decimal)*Decimal {
 				break
 			}
 			up := strings.HasSuffix(r, "5")
-			r = d.delete(r, len(r), 1)
+			r = d.delete(r, len(r)-1, 1)
 			if up {
 				i := len(r) - 1
 				for{
@@ -860,14 +844,17 @@ func (d *Decimal)trimLeadingZeros(s string)string{
 	if s == ""{
 		return ""
 	}
+	i := 0
 	for{
-		if strings.HasPrefix(s, "0"){
-			s = s[1:]
-		}else{
+		if !(i < len(s) && s[i] == '0') {
 			break
 		}
+		i++
 	}
-	return s
+	if i == len(s) {
+		return "0"
+	}
+	return s[i:]
 }
 
 func (d *Decimal)DivInt(other *Decimal)*Decimal{
