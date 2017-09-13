@@ -161,7 +161,6 @@ func NewUcumVersionDetails(releaseDate time.Time, version string)*UcumVersionDet
 }
 //UcumEssenceService=======================================================
 const UCUM_OID = "2.16.840.1.113883.6.8"
-var xmlFileName = "../terminology_data/ucum-essence.xml"
 
 type UcumEssenceService struct{
 	Model *UcumModel
@@ -170,7 +169,7 @@ type UcumEssenceService struct{
 
 var instanceOfOpenEhrTerminologyService *UcumEssenceService
 
-func GetInstanceOfOpenEhrTerminologyService()(*UcumEssenceService, error){
+func GetInstanceOfOpenEhrTerminologyService(xmlFileName string)(*UcumEssenceService, error){
 	if instanceOfOpenEhrTerminologyService==nil{
 		instanceOfOpenEhrTerminologyService = new(UcumEssenceService)
 		xmlFile, err := os.Open(xmlFileName)
