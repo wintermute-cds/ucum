@@ -47,7 +47,8 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		names := make([]string,1)
 		name := xmlItem.Name
 		names = append(names, name)
-		value, err := NewDecimalAndPrecision(xmlItem.Value, 24)
+		//value, err := NewDecimalAndPrecision(xmlItem.Value, 24)
+		value, err := NewDecimal(xmlItem.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -84,7 +85,8 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		value.Unit = xmlItem2.Unit
 		value.UnitUC = xmlItem2.UnitUC
 		if strings.Contains(xmlItem2.Value, "."){
-			value.Value, err = NewDecimalAndPrecision(xmlItem2.Value, 24)
+			//value.Value, err = NewDecimalAndPrecision(xmlItem2.Value, 24)
+			value.Value, err = NewDecimal(xmlItem2.Value)
 		}else{
 			value.Value, err = NewDecimal(xmlItem2.Value)
 		}

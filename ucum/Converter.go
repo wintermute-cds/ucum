@@ -22,7 +22,8 @@ func (c *Converter)Convert(term *Term)(*Canonical, error){
 }
 
 func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
-	result,_ := NewCanonical(One())
+	d,_ := NewDecimal("1")
+	result,_ := NewCanonical(d)
 	div := false
 	t := term
 	for{
@@ -90,7 +91,8 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 }
 
 func (c *Converter)normaliseSymbol(indent string, sym Symbol)(*Canonical, error) {
-	result,_ :=  NewCanonical(One())
+	d,_ := NewDecimal("1")
+	result,_ :=  NewCanonical(d)
 	if _,instanceof := sym.Unit.(*BaseUnit); instanceof {
 		cf,_ := NewCanonicalUnit(sym.Unit.(*BaseUnit), sym.Exponent)
 		result.Units = append(result.Units, cf)

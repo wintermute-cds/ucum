@@ -1,889 +1,1017 @@
-/*******************************************************************************
- * Crown Copyright (c) 2006 - 2014, Copyright (c) 2006 - 2014 Kestral Computing & Health Intersections P/L.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- *
- * Contributors:
- *    Kestral Computing P/L - initial implementation (pascal)
- *    Health Intersections P/L - port to Java
- *******************************************************************************/
-
-/**
-    Precision aware Decimal implementation. Any size number with any number of significant digits is supported.
-
-    Note that operations are precision aware operations. Note that whole numbers are assumed to have
-    unlimited precision. For example:
-      2 x 2 = 4
-      2.0 x 2.0 = 4.0
-      2.00 x 2.0 = 4.0
-    and
-     10 / 3 = 3.33333333333333333333333333333333333333333333333
-     10.0 / 3 = 3.33
-     10.00 / 3 = 3.333
-     10.00 / 3.0 = 3.3
-     10 / 3.0 = 3.3
-
-    Addition
-      2 + 0.001 = 2.001
-      2.0 + 0.001 = 2.0
-
-    Note that the string representation is precision limited, but the internal representation
-    is not.
-
-
-  * This class is defined to work around the limitations of Java Big Decimal
- *
- * @author Grahame
- *
- */
-
- /**
- Decimal implementation for Golang for use in UCUM Service
-  */
-
 package ucum
 
+
 import (
-	"strings"
-	"unicode"
-	"fmt"
-	"strconv"
+"database/sql/driver"
+"encoding/binary"
+"fmt"
+"math"
+"math/big"
+"strconv"
+"strings"
 )
 
-const MAX_INT = 1<<31 - 1
-const MIN_INT = -1 << 31
+// DivisionPrecision is the number of decimal places in the result when it
+// doesn't divide exactly.
+//
+// Example:
+//
+//     d1 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(3)
+//     d1.String() // output: "0.6666666666666667"
+//     d2 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(30000)
+//     d2.String() // output: "0.0000666666666667"
+//     d3 := decimal.NewFromFloat(20000).Div(decimal.NewFromFloat(3)
+//     d3.String() // output: "6666.6666666666666667"
+//     decimal.DivisionPrecision = 3
+//     d4 := decimal.NewFromFloat(2).Div(decimal.NewFromFloat(3)
+//     d4.String() // output: "0.667"
+//
+var DivisionPrecision = 16
 
+// MarshalJSONWithoutQuotes should be set to true if you want the decimal to
+// be JSON marshaled as a number, instead of as a string.
+// WARNING: this is dangerous for decimals with many digits, since many JSON
+// unmarshallers (ex: Javascript's) will unmarshal JSON numbers to IEEE 754
+// double-precision floating point numbers, which means you can potentially
+// silently lose precision.
+var MarshalJSONWithoutQuotes = false
 
+// Zero constant, to make computations faster.
+var Zero = New(0, 1)
+
+var zeroInt = big.NewInt(0)
+var oneInt = big.NewInt(1)
+var fiveInt = big.NewInt(5)
+var tenInt = big.NewInt(10)
+
+// Decimal represents a fixed-point decimal. It is immutable.
+// number = value * 10 ^ exp
 type Decimal struct {
-	Decimal int
-	Digits string
-	Negative bool
-	Precision int
-	Scientific bool
+	value *big.Int
+
+	// NOTE(vadim): this must be an int32, because we cast it to float64 during
+	// calculations. If exp is 64 bit, we might lose precision.
+	// If we cared about being able to represent every possible decimal, we
+	// could make exp a *big.Int but it would hurt performance and numbers
+	// like that are unrealistic.
+	exp int32
+	precision int
 }
 
-func NewDecimal(value string)(*Decimal, error){
-	var err error
-	d := &Decimal{}
-	value = strings.ToLower(value)
-	if strings.Contains(value, "e"){
-		err = d.setValueScientific(value)
-	}else{
-		err = d.setValueDecimal(value)
-	}
-	return d, err
+func (d Decimal)GetValue() *big.Int{
+	return d.value
 }
 
-func NewDecimalInt(value int)(*Decimal, error){
-	var err error
-	d := &Decimal{}
-	err = d.setValueDecimal(strconv.Itoa(value))
-	return d, err
-}
-/**
-	 * There are a few circumstances where a simple value is known to be correct to a high
-	 * precision. For instance, the unit prefix milli is not ~0.001, it is precisely 0.001
-	 * to whatever precision you want to specify. This constructor allows you to specify
-	 * an alternative precision than the one implied by the stated string
- */
-func NewDecimalAndPrecision(value string, precision int)(*Decimal, error){
-	var err error
-	d := &Decimal{}
-	value = strings.ToLower(value)
-	if strings.Contains(value, "e"){
-		err = d.setValueScientific(value)
-	}else{
-		err = d.setValueDecimal(value)
-	}
-	d.Precision = precision
-	return d, err
+func (d Decimal)GetExp() int32{
+	return d.exp
 }
 
-func (d *Decimal)setValueDecimal(value string)error{
-	var err error
-	d.Scientific = false
-	dec := -1
-	d.Negative = strings.Index(value, "-") == 0
-	if d.Negative {
-		value = value[1:]
+// New returns a new fixed-point decimal, value * 10 ^ exp.
+func New(value int64, exp int32) Decimal {
+	return Decimal{
+		value: big.NewInt(value),
+		exp:   exp,
 	}
-	for {
-		if !(strings.Index(value, "0") == 0 && len(value) > 1) {
-			break
-		}
-		value = value[1:]
-	}
-	for i,c := range value{
-		if c == '.' && dec == -1 {
-			dec = i
-		}else if c < '0' || c > '9' {
-			return fmt.Errorf("'"+value+"'  is not a valid decimal")
+}
 
-		}
+// NewFromBigInt returns a new Decimal from a big.Int, value * 10 ^ exp
+func NewFromBigInt(value *big.Int, exp int32) Decimal {
+	return Decimal{
+		value: big.NewInt(0).Set(value),
+		exp:   exp,
 	}
-	if dec == -1 {
-		d.Precision = len(value)
-		d.Decimal = len(value)
-		d.Digits = value
-	}else if dec == len(value) - 1 {
-		return fmt.Errorf("'"+value+"'  is not a valid decimal")
-	}else {
-		d.Decimal = dec
-		if d.allZeros(value, 1){
-			d.Precision = len(value) - 1
-		} else {
-			d.Precision, err = d.countSignificants(value)
-			if err!=nil {
-				return err
+}
+
+// NewFromString returns a new Decimal from a string representation.
+//
+// Example:
+//
+//     d, err := NewFromString("-123.45")
+//     d2, err := NewFromString(".0001")
+//
+func NewDecimal(value string) (Decimal, error) {
+	return NewFromString(value)
+}
+
+func NewFromString(value string) (Decimal, error) {
+	originalInput := value
+	var intString string
+	var exp int64
+	var dPrecision int
+
+	// Check if number is using scientific notation
+	eIndex := strings.IndexAny(value, "Ee")
+	if eIndex != -1 {
+		expInt, err := strconv.ParseInt(value[eIndex+1:], 10, 32)
+		if err != nil {
+			if e, ok := err.(*strconv.NumError); ok && e.Err == strconv.ErrRange {
+				return Decimal{}, fmt.Errorf("can't convert %s to decimal: fractional part too long", value)
 			}
+			return Decimal{}, fmt.Errorf("can't convert %s to decimal: exponent is not numeric", value)
 		}
-		d.Digits = d.delete(value, d.Decimal, 1)
-		if d.allZeros(d.Digits, 0){
-			d.Precision++
-		}else {
-			tmp := d.Digits
-			for _,c := range tmp{
-				if c != '0' {
-					break
-				}
-				d.Digits = d.Digits[1:]
-				d.Decimal--
-			}
-		}
+		value = value[:eIndex]
+		exp = expInt
 	}
-	return nil
-}
 
-func (d *Decimal)allZeros(s string, start int)bool{
-	for i,c := range s {
-		if i >= start {
-			if c != '0' {
-				return false
-			}
-		}
-	}
-	return true
-}
-
-func (d *Decimal)countSignificants(value string)(int, error){
-	i := strings.Index(value, ".")
-	if i > -1 {
-		value = d.delete(value, i, 1)
-	}
-	tmp := value
-	for _,c := range tmp{
-		if c != '0' {
-			break
-		}
-		value = value[1:]
-	}
-	return len(value), nil
-}
-
-func (d *Decimal)delete(value string, offset, length int)(string){
-	if length + offset > len(value) {
-		return value
-	}
-	if offset > len(value) {
-		return value
-	}
-	if offset == 0 {
-		return value[length:]
-	}else{
-		return value[0:offset]+value[offset+length:]
-	}
-}
-
-func (d *Decimal)setValueScientific(value string)error {
-	var err error
-	i := strings.Index(value, "e")
-	s := value[0:i]
-	e := value[i+1:]
-	if s == "" || s == "-" || !IsDecimal(s){
-		return fmt.Errorf("'"+value+"' is not a valid decimal (numeric)")
-	}
-	if e == "" || e == "-" || !IsInteger(e){
-		return fmt.Errorf("'"+value+"' is not a valid decimal (exponent)")
-	}
-	d.setValueDecimal(s)
-	d.Scientific = true
-	//exponent
-	if e[0] == '-' {
-		i = 1
+	parts := strings.Split(value, ".")
+	if len(parts) == 1 {
+		// There is no decimal point, we can just parse the original string as
+		// an int
+		intString = value
+	} else if len(parts) == 2 {
+		// strip the insignificant digits for more accurate comparisons.
+		decimalPart := strings.TrimRight(parts[1], "0")
+		intString = parts[0] + decimalPart
+		expInt := -len(decimalPart)
+		exp += int64(expInt)
+		dPrecision = len(decimalPart)
 	} else {
-		i = 0
+		return Decimal{}, fmt.Errorf("can't convert %s to decimal: too many .s", value)
 	}
-	for j,c := range e {
-		if j >= i {
-			if !unicode.IsDigit(c){
-				return fmt.Errorf("'"+value+"' is not a valid decimal")
-			}
-		}
+
+	dValue := new(big.Int)
+	_, ok := dValue.SetString(intString, 10)
+	if !ok {
+		return Decimal{}, fmt.Errorf("can't convert %s to decimal", value)
 	}
-	i,err = strconv.Atoi(e)
-	if err !=nil{
-		return err
+
+	if exp < math.MinInt32 || exp > math.MaxInt32 {
+		// NOTE(vadim): I doubt a string could realistically be this long
+		return Decimal{}, fmt.Errorf("can't convert %s to decimal: fractional part too long", originalInput)
 	}
-	d.Decimal = d.Decimal + i
-	return nil
+
+	return Decimal{
+		value: dValue,
+		exp:   int32(exp),
+		precision:dPrecision,
+	}, nil
 }
 
-func (d *Decimal)stringMultiply(c rune, i int)string{
-	return PadLeft("", c, i)
+func (d Decimal)AsScientific()(string){
+	f, _ := d.Float64()
+	s := fmt.Sprintf("%e", f)
+	return s
+}
+func (d Decimal)AsDecimal()(string){
+	return d.String()
 }
 
-func (d *Decimal)insert(ins, value string, offset int)(string){
-	if offset > len(value) {
-		panic("Offset cannot be greater then the length of the value string")
+
+// NewFromFloat converts a float64 to Decimal.
+//
+// Example:
+//
+//     NewFromFloat(123.45678901234567).String() // output: "123.4567890123456"
+//     NewFromFloat(.00000000000000001).String() // output: "0.00000000000000001"
+//
+// NOTE: this will panic on NaN, +/-inf
+func NewFromFloat(value float64) Decimal {
+	floor := math.Floor(value)
+
+	// fast path, where float is an int
+	if floor == value && value <= math.MaxInt64 && value >= math.MinInt64 {
+		return New(int64(value), 0)
 	}
-	if offset == 0 {
-		return ins + value
-	}else{
-		return value[0:offset] + ins + value[offset:]
+
+	// slow path: float is a decimal
+	// HACK(vadim): do this the slow hacky way for now because the logic to
+	// convert a base-2 float to base-10 properly is not trivial
+	str := strconv.FormatFloat(value, 'f', -1, 64)
+	dec, err := NewFromString(str)
+	if err != nil {
+		panic(err)
+	}
+	return dec
+}
+
+// NewFromFloatWithExponent converts a float64 to Decimal, with an arbitrary
+// number of fractional digits.
+//
+// Example:
+//
+//     NewFromFloatWithExponent(123.456, -2).String() // output: "123.46"
+//
+func NewFromFloatWithExponent(value float64, exp int32) Decimal {
+	mul := math.Pow(10, -float64(exp))
+	floatValue := value * mul
+	if math.IsNaN(floatValue) || math.IsInf(floatValue, 0) {
+		panic(fmt.Sprintf("Cannot create a Decimal from %v", floatValue))
+	}
+	dValue := big.NewInt(round(floatValue))
+
+	return Decimal{
+		value: dValue,
+		exp:   exp,
 	}
 }
 
-func (d *Decimal)String()string{
-	return d.AsDecimal()
+// rescale returns a rescaled version of the decimal. Returned
+// decimal may be less precise if the given exponent is bigger
+// than the initial exponent of the Decimal.
+// NOTE: this will truncate, NOT round
+//
+// Example:
+//
+// 	d := New(12345, -4)
+//	d2 := d.rescale(-1)
+//	d3 := d2.rescale(-4)
+//	println(d1)
+//	println(d2)
+//	println(d3)
+//
+// Output:
+//
+//	1.2345
+//	1.2
+//	1.2000
+//
+func (d Decimal) Rescale(exp int32) Decimal {
+	d.ensureInitialized()
+	// NOTE(vadim): must convert exps to float64 before - to prevent overflow
+	diff := math.Abs(float64(exp) - float64(d.exp))
+	value := new(big.Int).Set(d.value)
+
+	expScale := new(big.Int).Exp(tenInt, big.NewInt(int64(diff)), nil)
+	if exp > d.exp {
+		value = value.Quo(value, expScale)
+	} else if exp < d.exp {
+		value = value.Mul(value, expScale)
+	}
+
+	return Decimal{
+		value: value,
+		exp:   exp,
+	}
 }
 
-func (d *Decimal)copy()*Decimal{
-	r := &Decimal{}
-	r.Precision = d.Precision
-	r. Scientific = d.Scientific
-	r.Negative = d.Negative
-	r.Digits = d.Digits
-	r.Decimal = d.Decimal
-	return r
+// Abs returns the absolute value of the decimal.
+func (d Decimal) Abs() Decimal {
+	d.ensureInitialized()
+	d2Value := new(big.Int).Abs(d.value)
+	return Decimal{
+		value: d2Value,
+		exp:   d.exp,
+	}
 }
 
-func Zero()(*Decimal){
-	d := &Decimal{}
-	d.setValueDecimal(strconv.Itoa(0))
-	return d
+// Add returns d + d2.
+func (d Decimal) Add(d2 Decimal) Decimal {
+	baseScale := min(d.exp, d2.exp)
+	rd := d.Rescale(baseScale)
+	rd2 := d2.Rescale(baseScale)
+
+	d3Value := new(big.Int).Add(rd.value, rd2.value)
+	return Decimal{
+		value: d3Value,
+		exp:   baseScale,
+	}
 }
 
-func One()(*Decimal){
-	d := &Decimal{}
-	d.setValueDecimal(strconv.Itoa(1))
-	return d
+// Sub returns d - d2.
+func (d Decimal) Subtract(d2 Decimal) Decimal {
+	return d.Sub(d2)
 }
 
-func (d *Decimal)IsZero()bool{
-	return d.allZeros(d.Digits,0)
+func (d Decimal) Sub(d2 Decimal) Decimal {
+	baseScale := min(d.exp, d2.exp)
+	rd := d.Rescale(baseScale)
+	rd2 := d2.Rescale(baseScale)
+
+	d3Value := new(big.Int).Sub(rd.value, rd2.value)
+	return Decimal{
+		value: d3Value,
+		exp:   baseScale,
+	}
 }
 
-func (d *Decimal)IsOne()bool{
-	one := One()
-	return d.ComparesTo(one) == 0
+// Neg returns -d.
+func (d Decimal) Neg() Decimal {
+	val := new(big.Int).Neg(d.value)
+	return Decimal{
+		value: val,
+		exp:   d.exp,
+	}
 }
 
-func (d *Decimal)Equals(other *Decimal)bool{
-	return d.ComparesTo(other) == 0
+// Mul returns d * d2.
+func (d Decimal) Multiply(d2 Decimal) Decimal {
+	dr := d.Mul(d2)
+	return dr
 }
 
-func (d *Decimal)ComparesTo(other *Decimal)int{
-	if other == nil {
+func (d Decimal) Mul(d2 Decimal) Decimal {
+	d.ensureInitialized()
+	d2.ensureInitialized()
+
+	expInt64 := int64(d.exp) + int64(d2.exp)
+	if expInt64 > math.MaxInt32 || expInt64 < math.MinInt32 {
+		// NOTE(vadim): better to panic than give incorrect results, as
+		// Decimals are usually used for money
+		panic(fmt.Sprintf("exponent %v overflows an int32!", expInt64))
+	}
+
+	d3Value := new(big.Int).Mul(d.value, d2.value)
+	return Decimal{
+		value: d3Value,
+		exp:   int32(expInt64),
+	}
+}
+
+// Div returns d / d2. If it doesn't divide exactly, the result will have
+// DivisionPrecision digits after the decimal point.
+func (d Decimal) DivInt(d2 Decimal) Decimal {
+	return d.Div(d2).Trunc()
+}
+func (d Decimal) Divide(d2 Decimal) Decimal {
+	return d.Div(d2)
+}
+
+func (d Decimal) Div(d2 Decimal) Decimal {
+	return d.DivRound(d2, int32(DivisionPrecision))
+}
+
+// QuoRem does divsion with remainder
+// d.QuoRem(d2,precision) returns quotient q and remainder r such that
+//   d = d2 * q + r, q an integer multiple of 10^(-precision)
+//   0 <= r < abs(d2) * 10 ^(-precision) if d>=0
+//   0 >= r > -abs(d2) * 10 ^(-precision) if d<0
+// Note that precision<0 is allowed as input.
+func (d Decimal) QuoRem(d2 Decimal, precision int32) (Decimal, Decimal) {
+	d.ensureInitialized()
+	d2.ensureInitialized()
+	if d2.value.Sign() == 0 {
+		panic("decimal division by 0")
+	}
+	scale := -precision
+	e := int64(d.exp - d2.exp - scale)
+	if e > math.MaxInt32 || e < math.MinInt32 {
+		panic("overflow in decimal QuoRem")
+	}
+	var aa, bb, expo big.Int
+	var scalerest int32
+	// d = a 10^ea
+	// d2 = b 10^eb
+	if e < 0 {
+		aa = *d.value
+		expo.SetInt64(-e)
+		bb.Exp(tenInt, &expo, nil)
+		bb.Mul(d2.value, &bb)
+		scalerest = d.exp
+		// now aa = a
+		//     bb = b 10^(scale + eb - ea)
+	} else {
+		expo.SetInt64(e)
+		aa.Exp(tenInt, &expo, nil)
+		aa.Mul(d.value, &aa)
+		bb = *d2.value
+		scalerest = scale + d2.exp
+		// now aa = a ^ (ea - eb - scale)
+		//     bb = b
+	}
+	var q, r big.Int
+	q.QuoRem(&aa, &bb, &r)
+	dq := Decimal{value: &q, exp: scale}
+	dr := Decimal{value: &r, exp: scalerest}
+	return dq, dr
+}
+
+// DivRound divides and rounds to a given precision
+// i.e. to an integer multiple of 10^(-precision)
+//   for a positive quotient digit 5 is rounded up, away from 0
+//   if the quotient is negative then digit 5 is rounded down, away from 0
+// Note that precision<0 is allowed as input.
+func (d Decimal) DivRound(d2 Decimal, precision int32) Decimal {
+	// QuoRem already checks initialization
+	q, r := d.QuoRem(d2, precision)
+	// the actual rounding decision is based on comparing r*10^precision and d2/2
+	// instead compare 2 r 10 ^precision and d2
+	var rv2 big.Int
+	rv2.Abs(r.value)
+	rv2.Lsh(&rv2, 1)
+	// now rv2 = abs(r.value) * 2
+	r2 := Decimal{value: &rv2, exp: r.exp + precision}
+	// r2 is now 2 * r * 10 ^ precision
+	var c = r2.Cmp(d2.Abs())
+
+	if c < 0 {
+		return q
+	}
+
+	if d.value.Sign()*d2.value.Sign() < 0 {
+		return q.Sub(New(1, -precision))
+	}
+
+	return q.Add(New(1, -precision))
+}
+
+// Mod returns d % d2.
+func (d Decimal) Modulo(d2 Decimal) Decimal {
+	return d.Mod(d2)
+}
+func (d Decimal) Mod(d2 Decimal) Decimal {
+	quo := d.Div(d2).Truncate(0)
+	return d.Sub(d2.Mul(quo))
+}
+
+// Pow returns d to the power d2
+func (d Decimal) Pow(d2 Decimal) Decimal {
+	var temp Decimal
+	if d2.IntPart() == 0 {
+		return NewFromFloat(1)
+	}
+	temp = d.Pow(d2.Div(NewFromFloat(2)))
+	if d2.IntPart()%2 == 0 {
+		return temp.Mul(temp)
+	}
+	if d2.IntPart() > 0 {
+		return temp.Mul(temp).Mul(d)
+	}
+	return temp.Mul(temp).Div(d)
+}
+
+// Cmp compares the numbers represented by d and d2 and returns:
+//
+//     -1 if d <  d2
+//      0 if d == d2
+//     +1 if d >  d2
+//
+func (d Decimal) ComparesTo(d2 Decimal) int {
+	return d.Cmp(d2)
+}
+func (d Decimal) Cmp(d2 Decimal) int {
+	d.ensureInitialized()
+	d2.ensureInitialized()
+
+	if d.exp == d2.exp {
+		return d.value.Cmp(d2.value)
+	}
+
+	baseExp := min(d.exp, d2.exp)
+	rd := d.Rescale(baseExp)
+	rd2 := d2.Rescale(baseExp)
+
+	return rd.value.Cmp(rd2.value)
+}
+
+// Equal returns whether the numbers represented by d and d2 are equal.
+func (d Decimal) Equal(d2 Decimal) bool {
+	return d.Cmp(d2) == 0
+}
+
+// Equals is deprecated, please use Equal method instead
+func (d Decimal) Equals(d2 Decimal) bool {
+	return d.Equal(d2)
+}
+
+// GreaterThan (GT) returns true when d is greater than d2.
+func (d Decimal) GreaterThan(d2 Decimal) bool {
+	return d.Cmp(d2) == 1
+}
+
+// GreaterThanOrEqual (GTE) returns true when d is greater than or equal to d2.
+func (d Decimal) GreaterThanOrEqual(d2 Decimal) bool {
+	cmp := d.Cmp(d2)
+	return cmp == 1 || cmp == 0
+}
+
+// LessThan (LT) returns true when d is less than d2.
+func (d Decimal) LessThan(d2 Decimal) bool {
+	return d.Cmp(d2) == -1
+}
+
+// LessThanOrEqual (LTE) returns true when d is less than or equal to d2.
+func (d Decimal) LessThanOrEqual(d2 Decimal) bool {
+	cmp := d.Cmp(d2)
+	return cmp == -1 || cmp == 0
+}
+
+// Sign returns:
+//
+//	-1 if d <  0
+//	 0 if d == 0
+//	+1 if d >  0
+//
+func (d Decimal) Sign() int {
+	if d.value == nil {
 		return 0
 	}
-
-	if d.Negative && !other.Negative {
-		return -1
-	}else if !d.Negative && other.Negative {
-		return 1
-	}else {
-		s1, s2, _ := d.makeEqualLength(other)
-		result := strings.Compare(s1, s2)
-		if d.Negative {
-			result = -result
-		}
-		return result
-	}
+	return d.value.Sign()
 }
 
-func (d *Decimal) IsWholeNumber()(bool){
-	s := d.AsDecimal()
-	b := !strings.Contains(s, ".")
-	return b
+// Exponent returns the exponent, or scale component of the decimal.
+func (d Decimal) Exponent() int32 {
+	return d.exp
 }
 
-func (d *Decimal)AsDecimal()(string){
-	result := d.Digits
-	if d.Decimal != len(d.Digits){
-		if d.Decimal < 0 {
-			result = "0." + d.stringMultiply('0', 0 - d.Decimal) + d.Digits
-		}else if d.Decimal < len(result){
-			if d.Decimal == 0{
-				result = "0." + result
-			} else {
-				result = d.insert(".", result, d.Decimal)
-			}
-		}else{
-			result = result + d.stringMultiply('0', d.Decimal - len(result) )
-		}
-	}
-	if d.Negative && !d.allZeros(result, 0){
-		result = "-" + result
-	}
-	return result
+// Coefficient returns the coefficient of the decimal.  It is scaled by 10^Exponent()
+func (d Decimal) Coefficient() *big.Int {
+	// we copy the coefficient so that mutating the result does not mutate the
+	// Decimal.
+	return big.NewInt(0).Set(d.value)
 }
 
-func (d *Decimal)AsInteger()(int, error){
-	b := d.IsWholeNumber()
-	if !b {
-		return 0, fmt.Errorf("Unable to represent "+d.String()+" as an integer")
-	}
-	dec, err := NewDecimalInt(MIN_INT)
-	if err!=nil {
-		return 0, err
-	}
-	if d.ComparesTo(dec)<0 {
-		return 0, fmt.Errorf("Unable to represent "+dec.String()+" as a signed 8 byte integer")
-	}
-	dec, err = NewDecimalInt(MAX_INT)
-	if err!=nil {
-		return 0, err
-	}
-	if d.ComparesTo(dec)>0 {
-		return 0, fmt.Errorf("Unable to represent "+dec.String()+" as a signed 8 byte integer")
-	}
-	de := d.AsDecimal()
-	return strconv.Atoi(de)
+// IntPart returns the integer component of the decimal.
+func (d Decimal)AsInteger()(int64){
+	return d.IntPart()
+}
+func (d Decimal) IntPart() int64 {
+	scaledD := d.Rescale(0)
+	return scaledD.value.Int64()
 }
 
-func (d *Decimal)AsScientific()(string){
-	result := d.Digits
-	zero := d.allZeros(result, 0)
-	if zero {
-		if d.Precision < 2 {
-			result = "0e0"
+// Rat returns a rational number representation of the decimal.
+func (d Decimal) Rat() *big.Rat {
+	d.ensureInitialized()
+	if d.exp <= 0 {
+		// NOTE(vadim): must negate after casting to prevent int32 overflow
+		denom := new(big.Int).Exp(tenInt, big.NewInt(-int64(d.exp)), nil)
+		return new(big.Rat).SetFrac(d.value, denom)
+	}
+
+	mul := new(big.Int).Exp(tenInt, big.NewInt(int64(d.exp)), nil)
+	num := new(big.Int).Mul(d.value, mul)
+	return new(big.Rat).SetFrac(num, oneInt)
+}
+
+// Float64 returns the nearest float64 value for d and a bool indicating
+// whether f represents d exactly.
+// For more details, see the documentation for big.Rat.Float64
+func (d Decimal) Float64() (f float64, exact bool) {
+	return d.Rat().Float64()
+}
+
+// String returns the string representation of the decimal
+// with the fixed point.
+//
+// Example:
+//
+//     d := New(-12345, -3)
+//     println(d.String())
+//
+// Output:
+//
+//     -12.345
+//
+func (d Decimal) String() string {
+	return d.string(true)
+}
+
+// StringFixed returns a rounded fixed-point string with places digits after
+// the decimal point.
+//
+// Example:
+//
+// 	   NewFromFloat(0).StringFixed(2) // output: "0.00"
+// 	   NewFromFloat(0).StringFixed(0) // output: "0"
+// 	   NewFromFloat(5.45).StringFixed(0) // output: "5"
+// 	   NewFromFloat(5.45).StringFixed(1) // output: "5.5"
+// 	   NewFromFloat(5.45).StringFixed(2) // output: "5.45"
+// 	   NewFromFloat(5.45).StringFixed(3) // output: "5.450"
+// 	   NewFromFloat(545).StringFixed(-1) // output: "550"
+//
+func (d Decimal) StringFixed(places int32) string {
+	rounded := d.Round(places)
+	return rounded.string(false)
+}
+
+// StringFixedBank returns a banker rounded fixed-point string with places digits
+// after the decimal point.
+//
+// Example:
+//
+// 	   NewFromFloat(0).StringFixed(2) // output: "0.00"
+// 	   NewFromFloat(0).StringFixed(0) // output: "0"
+// 	   NewFromFloat(5.45).StringFixed(0) // output: "5"
+// 	   NewFromFloat(5.45).StringFixed(1) // output: "5.4"
+// 	   NewFromFloat(5.45).StringFixed(2) // output: "5.45"
+// 	   NewFromFloat(5.45).StringFixed(3) // output: "5.450"
+// 	   NewFromFloat(545).StringFixed(-1) // output: "550"
+//
+func (d Decimal) StringFixedBank(places int32) string {
+	rounded := d.RoundBank(places)
+	return rounded.string(false)
+}
+
+// Round rounds the decimal to places decimal places.
+// If places < 0, it will round the integer part to the nearest 10^(-places).
+//
+// Example:
+//
+// 	   NewFromFloat(5.45).Round(1).String() // output: "5.5"
+// 	   NewFromFloat(545).Round(-1).String() // output: "550"
+//
+func (d Decimal) Round(places int32) Decimal {
+	// truncate to places + 1
+	ret := d.Rescale(-places - 1)
+
+	// add sign(d) * 0.5
+	if ret.value.Sign() < 0 {
+		ret.value.Sub(ret.value, fiveInt)
+	} else {
+		ret.value.Add(ret.value, fiveInt)
+	}
+
+	// floor for positive numbers, ceil for negative numbers
+	_, m := ret.value.DivMod(ret.value, tenInt, new(big.Int))
+	ret.exp++
+	if ret.value.Sign() < 0 && m.Cmp(zeroInt) != 0 {
+		ret.value.Add(ret.value, oneInt)
+	}
+
+	return ret
+}
+
+// RoundBank rounds the decimal to places decimal places.
+// If the final digit to round is equidistant from the nearest two integers the
+// rounded value is taken as the even number
+//
+// If places < 0, it will round the integer part to the nearest 10^(-places).
+//
+// Examples:
+//
+// 	   NewFromFloat(5.45).Round(1).String() // output: "5.4"
+// 	   NewFromFloat(545).Round(-1).String() // output: "540"
+// 	   NewFromFloat(5.46).Round(1).String() // output: "5.5"
+// 	   NewFromFloat(546).Round(-1).String() // output: "550"
+// 	   NewFromFloat(5.55).Round(1).String() // output: "5.6"
+// 	   NewFromFloat(555).Round(-1).String() // output: "560"
+//
+func (d Decimal) RoundBank(places int32) Decimal {
+
+	round := d.Round(places)
+	remainder := d.Sub(round).Abs()
+
+	if remainder.value.Cmp(fiveInt) == 0 && round.value.Bit(0) != 0 {
+		if round.value.Sign() < 0 {
+			round.value.Add(round.value, oneInt)
 		} else {
-			result = "0." + d.stringMultiply('0', d.Precision-1) + "e0"
+			round.value.Sub(round.value, oneInt)
 		}
-	} else {
-		if len(d.Digits) > 1 {
-			result = d.insert( ".", result, 1)
-		}
-		result = result + "e" + strconv.Itoa( d.Decimal - 1)
 	}
-	if d.Negative && !zero {
-		result = "-" + result
-	}
-	return result
+
+	return round
 }
 
-func (d *Decimal)Trunc()*Decimal{
-	if d.Decimal < 0 {
-		return Zero()
+func (d Decimal) Trunc() Decimal {
+	if d.GreaterThan(Zero){
+		return d.Floor()
+	}else if d.LessThan(Zero){
+		return d.Ceil()
+	}else{
+		return Zero
 	}
+}
+// Floor returns the nearest integer value less than or equal to d.
+func (d Decimal) Floor() Decimal {
+	d.ensureInitialized()
 
-	result := d.copy()
-	if len(result.Digits) >= result.Decimal {
-		result.Digits = result.Digits[0:result.Decimal]
-	}
-	if result.Digits == "" {
-		result.Digits = "0"
-		result.Decimal = 1
-		result.Negative = false
-	}
-	return result
+	exp := big.NewInt(10)
+
+	// NOTE(vadim): must negate after casting to prevent int32 overflow
+	exp.Exp(exp, big.NewInt(-int64(d.exp)), nil)
+
+	z := new(big.Int).Div(d.value, exp)
+	return Decimal{value: z, exp: 0}
 }
 
-func (d *Decimal)Add(other *Decimal)*Decimal{
-	if other == nil {
+// Ceil returns the nearest integer value greater than or equal to d.
+func (d Decimal) Ceil() Decimal {
+	d.ensureInitialized()
+
+	exp := big.NewInt(10)
+
+	// NOTE(vadim): must negate after casting to prevent int32 overflow
+	exp.Exp(exp, big.NewInt(-int64(d.exp)), nil)
+
+	z, m := new(big.Int).DivMod(d.value, exp, new(big.Int))
+	if m.Cmp(zeroInt) != 0 {
+		z.Add(z, oneInt)
+	}
+	return Decimal{value: z, exp: 0}
+}
+
+// Truncate truncates off digits from the number, without rounding.
+//
+// NOTE: precision is the last digit that will not be truncated (must be >= 0).
+//
+// Example:
+//
+//     decimal.NewFromString("123.456").Truncate(2).String() // "123.45"
+//
+func (d Decimal) Truncate(precision int32) Decimal {
+	d.ensureInitialized()
+	if precision >= 0 && -precision > d.exp {
+		return d.Rescale(-precision)
+	}
+	return d
+}
+
+// UnmarshalJSON implements the json.Unmarshaler interface.
+func (d *Decimal) UnmarshalJSON(decimalBytes []byte) error {
+	if string(decimalBytes) == "null" {
 		return nil
 	}
-	result := d
-	if d.Negative == other.Negative {
-		result = d.doAdd(other)
-		result.Negative = d.Negative
-	}else if d.Negative {
-		result = other.doSubtract(d)
-	}else {
-		result = d.doSubtract(other)
+
+	str, err := unquoteIfQuoted(decimalBytes)
+	if err != nil {
+		return fmt.Errorf("Error decoding string '%s': %s", decimalBytes, err)
 	}
-	return result
+
+	decimal, err := NewFromString(str)
+	*d = decimal
+	if err != nil {
+		return fmt.Errorf("Error decoding string '%s': %s", str, err)
+	}
+	return nil
 }
 
-func (d *Decimal)Subtract(other *Decimal)*Decimal{
-	if other == nil {
-		return nil
-	}
-	result := d
-	if d.Negative && !other.Negative {
-		result = d.doAdd(other)
-		result.Negative = true
-	} else if !d.Negative && other.Negative {
-		result = d.doAdd(other)
-	} else if d.Negative && other.Negative {
-		result = d.doSubtract(other)
-		result.Negative = !result.Negative
+// MarshalJSON implements the json.Marshaler interface.
+func (d Decimal) MarshalJSON() ([]byte, error) {
+	var str string
+	if MarshalJSONWithoutQuotes {
+		str = d.String()
 	} else {
-		result = other.doSubtract(d)
-		result.Negative = !result.Negative
+		str = "\"" + d.String() + "\""
 	}
-	return result
+	return []byte(str), nil
 }
 
-func (d *Decimal)makeEqualLength(other *Decimal)(s1, s2 string, max int){
-	max = MaxInt(d.Decimal, other.Decimal)
-	s1 = d.stringMultiply('0', max - d.Decimal + 1) + d.Digits
-	s2 = d.stringMultiply('0', max - other.Decimal + 1) + other.Digits
-	if len(s1) < len(s2) {
-		s1 = s1 + d.stringMultiply( '0', len(s2) - len(s1))
-	}else if len(s2) < len(s1){
-		s2 = s2 + d.stringMultiply('0', len(s1)-len(s2))
+// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface. As a string representation
+// is already used when encoding to text, this method stores that string as []byte
+func (d *Decimal) UnmarshalBinary(data []byte) error {
+	// Extract the exponent
+	d.exp = int32(binary.BigEndian.Uint32(data[:4]))
+
+	// Extract the value
+	d.value = new(big.Int)
+	return d.value.GobDecode(data[4:])
+}
+
+// MarshalBinary implements the encoding.BinaryMarshaler interface.
+func (d Decimal) MarshalBinary() (data []byte, err error) {
+	// Write the exponent first since it's a fixed size
+	v1 := make([]byte, 4)
+	binary.BigEndian.PutUint32(v1, uint32(d.exp))
+
+	// Add the value
+	var v2 []byte
+	if v2, err = d.value.GobEncode(); err != nil {
+		return
 	}
+
+	// Return the byte array
+	data = append(v1, v2...)
 	return
 }
 
-func (d *Decimal)doAdd(other *Decimal)*Decimal{
-	s1, s2, max := d.makeEqualLength(other)
-	s3 := d.stringAddition(s1, s2)
+// Scan implements the sql.Scanner interface for database deserialization.
+func (d *Decimal) Scan(value interface{}) error {
+	// first try to see if the data is stored in database as a Numeric datatype
+	switch v := value.(type) {
 
-	if s3[0] == '1' {
-		max++
-	} else {
-		s3 = d.delete(s3, 0, 1)
-	}
-
-	if max != len(s3) {
-		if max < 0 {
-			panic("Unhandled")
-		}else if max < len(s3) {
-			s3 = d.insert(".", s3, max)
-		}else {
-			panic("Unhandled")
-		}
-	}
-	result := &Decimal{}
-	result.setValueDecimal(s3)
-	result.Scientific = d.Scientific || other.Scientific
-	// todo: the problem with this is you have to figure out the absolute precision and take the lower of the two, not the relative one
-	if d.Decimal < other.Decimal {
-		result.Precision = d.Precision
-	}else if other.Decimal < d.Decimal {
-		result.Precision = other.Precision
-	}else{
-		result.Precision = MinInt(d.Precision, other.Precision)
-	}
-	return result
-}
-
-func dig(c rune)int32{
-	return c - '0'
-}
-
-func cdig(i int32)rune{
-	return i + '0'
-}
-
-func (d *Decimal)doSubtract(other *Decimal)*Decimal{
-	s1, s2, max := d.makeEqualLength(other)
-	s3 := ""
-
-	neg := strings.Compare(s1, s2)<0
-	if neg {
-		s3 = s2
-		s2 = s1
-		s1 = s3
-	}
-
-	s3 = d.stringSubtraction(s1, s2)
-
-	if s3[0] == '1' {
-		max++
-	} else {
-		s3 = d.delete(s3, 0, 1)
-	}
-
-	if max != len(s3) {
-		if max < 0 {
-			panic("Unhandled")
-		}else if max < len(s3) {
-			s3 = d.insert(".", s3, max)
-		}else {
-			panic("Unhandled")
-		}
-	}
-	result := &Decimal{}
-	result.setValueDecimal(s3)
-	result.Negative = neg
-	result.Scientific = d.Scientific || other.Scientific
-	// todo: the problem with this is you have to figure out the absolute precision and take the lower of the two, not the relative one
-	if d.Decimal < other.Decimal {
-		result.Precision = d.Precision
-	}else if other.Decimal < d.Decimal {
-		result.Precision = other.Precision
-	}else{
-		result.Precision = MinInt(d.Precision, other.Precision)
-	}
-	return result
-}
-
-func (d *Decimal)stringAddition(s1, s2 string)string{
-	if len(s1)!=len(s2){
-		panic("string length assertion failed")
-	}
-	result := make([]int32,len(s2))
-	for i := 0; i < len(s2);i++ {
-		result[i]= '0'
-	}
-	c := int32(0)
-	for i := len(s1) - 1; i>=0; i-- {
-		t := c + dig(rune(s1[i])) + dig(rune(s2[i]))
-		result[i] = cdig(t % 10)
-		c = t / 10
-	}
-	if c!=0 {
-		panic("c should be 0")
-	}
-	s := ""
-	for i:=0; i<len(result);i++ {
-		s = s + string(result[i])
-	}
-	return s
-}
-
-func (d *Decimal)stringSubtraction(s1, s2 string)string{
-	if len(s1)!=len(s2){
-		panic("string length assertion failed")
-	}
-	result := make([]rune,len(s2))
-	for i := 0; i < len(s2);i++ {
-		result[i]= '0'
-	}
-	c := int32(0)
-	for i := len(s1) - 1; i>=0; i-- {
-		t := c + dig(rune(s1[i])) - dig(rune(s2[i]))
-		if t < 0 {
-			t = t + 10
-			if i==0{
-				panic("internal logic error")
-			}else{
-				s1 = d.replaceChar( s1, i-1, cdig(dig(rune(s1[i-1])) - 1))
-			}
-		}
-		result[i] = cdig(t)
-	}
-	if c!=0 {
-		panic("c should be 0")
-	}
-	s := ""
-	for i:=0; i<len(result);i++ {
-		s = s + string(result[i])
-	}
-	return s
-}
-
-func (d *Decimal)replaceChar(s string, offset int, c rune)string{
-	if offset == 0 {
-		s = string(c) + s[1:]
-	}else{
-		s = s[0:offset] + string(c) + s[offset+1:]
-	}
-	return s
-}
-
-func (d *Decimal)Multiply(other *Decimal)*Decimal{
-	if other == nil {
+	case float32:
+		*d = NewFromFloat(float64(v))
 		return nil
-	}
-	if d.IsZero()||other.IsZero() {
-		return Zero()
-	}
-	s1, s2, max := d.makeEqualLength(other)
-	s3 := ""
-	if  strings.Compare(s2, s1)>0 {
-		s3 = s2
-		s2 = s1
-		s1 = s3
-	}
-	s := make([]string,len(s2))
-	tr := int32(0)
-	for i := len(s2) - 1; i>=0;i-- {
-		s[i] = d.stringMultiply('0', len(s2) - (i+1))
-		c := int32(0)
-		for j := len(s1) - 1; j >= 0; j-- {
-			tr = c + dig(rune(s1[j])) * dig(rune(s2[i]))
-			s[i] = d.insert(string(cdig( tr % 10)), s[i], 0)
-			c = tr / 10
+
+	case float64:
+		// numeric in sqlite3 sends us float64
+		*d = NewFromFloat(v)
+		return nil
+
+	case int64:
+		// at least in sqlite3 when the value is 0 in db, the data is sent
+		// to us as an int64 instead of a float64 ...
+		*d = New(v, 0)
+		return nil
+
+	default:
+		// default is trying to interpret value stored as string
+		str, err := unquoteIfQuoted(v)
+		if err != nil {
+			return err
 		}
-		for {
-			if c <= 0 {
-				break
-			}
-			s[i] = d.insert(string(cdig( tr % 10)), s[i], 0)
-			c = tr / 10
-		}
+		*d, err = NewFromString(str)
+		return err
 	}
-
-	t := 0
-	for _,sv := range s {
-		t = MaxInt(t, len(sv))
-	}
-	for i := 0; i < len(s); i++ {
-		s[i] = d.stringMultiply('0', t-len(s[i])) + s[i]
-	}
-	res := ""
-	c := int32(0)
-	for i := t -1 ; i >=0; i-- {
-		for j := 0; j < len(s); j++ {
-			c = c + dig(rune(s[j][i]))
-		}
-		res = d.insert(string(cdig( c % 10)), res, 0)
-		c = c / 10
-	}
-	if c > 0 {
-		panic("internal logic error")
-	}
-
-	dec := len(res) - ((len(s1)-(max+1))*2)
-
-	for {
-		if !(res != "" && res != "0" && res[0] == '0') {
-			break
-		}
-		res = res[1:]
-		dec--
-	}
-
-	prec := 0
-	if d.IsWholeNumber() && other.IsWholeNumber() {
-		prec = MaxInt(MaxInt(len(d.Digits), len(other.Digits)), MinInt(d.Precision, other.Precision))
-	}else if d.IsWholeNumber(){
-		prec = other.Precision
-	}else if other.IsWholeNumber() {
-		prec = d.Precision
-	}else {
-		prec = MinInt(d.Precision, other.Precision)
-	}
-
-	for {
-		if !(len(res)>prec && res[len(res)-1]=='0') {
-			break
-		}
-		res = d.delete(res, len(res)-1, 1)
-	}
-
-	result := &Decimal{}
-	result.setValueDecimal(res)
-	result.Precision = prec
-	result.Decimal = dec
-	result.Negative = d.Negative != other.Negative
-	result.Scientific = d.Scientific || other.Scientific
-	return result
 }
 
-func (d *Decimal)Divide(other *Decimal)*Decimal {
-	if other == nil {
-		return nil
-	}
-	if d.IsZero() {
-		return Zero()
-	}
-	if other.IsZero() {
-		panic("Attempt to divide "+d.String()+" by zero")
+// Value implements the driver.Valuer interface for database serialization.
+func (d Decimal) Value() (driver.Value, error) {
+	return d.String(), nil
+}
+
+// UnmarshalText implements the encoding.TextUnmarshaler interface for XML
+// deserialization.
+func (d *Decimal) UnmarshalText(text []byte) error {
+	str := string(text)
+
+	dec, err := NewFromString(str)
+	*d = dec
+	if err != nil {
+		return fmt.Errorf("Error decoding string '%s': %s", str, err)
 	}
 
-	s := "0" + other.Digits
-	m := MaxInt(len(d.Digits),len(other.Digits)) + 40 //MaxInt loops we do
-	tens := make([]string, 10)
-	tens[0] = d.stringAddition(d.stringMultiply('0',len(s)), s)
-	for i := 1; i<10; i++ {
-		tens[i] = d.stringAddition(tens[i-1], s)
-	}
-	v := d.Digits
-	r := ""
-	l := 0
-	di := (len(d.Digits) - d.Decimal + 1) - (len(other.Digits) - other.Decimal + 1)
+	return nil
+}
 
-	for {
-		if !(len(v) < len(tens[0])) {
-			break
-		}
-		v = v + "0"
-		di++
+// MarshalText implements the encoding.TextMarshaler interface for XML
+// serialization.
+func (d Decimal) MarshalText() (text []byte, err error) {
+	return []byte(d.String()), nil
+}
+
+// GobEncode implements the gob.GobEncoder interface for gob serialization.
+func (d Decimal) GobEncode() ([]byte, error) {
+	return d.MarshalBinary()
+}
+
+// GobDecode implements the gob.GobDecoder interface for gob serialization.
+func (d *Decimal) GobDecode(data []byte) error {
+	return d.UnmarshalBinary(data)
+}
+
+// StringScaled first scales the decimal then calls .String() on it.
+// NOTE: buggy, unintuitive, and DEPRECATED! Use StringFixed instead.
+func (d Decimal) StringScaled(exp int32) string {
+	return d.Rescale(exp).String()
+}
+
+func (d Decimal) string(trimTrailingZeros bool) string {
+	if d.exp >= 0 {
+		return d.Rescale(0).value.String()
 	}
 
-	w := ""
-	vi := 0
-	if strings.Compare(v[0:len(other.Digits)], other.Digits) < 0 {
-		if len(v) == len(tens[0]) {
-			v = v + "0"
-			di++
-		}
-		w = v[0:len(other.Digits)+1]
-		vi = len(w)
+	abs := new(big.Int).Abs(d.value)
+	str := abs.String()
+
+	var intPart, fractionalPart string
+
+	// NOTE(vadim): this cast to int will cause bugs if d.exp == INT_MIN
+	// and you are on a 32-bit machine. Won't fix this super-edge case.
+	dExpInt := int(d.exp)
+	if len(str) > -dExpInt {
+		intPart = str[:len(str)+dExpInt]
+		fractionalPart = str[len(str)+dExpInt:]
 	} else {
-		w = "0" + v[0:len(other.Digits)]
-		vi = len(w) - 1
+		intPart = "0"
+
+		num0s := -dExpInt - len(str)
+		fractionalPart = strings.Repeat("0", num0s) + str
 	}
 
-	handled := false
-	proc := false
-
-	for {
-		if !(!(handled && ((l > m) || (( vi >= len(v)) && ((w == "" || d.allZeros(w, 0))))))) {
-			break
-		}
-		l++
-		handled = true
-		proc = false
-		for i := 8; i >= 0; i-- {
-			if strings.Compare(tens[i], w) <= 0 {
-				proc = true
-				r = r + string(cdig(int32(i+1)))
-				w = d.trimLeadingZeros(d.stringSubtraction(w, tens[i]))
-				if !(handled && ((l > m) || (( vi >= len(v)) && ((w == "" || d.allZeros(w, 0)))))) {
-					if vi < len(v) {
-						w = w + string(v[vi])
-						vi++
-						handled = false
-					} else {
-						w = w + "0"
-						di++
-					}
-					for {
-						if !(len(w) < len(tens[0])) {
-							break
-						}
-						w = "0" + w
-					}
-				}
+	if trimTrailingZeros {
+		i := len(fractionalPart) - 1
+		for ; i >= 0; i-- {
+			if fractionalPart[i] != '0' {
 				break
 			}
 		}
-		if !proc {
-			if w[0]!='0' {
-				panic("w should not start with 0")
-			}
-			w = d.delete(w, 0, 1)
-			r = r + "0"
-			if !(handled && ((l > m) || (( vi >= len(v)) && ((w == "" || d.allZeros(w, 0)))))) {
-				if vi < len(v) {
-					w = w + string(v[vi])
-					vi++
-					handled = false
-				} else {
-					w = w + "0"
-					di++
-				}
-				for {
-					if !(len(w) < len(tens[0])) {
-						break
-					}
-					w = "0" + w
-				}
-			}
-		}
+		fractionalPart = fractionalPart[:i+1]
 	}
 
-	prec := 0
-
-	if d.IsWholeNumber() && other.IsWholeNumber() && l < m {
-		for i := 0; i < di; i++ {
-			if strings.HasSuffix(r, "0"){
-				r = d.delete(r, len(r) - 1, 1)
-				di--
-			}
-		}
-		prec = 100
-	}else{
-		if d.IsWholeNumber() && other.IsWholeNumber() {
-			prec = MaxInt(len(d.Digits), len(other.Digits))
-		}else if d.IsWholeNumber(){
-			prec = MaxInt(other.Precision, len(r) - di)
-		}else if other.IsWholeNumber(){
-			prec = MaxInt(d.Precision, len(r) - di)
-		}else{
-			prec = MaxInt(MinInt(d.Precision, other.Precision), len(r) - di)
-		}
-		for{
-			if !(len(r) > prec){
-				break
-			}
-			up := strings.HasSuffix(r, "5")
-			r = d.delete(r, len(r)-1, 1)
-			if up {
-				i := len(r) - 1
-				for{
-					if !(up && i > 0){
-						break
-					}
-					up = r[i] == '9'
-					if up {
-						r = r[0:i] + "0" + r[i+1:]
-					} else {
-						r = r[0:i] + string(cdig(dig(rune(r[i]))+1)) + r[i+1:]
-					}
-					i--
-				}
-				if up {
-					r = "1" + r
-					di++
-				}else {
-					r = r
-				}
-			}
-			di--
-		}
+	number := intPart
+	if len(fractionalPart) > 0 {
+		number += "." + fractionalPart
 	}
-	result := &Decimal{}
-	result.setValueDecimal(r)
-	result.Decimal = len(r) - di
-	result.Negative = d.Negative != other.Negative
-	result.Precision = prec
-	result.Scientific = d.Scientific || other.Scientific
-	return result
+
+	if d.value.Sign() < 0 {
+		return "-" + number
+	}
+
+	return number
 }
 
-func (d *Decimal)trimLeadingZeros(s string)string{
-	if s == ""{
-		return ""
+func (d *Decimal) ensureInitialized() {
+	if d.value == nil {
+		d.value = new(big.Int)
 	}
-	i := 0
-	for{
-		if !(i < len(s) && s[i] == '0') {
-			break
-		}
-		i++
-	}
-	if i == len(s) {
-		return "0"
-	}
-	return s[i:]
 }
 
-func (d *Decimal)DivInt(other *Decimal)*Decimal{
-	if other == nil {
+// Min returns the smallest Decimal that was passed in the arguments.
+//
+// To call this function with an array, you must do:
+//
+//     Min(arr[0], arr[1:]...)
+//
+// This makes it harder to accidentally call Min with 0 arguments.
+func Min(first Decimal, rest ...Decimal) Decimal {
+	ans := first
+	for _, item := range rest {
+		if item.Cmp(ans) < 0 {
+			ans = item
+		}
+	}
+	return ans
+}
+
+// Max returns the largest Decimal that was passed in the arguments.
+//
+// To call this function with an array, you must do:
+//
+//     Max(arr[0], arr[1:]...)
+//
+// This makes it harder to accidentally call Max with 0 arguments.
+func Max(first Decimal, rest ...Decimal) Decimal {
+	ans := first
+	for _, item := range rest {
+		if item.Cmp(ans) > 0 {
+			ans = item
+		}
+	}
+	return ans
+}
+
+// Sum returns the combined total of the provided first and rest Decimals
+func Sum(first Decimal, rest ...Decimal) Decimal {
+	total := first
+	for _, item := range rest {
+		total = total.Add(item)
+	}
+
+	return total
+}
+
+// Avg returns the average value of the provided first and rest Decimals
+func Avg(first Decimal, rest ...Decimal) Decimal {
+	count := New(int64(len(rest)+1), 0)
+	sum := Sum(first, rest...)
+	return sum.Div(count)
+}
+
+func min(x, y int32) int32 {
+	if x >= y {
+		return y
+	}
+	return x
+}
+
+func round(n float64) int64 {
+	if n < 0 {
+		return int64(n - 0.5)
+	}
+	return int64(n + 0.5)
+}
+
+func unquoteIfQuoted(value interface{}) (string, error) {
+	var bytes []byte
+
+	switch v := value.(type) {
+	case string:
+		bytes = []byte(v)
+	case []byte:
+		bytes = v
+	default:
+		return "", fmt.Errorf("Could not convert value '%+v' to byte array of type '%T'",
+			value, value)
+	}
+
+	// If the amount is quoted, strip the quotes
+	if len(bytes) > 2 && bytes[0] == '"' && bytes[len(bytes)-1] == '"' {
+		bytes = bytes[1 : len(bytes)-1]
+	}
+	return string(bytes), nil
+}
+
+// NullDecimal represents a fixed-point decimal. It is immutable.
+// number = value * 10 ^ exp
+type NullDecimal struct {
+	Decimal Decimal
+	Valid   bool
+}
+
+// Scan implements the sql.Scanner interface for database deserialization.
+func (d *NullDecimal) Scan(value interface{}) error {
+	if value == nil {
+		d.Valid = false
 		return nil
 	}
-	t := d.Divide(other)
-	return t.Trunc()
+	d.Valid = true
+	return d.Decimal.Scan(value)
 }
 
-func (d *Decimal)Modulo(other *Decimal)*Decimal{
-	if other == nil {
-		return nil
+// Value implements the driver.Valuer interface for database serialization.
+func (d NullDecimal) Value() (driver.Value, error) {
+	if !d.Valid {
+		return nil, nil
 	}
-	t := d.DivInt(other)
-	t2 := t.Multiply(other)
-	return d.Subtract(t2)
+	return d.Decimal.Value()
 }
 
-func (d *Decimal)Equal(value, maxDifference *Decimal)bool{
-	diff := d.Subtract(value).absolute()
-	return diff.ComparesTo(maxDifference) <= 0
+// this is the old Div method from decimal
+// Div returns d / d2. If it doesn't divide exactly, the result will have
+// DivisionPrecision digits after the decimal point.
+func (d Decimal) DivOld(d2 Decimal, prec int) Decimal {
+	// NOTE(vadim): division is hard, use Rat to do it
+	ratNum := d.Rat()
+	ratDenom := d2.Rat()
+
+	quoRat := big.NewRat(0, 1).Quo(ratNum, ratDenom)
+
+	// HACK(vadim): converting from Rat to Decimal inefficiently for now
+	ret, err := NewFromString(quoRat.FloatString(prec))
+	if err != nil {
+		panic(err) // this should never happen
+	}
+	return ret
 }
-
-func (d *Decimal)absolute()*Decimal{
-	di := d.copy()
-	di.Negative = false
-	return di
-}
-
-
 

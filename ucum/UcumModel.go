@@ -244,7 +244,7 @@ func (d DefinedUnit)GetDescription()string {
 //Prefix=====================================================
 type Prefix struct{
 	Concept
-	Value *Decimal
+	Value Decimal
 }
 
 func NewPrefix(kind ConceptKind, code string, codeUC string)(*Prefix,error){
@@ -264,10 +264,10 @@ type Value struct{
 	Text string
 	Unit string
 	UnitUC string
-	Value *Decimal
+	Value Decimal
 }
 
-func NewValue(unit, unitUC string, value *Decimal)(*Value, error){
+func NewValue(unit, unitUC string, value Decimal)(*Value, error){
 	v := &Value{}
 	v.Unit = unit
 	v.UnitUC = unitUC
@@ -276,7 +276,7 @@ func NewValue(unit, unitUC string, value *Decimal)(*Value, error){
 }
 
 func (v Value)GetDescription()string {
-	if v.Value == nil {
+	if v.Value == Zero {
 		return v.Unit
 	}
 	return v.Value.String()
@@ -285,7 +285,7 @@ func (v Value)GetDescription()string {
 //Canonical=====================================================
 type Canonical struct {
 	Units []*CanonicalUnit
-	Value *Decimal
+	Value Decimal
 }
 
 func (c *Canonical)RemoveFromUnits(i int){
@@ -304,7 +304,7 @@ func (c *Canonical)SortUnits(){
 	sort.Sort(ByCode(c.Units))
 }
 
-func NewCanonical(value *Decimal)(*Canonical, error){
+func NewCanonical(value Decimal)(*Canonical, error){
 	v := &Canonical{
 		Value:value,
 		Units : make([]*CanonicalUnit, 0),
@@ -312,7 +312,7 @@ func NewCanonical(value *Decimal)(*Canonical, error){
 	return v, nil
 }
 
-func (c *Canonical)MultiplyValueDecimal(multiplicand *Decimal){
+func (c *Canonical)MultiplyValueDecimal(multiplicand Decimal){
 	c.Value = c.Value.Multiply(multiplicand)
 }
 
@@ -325,7 +325,7 @@ func (c *Canonical)MultiplyValueInt(multiplicand int)error{
 	return nil
 }
 
-func (c *Canonical)DivideValueDecimal(divisor *Decimal){
+func (c *Canonical)DivideValueDecimal(divisor Decimal){
 	c.Value = c.Value.Divide(divisor)
 }
 
@@ -426,11 +426,11 @@ func (t *Term)SetTermCheckOp(term *Term){
 
 //Pair=====================================================
 type Pair struct{
-	Value *Decimal
+	Value Decimal
 	Code string
 }
 
-func NewPair(value *Decimal, code string)*Pair{
+func NewPair(value Decimal, code string)*Pair{
 	p := &Pair{}
 	p.Value = value
 	p.Code = code

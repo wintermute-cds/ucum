@@ -11,7 +11,8 @@ func ( c * CelsiusHandler)GetUnits() string{
 	return "K"
 }
 
-func ( c * CelsiusHandler)GetValue() (*Decimal){
-	return One()
+func ( c * CelsiusHandler)GetValue() (Decimal){
+	d,_ := NewDecimal("1")
+	return d
 }
 
