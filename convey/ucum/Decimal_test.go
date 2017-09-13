@@ -913,7 +913,7 @@ func TestDecimal_Uninitialized(t *testing.T) {
 		a.Add(b),
 		a.Sub(b),
 		a.Mul(b),
-		a.Div(ucum.New(1, -1)),
+		a.Div(ucum.NewDecimalValueExp(1, -1)),
 		a.Round(2),
 		a.Floor(),
 		a.Ceil(),
@@ -1070,7 +1070,7 @@ func TestDecimal_Mul(t *testing.T) {
 	}
 
 	// positive scale
-	c := ucum.New(1234, 5).Mul(ucum.New(45, -1))
+	c := ucum.NewDecimalValueExp(1234, 5).Mul(ucum.NewDecimalValueExp(45, -1))
 	if c.String() != "555300000" {
 		t.Errorf("Expected %s, got %s", "555300000", c.String())
 	}
@@ -1139,8 +1139,8 @@ func TestDecimal_Div(t *testing.T) {
 			for j := -1; j <= 1; j += 2 {
 				n := inp.n * int64(i)
 				n2 := inp.n2 * int64(j)
-				num := ucum.New(n, inp.exp)
-				denom := ucum.New(n2, inp.exp2)
+				num := ucum.NewDecimalValueExp(n, inp.exp)
+				denom := ucum.NewDecimalValueExp(n2, inp.exp2)
 				expected := expectedAbs
 				if i != j {
 					expected = "-" + expectedAbs
@@ -1173,10 +1173,10 @@ func createDivTestCases() []DivTestCase {
 					for prec = -n; prec <= n; prec++ { // 2n+1
 						for _, v1 := range a { // 11
 							for _, v2 := range a { // 11, even if 0 is skipped
-								sign1 := ucum.New(int64(s), 0)
-								sign2 := ucum.New(int64(s2), 0)
-								d := sign1.Mul(ucum.New(int64(v1), int32(e1)))
-								d2 := sign2.Mul(ucum.New(int64(v2), int32(e2)))
+								sign1 := ucum.NewDecimalValueExp(int64(s), 0)
+								sign2 := ucum.NewDecimalValueExp(int64(s2), 0)
+								d := sign1.Mul(ucum.NewDecimalValueExp(int64(v1), int32(e1)))
+								d2 := sign2.Mul(ucum.NewDecimalValueExp(int64(v2), int32(e2)))
 								res = append(res, DivTestCase{d, d2, prec})
 							}
 						}
@@ -1264,11 +1264,11 @@ func TestDecimal_DivRound(t *testing.T) {
 		if sign(q)*sign(d)*sign(d2) < 0 {
 			t.Errorf("sign of quotient wrong, got: %v/%v is about %v", d, d2, q)
 		}
-		x := q.Mul(d2).Abs().Sub(d.Abs()).Mul(ucum.New(2, 0))
-		if x.Cmp(d2.Abs().Mul(ucum.New(1, -prec))) > 0 {
+		x := q.Mul(d2).Abs().Sub(d.Abs()).Mul(ucum.NewDecimalValueExp(2, 0))
+		if x.Cmp(d2.Abs().Mul(ucum.NewDecimalValueExp(1, -prec))) > 0 {
 			t.Errorf("wrong rounding, got: %v/%v prec=%d is about %v", d, d2, prec, q)
 		}
-		if x.Cmp(d2.Abs().Mul(ucum.New(-1, -prec))) <= 0 {
+		if x.Cmp(d2.Abs().Mul(ucum.NewDecimalValueExp(-1, -prec))) <= 0 {
 			t.Errorf("wrong rounding, got: %v/%v prec=%d is about %v", d, d2, prec, q)
 		}
 		if !q.Equal(result) {
@@ -1289,11 +1289,11 @@ func TestDecimal_DivRound2(t *testing.T) {
 		if sign(q)*sign(d)*sign(d2) < 0 {
 			t.Errorf("sign of quotient wrong, got: %v/%v is about %v", d, d2, q)
 		}
-		x := q.Mul(d2).Abs().Sub(d.Abs()).Mul(ucum.New(2, 0))
-		if x.Cmp(d2.Abs().Mul(ucum.New(1, -prec))) > 0 {
+		x := q.Mul(d2).Abs().Sub(d.Abs()).Mul(ucum.NewDecimalValueExp(2, 0))
+		if x.Cmp(d2.Abs().Mul(ucum.NewDecimalValueExp(1, -prec))) > 0 {
 			t.Errorf("wrong rounding, got: %v/%v prec=%d is about %v", d, d2, prec, q)
 		}
-		if x.Cmp(d2.Abs().Mul(ucum.New(-1, -prec))) <= 0 {
+		if x.Cmp(d2.Abs().Mul(ucum.NewDecimalValueExp(-1, -prec))) <= 0 {
 			t.Errorf("wrong rounding, got: %v/%v prec=%d is about %v", d, d2, prec, q)
 		}
 	}
@@ -1333,10 +1333,10 @@ func TestDecimal_Mod(t *testing.T) {
 }
 
 func TestDecimal_Overflow(t *testing.T) {
-	if !didPanic(func() { ucum.New(1, math.MinInt32).Mul(ucum.New(1, math.MinInt32)) }) {
+	if !didPanic(func() { ucum.NewDecimalValueExp(1, math.MinInt32).Mul(ucum.NewDecimalValueExp(1, math.MinInt32)) }) {
 		t.Fatalf("should have gotten an overflow panic")
 	}
-	if !didPanic(func() { ucum.New(1, math.MaxInt32).Mul(ucum.New(1, math.MaxInt32)) }) {
+	if !didPanic(func() { ucum.NewDecimalValueExp(1, math.MaxInt32).Mul(ucum.NewDecimalValueExp(1, math.MaxInt32)) }) {
 		t.Fatalf("should have gotten an overflow panic")
 	}
 }
@@ -1367,19 +1367,19 @@ func TestDecimal_ExtremeValues(t *testing.T) {
 	}
 
 	test(func() {
-		got := ucum.New(123, math.MinInt32).Floor()
+		got := ucum.NewDecimalValueExp(123, math.MinInt32).Floor()
 		if !got.Equal(ucum.NewFromFloat(0)) {
 			t.Errorf("Error: got %s, expected 0", got)
 		}
 	})
 	test(func() {
-		got := ucum.New(123, math.MinInt32).Ceil()
+		got := ucum.NewDecimalValueExp(123, math.MinInt32).Ceil()
 		if !got.Equal(ucum.NewFromFloat(1)) {
 			t.Errorf("Error: got %s, expected 1", got)
 		}
 	})
 	test(func() {
-		got := ucum.New(123, math.MinInt32).Rat().FloatString(10)
+		got := ucum.NewDecimalValueExp(123, math.MinInt32).Rat().FloatString(10)
 		expected := "0.0000000000"
 		if got != expected {
 			t.Errorf("Error: got %s, expected %s", got, expected)
@@ -1507,7 +1507,7 @@ func TestDecimal_Scan(t *testing.T) {
 	// at least SQLite returns an int64 when 0 is stored in the db
 	// and you specified a numeric format on the schema
 	dbvalueInt := int64(0)
-	expected = ucum.New(dbvalueInt, 0)
+	expected = ucum.NewDecimalValueExp(dbvalueInt, 0)
 
 	err = a.Scan(dbvalueInt)
 	if err != nil {
@@ -1574,7 +1574,7 @@ func TestDecimal_Value(t *testing.T) {
 	}
 
 	// check that normal case is handled appropriately
-	a := ucum.New(1234, -2)
+	a := ucum.NewDecimalValueExp(1234, -2)
 	expected := "12.34"
 	value, err := a.Value()
 	if err != nil {
@@ -1587,15 +1587,15 @@ func TestDecimal_Value(t *testing.T) {
 // old tests after this line
 
 func TestDecimal_Scale(t *testing.T) {
-	a := ucum.New(1234, -3)
+	a := ucum.NewDecimalValueExp(1234, -3)
 	if a.Exponent() != -3 {
 		t.Errorf("error")
 	}
 }
 
 func TestDecimal_Abs1(t *testing.T) {
-	a := ucum.New(-1234, -4)
-	b := ucum.New(1234, -4)
+	a := ucum.NewDecimalValueExp(-1234, -4)
+	b := ucum.NewDecimalValueExp(1234, -4)
 
 	c := a.Abs()
 	if c.Cmp(b) != 0 {
@@ -1604,8 +1604,8 @@ func TestDecimal_Abs1(t *testing.T) {
 }
 
 func TestDecimal_Abs2(t *testing.T) {
-	a := ucum.New(-1234, -4)
-	b := ucum.New(1234, -4)
+	a := ucum.NewDecimalValueExp(-1234, -4)
+	b := ucum.NewDecimalValueExp(1234, -4)
 
 	c := b.Abs()
 	if c.Cmp(a) == 0 {
@@ -1614,9 +1614,9 @@ func TestDecimal_Abs2(t *testing.T) {
 }
 
 func TestDecimal_Equalities(t *testing.T) {
-	a := ucum.New(1234, 3)
-	b := ucum.New(1234, 3)
-	c := ucum.New(1234, 4)
+	a := ucum.NewDecimalValueExp(1234, 3)
+	b := ucum.NewDecimalValueExp(1234, 3)
+	c := ucum.NewDecimalValueExp(1234, 4)
 
 	if !a.Equal(b) {
 		t.Errorf("%q should equal %q", a, b)
@@ -1663,16 +1663,16 @@ func TestDecimal_Equalities(t *testing.T) {
 }
 
 func TestDecimal_ScalesNotEqual(t *testing.T) {
-	a := ucum.New(1234, 2)
-	b := ucum.New(1234, 3)
+	a := ucum.NewDecimalValueExp(1234, 2)
+	b := ucum.NewDecimalValueExp(1234, 3)
 	if a.Equal(b) {
 		t.Errorf("%q should not equal %q", a, b)
 	}
 }
 
 func TestDecimal_Cmp1(t *testing.T) {
-	a := ucum.New(123, 3)
-	b := ucum.New(-1234, 2)
+	a := ucum.NewDecimalValueExp(123, 3)
+	b := ucum.NewDecimalValueExp(-1234, 2)
 
 	if a.Cmp(b) != 1 {
 		t.Errorf("Error")
@@ -1680,8 +1680,8 @@ func TestDecimal_Cmp1(t *testing.T) {
 }
 
 func TestDecimal_Cmp2(t *testing.T) {
-	a := ucum.New(123, 3)
-	b := ucum.New(1234, 2)
+	a := ucum.NewDecimalValueExp(123, 3)
+	b := ucum.NewDecimalValueExp(1234, 2)
 
 	if a.Cmp(b) != -1 {
 		t.Errorf("Error")
@@ -1689,8 +1689,8 @@ func TestDecimal_Cmp2(t *testing.T) {
 }
 
 func TestPow(t *testing.T) {
-	a := ucum.New(4, 0)
-	b := ucum.New(2, 0)
+	a := ucum.NewDecimalValueExp(4, 0)
+	b := ucum.NewDecimalValueExp(2, 0)
 	x := a.Pow(b)
 	if x.String() != "16" {
 		t.Errorf("Error, saw %s", x.String())
@@ -1698,8 +1698,8 @@ func TestPow(t *testing.T) {
 }
 
 func TestNegativePow(t *testing.T) {
-	a := ucum.New(4, 0)
-	b := ucum.New(-2, 0)
+	a := ucum.NewDecimalValueExp(4, 0)
+	b := ucum.NewDecimalValueExp(-2, 0)
 	x := a.Pow(b)
 	if x.String() != "0.0625" {
 		t.Errorf("Error, saw %s", x.String())
@@ -1711,12 +1711,12 @@ func TestDecimal_Sign(t *testing.T) {
 		t.Errorf("%q should have sign 0", ucum.Zero)
 	}
 
-	one := ucum.New(1, 0)
+	one := ucum.NewDecimalValueExp(1, 0)
 	if one.Sign() != 1 {
 		t.Errorf("%q should have sign 1", one)
 	}
 
-	mone := ucum.New(-1, 0)
+	mone := ucum.NewDecimalValueExp(-1, 0)
 	if mone.Sign() != -1 {
 		t.Errorf("%q should have sign -1", mone)
 	}
@@ -1742,7 +1742,7 @@ func didPanic(f func()) bool {
 }
 
 func TestDecimal_Coefficient(t *testing.T) {
-	d := ucum.New(123, 0)
+	d := ucum.NewDecimalValueExp(123, 0)
 	co := d.Coefficient()
 	if co.Int64() != 123 {
 		t.Error("Coefficient should be 123; Got:", co)
@@ -1761,7 +1761,7 @@ func (p DecimalSlice) Less(i, j int) bool { return p[i].Cmp(p[j]) < 0 }
 func Benchmark_Cmp(b *testing.B) {
 	decimals := DecimalSlice([]ucum.Decimal{})
 	for i := 0; i < 1000000; i++ {
-		decimals = append(decimals, ucum.New(int64(i), 0))
+		decimals = append(decimals, ucum.NewDecimalValueExp(int64(i), 0))
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -1812,7 +1812,7 @@ func TestNullDecimal_Scan(t *testing.T) {
 	// at least SQLite returns an int64 when 0 is stored in the db
 	// and you specified a numeric format on the schema
 	dbvalueInt := int64(0)
-	expected = ucum.New(dbvalueInt, 0)
+	expected = ucum.NewDecimalValueExp(dbvalueInt, 0)
 
 	err = a.Scan(dbvalueInt)
 	if err != nil {
@@ -1887,7 +1887,7 @@ func TestNullDecimal_Value(t *testing.T) {
 	}
 
 	// check that normal case is handled appropriately
-	a := ucum.NullDecimal{Decimal: ucum.New(1234, -2), Valid: true}
+	a := ucum.NullDecimal{Decimal: ucum.NewDecimalValueExp(1234, -2), Valid: true}
 	expected := "12.34"
 	value, err = a.Value()
 	if err != nil {
@@ -1980,13 +1980,13 @@ func TestSum(t *testing.T) {
 	var i = int64(0)
 
 	for key := range vals {
-		vals[key] = ucum.New(i, 0)
+		vals[key] = ucum.NewDecimalValueExp(i, 0)
 		i++
 	}
 
 	sum := ucum.Sum(vals[0], vals[1:]...)
-	if !sum.Equal(ucum.New(45, 0)) {
-		t.Errorf("Failed to calculate sum, expected %s got %s", ucum.New(45, 0), sum)
+	if !sum.Equal(ucum.NewDecimalValueExp(45, 0)) {
+		t.Errorf("Failed to calculate sum, expected %s got %s", ucum.NewDecimalValueExp(45, 0), sum)
 	}
 }
 
@@ -1995,7 +1995,7 @@ func TestAvg(t *testing.T) {
 	var i = int64(0)
 
 	for key := range vals {
-		vals[key] = ucum.New(i, 0)
+		vals[key] = ucum.NewDecimalValueExp(i, 0)
 		i++
 	}
 
@@ -2225,7 +2225,7 @@ func TestDecimal_rescale(t *testing.T) {
 	}
 
 	for input, s := range tests {
-		d := ucum.New(input.int, input.exp).Rescale(input.rescale)
+		d := ucum.NewDecimalValueExp(input.int, input.exp).Rescale(input.rescale)
 
 		if d.String() != s {
 			t.Errorf("expected %s, got %s (%s, %d)",
@@ -2234,7 +2234,7 @@ func TestDecimal_rescale(t *testing.T) {
 		}
 
 		// test StringScaled
-		s2 := ucum.New(input.int, input.exp).StringScaled(input.rescale)
+		s2 := ucum.NewDecimalValueExp(input.int, input.exp).StringScaled(input.rescale)
 		if s2 != s {
 			t.Errorf("expected %s, got %s", s, s2)
 		}
@@ -2284,7 +2284,7 @@ func TestDecimal_QuoRem(t *testing.T) {
 			t.Errorf("quotient wrong precision: d=%v, d2= %v, prec=%d, q=%v, r=%v",
 				d, d2, prec, q, r)
 		}
-		if r.Abs().Cmp(d2.Abs().Mul(ucum.New(1, -prec))) >= 0 {
+		if r.Abs().Cmp(d2.Abs().Mul(ucum.NewDecimalValueExp(1, -prec))) >= 0 {
 			t.Errorf("remainder too large: d=%v, d2= %v, prec=%d, q=%v, r=%v",
 				d, d2, prec, q, r)
 		}
@@ -2315,7 +2315,7 @@ func TestDecimal_QuoRem2(t *testing.T) {
 				d, d2, prec, q, r)
 		}
 		// rule 3: abs(r)<abs(d) * 10^(-prec)
-		if r.Abs().Cmp(d2.Abs().Mul(ucum.New(1, -prec))) >= 0 {
+		if r.Abs().Cmp(d2.Abs().Mul(ucum.NewDecimalValueExp(1, -prec))) >= 0 {
 			t.Errorf("remainder too large, d=%v, d2=%v, prec=%d, q=%v, r=%v",
 				d, d2, prec, q, r)
 		}

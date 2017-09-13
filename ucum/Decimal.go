@@ -37,7 +37,7 @@ var DivisionPrecision = 16
 var MarshalJSONWithoutQuotes = false
 
 // Zero constant, to make computations faster.
-var Zero = New(0, 1)
+var Zero = NewDecimalValueExp(0, 1)
 
 var zeroInt = big.NewInt(0)
 var oneInt = big.NewInt(1)
@@ -66,8 +66,8 @@ func (d Decimal)GetExp() int32{
 	return d.exp
 }
 
-// New returns a new fixed-point decimal, value * 10 ^ exp.
-func New(value int64, exp int32) Decimal {
+// NewDecimalValueExp returns a new fixed-point decimal, value * 10 ^ exp.
+func NewDecimalValueExp(value int64, exp int32) Decimal {
 	return Decimal{
 		value: big.NewInt(value),
 		exp:   exp,
@@ -170,7 +170,7 @@ func NewFromFloat(value float64) Decimal {
 
 	// fast path, where float is an int
 	if floor == value && value <= math.MaxInt64 && value >= math.MinInt64 {
-		return New(int64(value), 0)
+		return NewDecimalValueExp(int64(value), 0)
 	}
 
 	// slow path: float is a decimal
@@ -212,7 +212,7 @@ func NewFromFloatWithExponent(value float64, exp int32) Decimal {
 //
 // Example:
 //
-// 	d := New(12345, -4)
+// 	d := NewDecimalValueExp(12345, -4)
 //	d2 := d.rescale(-1)
 //	d3 := d2.rescale(-4)
 //	println(d1)
@@ -398,10 +398,10 @@ func (d Decimal) DivRound(d2 Decimal, precision int32) Decimal {
 	}
 
 	if d.value.Sign()*d2.value.Sign() < 0 {
-		return q.Sub(New(1, -precision))
+		return q.Sub(NewDecimalValueExp(1, -precision))
 	}
 
-	return q.Add(New(1, -precision))
+	return q.Add(NewDecimalValueExp(1, -precision))
 }
 
 // Mod returns d % d2.
@@ -545,7 +545,7 @@ func (d Decimal) Float64() (f float64, exact bool) {
 //
 // Example:
 //
-//     d := New(-12345, -3)
+//     d := NewDecimalValueExp(-12345, -3)
 //     println(d.String())
 //
 // Output:
@@ -781,7 +781,7 @@ func (d *Decimal) Scan(value interface{}) error {
 	case int64:
 		// at least in sqlite3 when the value is 0 in db, the data is sent
 		// to us as an int64 instead of a float64 ...
-		*d = New(v, 0)
+		*d = NewDecimalValueExp(v, 0)
 		return nil
 
 	default:
@@ -933,7 +933,7 @@ func Sum(first Decimal, rest ...Decimal) Decimal {
 
 // Avg returns the average value of the provided first and rest Decimals
 func Avg(first Decimal, rest ...Decimal) Decimal {
-	count := New(int64(len(rest)+1), 0)
+	count := NewDecimalValueExp(int64(len(rest)+1), 0)
 	sum := Sum(first, rest...)
 	return sum.Div(count)
 }
