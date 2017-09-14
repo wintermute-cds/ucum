@@ -2,43 +2,55 @@ package ucum
 
 
 type XMLUcumTests struct {
-	validations  XMLValidation  	`xml:"validation"`
-	displayNameGeneration	XMLDisplayNameGeneration	`xml:"displayNameGeneration"`
-	conversion	XMLConversion	`xml:"conversion"`
-	multiplication	XMLMultiplication	`xml:"multiplication"`
+	Validations  XMLValidation  	`xml:"validation"`
+	DisplayNameGenerations	XMLDisplayNameGeneration	`xml:"displayNameGeneration"`
+	Conversions	XMLConversion	`xml:"conversion"`
+	Multiplications	XMLMultiplication	`xml:"multiplication"`
 }
 
 type XMLValidation struct{
-	case_ XMLValidationCase					`xml:"case"`
+	Cases []XMLValidationCase					`xml:"case"`
 }
 
 type XMLValidationCase struct {
-	id string						`xml:"id, attr"`
-	unit string						`xml:"unit, attr"`
-	valid string					`xml:"valid, attr"`
-	reason string					`xml:"reason, attr"`
+	Id string						`xml:"id,attr"`
+	Unit string						`xml:"unit,attr"`
+	Valid string					`xml:"valid,attr"`
+	Reason string					`xml:"reason,attr"`
 }
 
 type XMLDisplayNameGeneration struct {
-	id string						`xml:"id, attr"`
-	unit string						`xml:"unit, attr"`
-	display string					`xml:"valid, attr"`
+	Cases []XMLDisplayNameGenerationCase		`xml:"case"`
+}
+
+type XMLDisplayNameGenerationCase struct {
+	Id string						`xml:"id,attr"`
+	Unit string						`xml:"unit,attr"`
+	Display string					`xml:"valid,attr"`
 }
 
 type XMLConversion struct {
-	id string			`xml:"id, attr"`
-	value string		`xml:"value, attr"`
-	srcUnit string		`xml:"srcUnit, attr"`
-	dstUnit string		`xml:"dstUnit, attr"`
-	outcome string		`xml:"outcome, attr"`
+	Cases []XMLConversionCase		`xml:"case"`
+}
+type XMLConversionCase struct {
+	Id string			`xml:"id,attr"`
+	Value string		`xml:"value,attr"`
+	SrcUnit string		`xml:"srcUnit,attr"`
+	DstUnit string		`xml:"dstUnit,attr"`
+	Outcome string		`xml:"outcome,attr"`
 }
 
+
 type XMLMultiplication struct {
-	id string			`xml:"id, attr"`
-	v1 string			`xml:"v1, attr"`
-	u1 string			`xml:"u1, attr"`
-	v2 string			`xml:"v2, attr"`
-	u2 string			`xml:"u2, attr"`
-	vRes string			`xml:"vRes, attr"`
-	uRes string			`xml:"uRes, attr"`
+	Cases []XMLMultiplicationCase		`xml:"case"`
+}
+
+type XMLMultiplicationCase struct {
+	Id string			`xml:"id, attr"`
+	V1 string			`xml:"v1, attr"`
+	U1 string			`xml:"u1, attr"`
+	V2 string			`xml:"v2, attr"`
+	U2 string			`xml:"u2, attr"`
+	VRes string			`xml:"vRes, attr"`
+	URes string			`xml:"uRes, attr"`
 }

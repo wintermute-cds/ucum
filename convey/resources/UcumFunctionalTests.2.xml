@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>  
+<?xml version="1.0" encoding="UTF-8" ?>
 <ucumTests>
 <!--
   Ucum Functional Tests. 
@@ -46,7 +46,7 @@
 	  unit is not valid
 	 -->
     <case id="1-101" unit="m" valid="true"/>
-	<case id="1-102" unit="m/" valid="false" reason="/ is not followed by a term"/>
+    <case id="1-102" unit="m/" valid="false" reason="/ is not followed by a term"/>
 	<case id="1-103" unit="" valid="true"/>
 	<case id="1-104" unit="/m" valid="true"/>
 	<case id="1-105" unit="10*3/ul" valid="true"/>
@@ -582,7 +582,7 @@
     <case id="k=1=265" unit="ng/kg" valid="true"/>
     <case id="k=1=266" unit="t" valid="true"/>
     <case id="k=1=267" unit="Wb" valid="true"/>
-  </validation>	
+  </validation>
   
   <displayNameGeneration>
     <!-- 

@@ -17,11 +17,14 @@ import (
 	"sort"
 )
 
+const MAX_INT = 1 << 31 - 1
+const MIN_INT = -1 << 31
+
 
 
 func TestStringAsIntegerDecimal(t *testing.T){
 	var integerTable = []int{
-		0, 1, 2, 64, ucum.MAX_INT, -1, -2, -64, ucum.MIN_INT,
+		0, 1, 2, 64, MAX_INT, -1, -2, -64, MIN_INT,
 	}
 	convey.Convey("TestStringAsIntegerDecimal", t, func() {
 		for _, integer := range integerTable {
@@ -241,14 +244,14 @@ func TestDecimalToString(t *testing.T) {
 		"100000000000000.1": "100000000000000.1",
 	}
 	convey.Convey("TestDecimalToString", t, func() {
-		d, err := ucum.NewDecimal(strconv.Itoa(ucum.MIN_INT))
+		d, err := ucum.NewDecimal(strconv.Itoa(MIN_INT))
 		convey.So(err, should.BeNil)
 		s := d.String()
-		convey.So(s, should.Equal, strconv.Itoa(ucum.MIN_INT))
-		d, err = ucum.NewDecimal(strconv.Itoa(ucum.MAX_INT))
+		convey.So(s, should.Equal, strconv.Itoa(MIN_INT))
+		d, err = ucum.NewDecimal(strconv.Itoa(MAX_INT))
 		convey.So(err, should.BeNil)
 		s = d.String()
-		convey.So(s, should.Equal, strconv.Itoa(ucum.MAX_INT))
+		convey.So(s, should.Equal, strconv.Itoa(MAX_INT))
 		for k, v := range DecimalToStringMap {
 			d, err = ucum.NewDecimal(k)
 			convey.So(err, should.BeNil)

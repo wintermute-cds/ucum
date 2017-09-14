@@ -48,7 +48,7 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		name := xmlItem.Name
 		names = append(names, name)
 		//value, err := NewDecimalAndPrecision(xmlItem.Value, 24)
-		value, err := NewDecimal(xmlItem.Value)
+		value, err := NewDecimal(xmlItem.Value.Value)
 		if err != nil {
 			return nil, err
 		}
@@ -84,14 +84,11 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		xmlItem2 := xmlItem.Value
 		value.Unit = xmlItem2.Unit
 		value.UnitUC = xmlItem2.UnitUC
-		if strings.Contains(xmlItem2.Value, "."){
-			//value.Value, err = NewDecimalAndPrecision(xmlItem2.Value, 24)
+		if strings.Trim(xmlItem2.Value, " ")!="" {
 			value.Value, err = NewDecimal(xmlItem2.Value)
-		}else{
-			value.Value, err = NewDecimal(xmlItem2.Value)
-		}
-		if err != nil {
-			return nil, err
+			if err != nil {
+				return nil, err
+			}
 		}
 		unit := &DefinedUnit{}
 		unit.Code = xmlItem.Code
@@ -100,8 +97,8 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		unit.PrintSymbol = xmlItem.PrintSymbol
 		unit.Property = xmlItem.Property
 		unit.Class = xmlItem.Class
-		unit.IsSpecial = xmlItem.IsSpecial
-		unit.Metric = xmlItem.Metric
+		unit.IsSpecial = xmlItem.IsSpecial == "yes"
+		unit.Metric = xmlItem.Metric == "yes"
 		unit.Value = value
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
 	}
@@ -109,16 +106,24 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 }
 
 func (x *XMLRoot)ProcessRevisionDate(revisionDate string)(time.Time, error){
-	time_,err := time.Parse("2013-10-21 21:24:43 -0700", revisionDate)
+	time_,err := time.Parse(time.RFC3339, revisionDate)
 	if err!=nil {
-		return time.Now(), err
+		//suppress error
+		//ucum-essence.xml has no known date-time notation.
+		//I changed it in the current file, but wrong dates may slip through in the future.
+		//This is how it should be:
+		//revision-date="$Date: 2013-10-21T21:24:43-07:00 (Mon, 21 Oct 2013) $">
+		//just normal ISO date-time notation, what else can would you expect from
+		//Regenstrief Institute, Inc.
+		//But it is: revision-date="$Date: 2015-11-13 15:13:19 -0500 (Fri, 13 Nov 2015) $
+		return time.Now(), nil
 	}
 	return time_, nil
 }
 
 type XMLPrefix struct{
 	XMLConcept
-	Value string	`xml:"value"` //"1e2" //precision 24
+	Value XMLValue	`xml:"value"` //"1e2" //precision 24
 }
 
 type XMLConcept struct{
@@ -149,8 +154,8 @@ type XMLBaseUnit struct{
 type XMLDefinedUnit struct{
 	XMLUnit
 	Class string	`xml:"class,attr"`
-	IsSpecial bool	`xml:"isSpecial,attr"`
-	Metric bool		`xml:"isMetric,attr"`
+	IsSpecial string	`xml:"isSpecial,attr"`
+	Metric string		`xml:"isMetric,attr"`
 	Value XMLValue	`xml:"value"`
 }
 

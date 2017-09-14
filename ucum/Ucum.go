@@ -167,23 +167,23 @@ type UcumEssenceService struct{
 	Handlers *Registry
 }
 
-var instanceOfOpenEhrTerminologyService *UcumEssenceService
+var instanceOfUcumEssenceService *UcumEssenceService
 
-func GetInstanceOfOpenEhrTerminologyService(xmlFileName string)(*UcumEssenceService, error){
-	if instanceOfOpenEhrTerminologyService==nil{
-		instanceOfOpenEhrTerminologyService = new(UcumEssenceService)
+func GetInstanceOfUcumEssenceService(xmlFileName string)(*UcumEssenceService, error){
+	if instanceOfUcumEssenceService==nil{
+		instanceOfUcumEssenceService = new(UcumEssenceService)
 		xmlFile, err := os.Open(xmlFileName)
 		if err != nil {
 			return nil, err
 		}
 		defer xmlFile.Close()
 		d := new(DefinitionParser)
-		instanceOfOpenEhrTerminologyService.Model,err = d.UnmarshalTerminology(xmlFile)
+		instanceOfUcumEssenceService.Model,err = d.UnmarshalTerminology(xmlFile)
 		if err != nil {
 			return nil, err
 		}
 	}
-	return instanceOfOpenEhrTerminologyService, nil
+	return instanceOfUcumEssenceService, nil
 }
 
 func (u *UcumEssenceService)UcumIdentification() *UcumVersionDetails{
@@ -212,15 +212,15 @@ func (u *UcumEssenceService)GetProperties()[]string{
 	return result
 }
 
-func (u *UcumEssenceService)Validate(unit string)(string, error){
+func (u *UcumEssenceService)Validate(unit string)(string) {
 	if unit == "" {
-		return "", fmt.Errorf("search", "text", "must not be empty")
+		return "search text must not be empty"
 	}
 	_, err := NewExpressionParser(u.Model).Parse(unit)
-	if err!=nil {
-		return err.Error(),nil
+	if err != nil {
+		return err.Error()
 	}
-	return "", nil
+	return ""
 }
 
 func (u *UcumEssenceService)Analyse(unit string)(string,error){
