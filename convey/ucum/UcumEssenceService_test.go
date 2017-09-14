@@ -4,7 +4,7 @@ import (
 	"testing"
 	"os"
 	"UCUM_Golang/ucum"
-	"github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 	"encoding/xml"
 	"io/ioutil"
 	"fmt"
@@ -23,29 +23,31 @@ type TestStructures struct {
 func TestService(t *testing.T){
 	var testStructures *TestStructures
 	var err error
-	convey.Convey("Service-creation", t, func() {
-		definitions := os.Getenv("GOPATH") + "/src/UCUM_Golang/ucum/terminology_data/ucum-essence.xml"
-		service, err = ucum.GetInstanceOfUcumEssenceService(definitions)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(service, convey.ShouldNotBeNil)
-	})
-	convey.Convey("First test run", t, func() {
-		test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.2.xml"
-		testStructures, err = UnmarshalTerminology(test)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(testStructures, convey.ShouldNotBeNil)
-	})
-	RunValidationTest(t, testStructures)
-	convey.Convey("First test run", t, func() {
-		test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.2.xml"
-		testStructures, err = UnmarshalTerminology(test)
-		convey.So(err, convey.ShouldBeNil)
-		convey.So(testStructures, convey.ShouldNotBeNil)
+	Convey("Service-creation", t, func() {
+		Convey("Service-creation", func() {
+			definitions := os.Getenv("GOPATH") + "/src/UCUM_Golang/ucum/terminology_data/ucum-essence.xml"
+			service, err = ucum.GetInstanceOfUcumEssenceService(definitions)
+			So(err, ShouldBeNil)
+			So(service, ShouldNotBeNil)
+		})
+		Convey("First test run", func() {
+			test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.2.xml"
+			testStructures, err = UnmarshalTerminology(test)
+			So(err, ShouldBeNil)
+			So(testStructures, ShouldNotBeNil)
+		})
+		RunValidationTest(t, testStructures)
+		Convey("Second test run", func() {
+			test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.2.xml"
+			testStructures, err = UnmarshalTerminology(test)
+			So(err, ShouldBeNil)
+			So(testStructures, ShouldNotBeNil)
+		})
 	})
 }
 
 func RunValidationTest(t *testing.T, testStructures *TestStructures){
-	convey.Convey("Validation test", t, func() {
+	Convey("Validation test", func() {
 		for _,v := range testStructures.validationCases{
 			msg := service.Validate(v.Unit)
 			fmt.Println(msg)
