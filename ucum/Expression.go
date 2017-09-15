@@ -208,7 +208,7 @@ func (p *ExpressionParser)parseTerm(l *Lexer, first bool)(*Term, error){
 			res.Term,err = p.parseTerm(l, false)
 		}
 	}
-	return res, nil
+	return res, err
 }
 
 func (p *ExpressionParser)parseComp(l *Lexer)(Componenter, error){
