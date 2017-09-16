@@ -364,7 +364,7 @@
     <case id="k=1=046" unit="meq/(8.h)" valid="true"/>
     <case id="k=1=047" unit="osm" valid="true"/>
     <case id="k=1=048" unit="[mclg'U]" valid="true"/>
-    <case id="k=1=049" unit="g.m/{hb}m2" valid="true"/>
+    <case id="k=1=049" unit="g.m/{hb}m2" valid="false"/>
     <case id="k=1=050" unit="meq/(8.h.kg)" valid="true"/>
     <case id="k=1=051" unit="osm/kg" valid="true"/>
     <case id="k=1=052" unit="{od}" valid="true"/>

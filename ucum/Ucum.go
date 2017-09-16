@@ -212,15 +212,15 @@ func (u *UcumEssenceService)GetProperties()[]string{
 	return result
 }
 
-func (u *UcumEssenceService)Validate(unit string)(string) {
+func (u *UcumEssenceService)Validate(unit string)(bool, string) {
 	if unit == "" {
-		return "search text must not be empty"
+		return true, "search text must not be empty"
 	}
 	_, err := NewExpressionParser(u.Model).Parse(unit)
 	if err != nil {
-		return err.Error()
+		return false, err.Error()
 	}
-	return ""
+	return true, ""
 }
 
 func (u *UcumEssenceService)Analyse(unit string)(string,error){

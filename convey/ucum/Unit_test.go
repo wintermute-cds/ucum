@@ -20,11 +20,11 @@ func TestUnits(t *testing.T){
 	SetUpService()
 	Convey("Test Units on errormsg", t, func() {
 		for _,u := range units {
-			s := testservice.Validate(u)
+			_,s := testservice.Validate(u)
 			So(s, ShouldBeEmpty)
 		}
 		for _,u := range wrongunits {
-			s := testservice.Validate(u)
+			_, s := testservice.Validate(u)
 			So(s, ShouldNotBeEmpty)
 		}
 	})
@@ -75,6 +75,7 @@ var wrongunits = []string{
 	"cm[H20]" ,
 	"ug(8.h)" ,
 	"ug(8hr)" ,
+	"g.m/{hb}m2",
 }
 var testservice *ucum.UcumEssenceService
 var units = []string{
