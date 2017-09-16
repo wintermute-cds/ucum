@@ -58,6 +58,7 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		prefix.Names = names
 		prefix.PrintSymbol = xmlItem.PrintSymbol
 		prefix.Value = value
+		prefix.Kind = PREFIX
 		ucumModel.Prefixes = append(ucumModel.Prefixes, prefix)
 	}
 	for _, xmlItem := range x.BaseUnits {
@@ -74,10 +75,11 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		baseUnit.PrintSymbol = xmlItem.PrintSymbol
 		baseUnit.Property = xmlItem.Property
 		baseUnit.Dim = xmlItem.Dim
+		baseUnit.Kind = BASEUNIT
 		ucumModel.BaseUnits = append(ucumModel.BaseUnits, baseUnit)
 	}
 	for _, xmlItem := range x.DefinedUnits {
-		names := make([]string,1)
+		names := make([]string,0)
 		name := xmlItem.Name
 		names = append(names, name)
 		value := &Value{}
@@ -100,6 +102,7 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		unit.IsSpecial = xmlItem.IsSpecial == "yes"
 		unit.Metric = xmlItem.Metric == "yes"
 		unit.Value = value
+		unit.Kind = UNIT
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
 	}
 	return ucumModel,err

@@ -7,7 +7,6 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"encoding/xml"
 	"io/ioutil"
-	"fmt"
 )
 
 var test string
@@ -31,7 +30,7 @@ func TestService(t *testing.T){
 			So(service, ShouldNotBeNil)
 		})
 		Convey("First test run", func() {
-			test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.2.xml"
+			test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.xml"
 			testStructures, err = UnmarshalTerminology(test)
 			So(err, ShouldBeNil)
 			So(testStructures, ShouldNotBeNil)
@@ -50,7 +49,11 @@ func RunValidationTest(t *testing.T, testStructures *TestStructures){
 	Convey("Validation test", func() {
 		for _,v := range testStructures.validationCases{
 			msg := service.Validate(v.Unit)
-			fmt.Println(msg)
+			if v.Valid == "true" {
+				So(msg, ShouldBeEmpty)
+			}else {
+				So(msg, ShouldNotBeEmpty)
+			}
 		}
 	})
 }

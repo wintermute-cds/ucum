@@ -248,7 +248,8 @@ func (p *ExpressionParser)parseSymbol(l *Lexer)(Componenter, error){
 	for _,prefix := range p.Model.Prefixes {
 		if strings.HasPrefix(sym, prefix.Code){
 			unit = p.Model.GetUnit(sym[len(prefix.Code):])
-			if unit != nil && (unit.GetKind() == BASEUNIT || unit.(DefinedUnit).Metric){
+			_,instanceof := unit.(*DefinedUnit)
+			if unit != nil && ((unit.GetKind() == BASEUNIT) || ((instanceof) && (unit.(*DefinedUnit).Metric))){
 				selected = prefix
 				break
 			}
@@ -261,8 +262,8 @@ func (p *ExpressionParser)parseSymbol(l *Lexer)(Componenter, error){
 		unit = p.Model.GetUnit(sym)
 		if unit!=nil{
 			symbol.Unit = unit
-		}else if sym!="1"{
-			return nil, fmt.Errorf("Error processing unit '"+l.Source+"': "+"The unit '" + sym + "' is unknown"+"' at position "+strconv.Itoa(l.Start))
+		}else if sym != "1"{
+			return nil, fmt.Errorf("Error processing unit '"+l.Source+"': "+"The unit '" + sym + "' is unknown"+" at position "+strconv.Itoa(l.Start))
 		}
 	}
 
