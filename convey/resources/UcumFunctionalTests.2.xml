@@ -45,11 +45,11 @@
 	  No particular error is specified, but a hint is provided for why the 
 	  unit is not valid
 	 -->
+    <case id="1-105" unit="10*3/ul" valid="true"/>
     <case id="1-101" unit="m" valid="true"/>
     <case id="1-102" unit="m/" valid="false" reason="/ is not followed by a term"/>
 	<case id="1-103" unit="" valid="true"/>
 	<case id="1-104" unit="/m" valid="true"/>
-	<case id="1-105" unit="10*3/ul" valid="true"/>
 	<case id="1-106" unit="10*-3/ul" valid="true"/>
 	<case id="1-107" unit="10*+3/ul" valid="true"/>
 	<case id="1-108" unit="10+3/ul" valid="false" reason="10 is not a valid unit"/>

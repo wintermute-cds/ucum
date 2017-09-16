@@ -423,17 +423,17 @@ func (l *Lexer)checkNumberOrSymbol(ch rune)(bool, error){
 func (l *Lexer)checkBrackets(ch rune, isInBrackets bool)(bool, error) {
 	if ch == '[' {
 		if isInBrackets {
-			return false, fmt.Errorf("Error processing unit '"+l.Source+"': "+"Nested ["+"' at position "+strconv.Itoa(l.Start))
+			return false, fmt.Errorf("Error processing unit '" + l.Source + "': " + "Nested [" + "' at position " + strconv.Itoa(l.Start))
+		} else {
+			return true, nil
 		}
-	} else {
-		return true, nil
 	}
 	if ch == ']' {
 		if !isInBrackets {
-			return false, fmt.Errorf("Error processing unit '"+l.Source+"': "+"] without ["+"' at position "+strconv.Itoa(l.Start))
+			return false, fmt.Errorf("Error processing unit '" + l.Source + "': " + "] without [" + "' at position " + strconv.Itoa(l.Start))
+		} else {
+			return false, nil
 		}
-	}else {
-		return false, nil
 	}
 	return isInBrackets, nil
 }
