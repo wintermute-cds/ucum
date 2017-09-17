@@ -36,13 +36,7 @@ func TestService(t *testing.T){
 			So(testStructures, ShouldNotBeNil)
 		})
 		RunValidationTest(t, testStructures, "Validation test 1")
-		Convey("Second test run", func() {
-			test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.2.xml"
-			testStructures, err = UnmarshalTerminology(test)
-			So(err, ShouldBeNil)
-			So(testStructures, ShouldNotBeNil)
-		})
-		RunValidationTest(t, testStructures, "Validation test 2")
+		RunDisplayNameGenerationTest(t, testStructures, "DisplayNameGenerationTest 1")
 	})
 }
 
@@ -52,6 +46,17 @@ func RunValidationTest(t *testing.T, testStructures *TestStructures, name string
 			Convey(v.Id + ": " + v.Unit, func() {
 				validated, _ := service.Validate(v.Unit)
 				So(validated, ShouldEqual, v.Valid == "true")
+			})
+		}
+	})
+}
+
+func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, name string){
+	Convey(name, func() {
+		for _,v := range testStructures.displayNameGenerationCases{
+			Convey(v.Id + ": " + v.Unit, func() {
+				analysed, _ := service.Analyse(v.Unit)
+				So(analysed, ShouldEqual, v.Display)
 			})
 		}
 	})

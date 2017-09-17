@@ -44,7 +44,7 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		DefinedUnits : make([]*DefinedUnit,0),
 	}
 	for _, xmlItem := range x.Prefixes {
-		names := make([]string,1)
+		names := make([]string,0)
 		name := xmlItem.Name
 		names = append(names, name)
 		//value, err := NewDecimalAndPrecision(xmlItem.Value, 24)
@@ -62,7 +62,7 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		ucumModel.Prefixes = append(ucumModel.Prefixes, prefix)
 	}
 	for _, xmlItem := range x.BaseUnits {
-		names := make([]string,1)
+		names := make([]string,0)
 		name := xmlItem.Name
 		names = append(names, name)
 		if err != nil {

@@ -95,21 +95,21 @@ type FormalStructureComposer struct{
 }
 
 func ComposeFormalStructure(term *Term)string{
-	var buffer *bytes.Buffer
+	var buffer bytes.Buffer
 	ec := &FormalStructureComposer{}
-	ec.composeTerm(buffer, term)
+	ec.composeTerm(&buffer, term)
 	return buffer.String()
 }
 
 func (e *FormalStructureComposer)composeTerm(buffer *bytes.Buffer, term *Term){
 	if term.Comp!=nil{
-		e.composeComp(buffer, term.Comp.(Component))
+		e.composeComp(buffer, term.Comp)
 	}
 	if term.Op > 0 {
 		e.composeOp(buffer, term.Op)
 	}
 	if term.Term!=nil{
-		e.composeTerm(buffer, term)
+		e.composeTerm(buffer, term.Term)
 	}
 }
 func (e *FormalStructureComposer)composeComp(buffer *bytes.Buffer, comp Componenter){
@@ -130,7 +130,7 @@ func (e *FormalStructureComposer)composeSymbol(buffer *bytes.Buffer, symbol *Sym
 	}
 	buffer.WriteString(symbol.Unit.GetNames()[0])
 	if symbol.Exponent!=1{
-		buffer.WriteString("^")
+		buffer.WriteString(" ^ ")
 		buffer.WriteString(strconv.Itoa(symbol.Exponent))
 	}
 	buffer.WriteString(")")
@@ -213,7 +213,11 @@ func (p *ExpressionParser)parseTerm(l *Lexer, first bool)(*Term, error){
 
 func (p *ExpressionParser)parseComp(l *Lexer)(Componenter, error){
 	if l.TokenType == NUMBER {
-		fact := NewFactor(l.TokenAsInt())
+		f, err := l.TokenAsInt()
+		if err!=nil {
+			return nil, fmt.Errorf("Error processing Tolen as numb er '"+l.Source+"': "+"The token '" + l.Token + "' is cannot be converted to integer"+" at position "+strconv.Itoa(l.Start))
+		}
+		fact := NewFactor(f)
 		l.Consume()
 		return fact, nil
 	}else if l.TokenType == SYMBOL {
@@ -269,7 +273,11 @@ func (p *ExpressionParser)parseSymbol(l *Lexer)(Componenter, error){
 
 	l.Consume()
 	if l.TokenType == NUMBER {
-		symbol.Exponent = l.TokenAsInt()
+		var err error
+		symbol.Exponent, err = l.TokenAsInt()
+		if err != nil {
+			return nil, fmt.Errorf("Error processing Tolen as numb er '"+l.Source+"': "+"The token '" + l.Token + "' is cannot be converted to integer"+" at position "+strconv.Itoa(l.Start))
+		}
 		l.Consume()
 	}else{
 		symbol.Exponent = 1
@@ -458,10 +466,18 @@ func (l *Lexer)Finished()bool{
 	return l.Index == len(l.Source)
 }
 
-func (l *Lexer)TokenAsInt()int{
+func (l *Lexer)TokenAsInt()(int, error){
 	if l.Token[0]=='+' {
-		return int([]rune(l.Token)[1])
+		result,err := strconv.Atoi(l.Token[1:])
+		if err != nil {
+			return 0, err
+		}
+		return result, nil
 	} else {
-		return int([]rune(l.Token)[0])
+		result,err := strconv.Atoi(l.Token)
+		if err != nil {
+			return 0, err
+		}
+		return result, nil
 	}
 }

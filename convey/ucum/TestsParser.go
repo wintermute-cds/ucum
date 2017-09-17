@@ -26,7 +26,7 @@ type XMLDisplayNameGeneration struct {
 type XMLDisplayNameGenerationCase struct {
 	Id string						`xml:"id,attr"`
 	Unit string						`xml:"unit,attr"`
-	Display string					`xml:"valid,attr"`
+	Display string					`xml:"display,attr"`
 }
 
 type XMLConversion struct {
