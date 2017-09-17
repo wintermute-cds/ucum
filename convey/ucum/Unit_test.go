@@ -5,6 +5,7 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"UCUM_Golang/ucum"
+	"fmt"
 )
 
 func SetUpService(){
@@ -22,6 +23,8 @@ func TestUnits(t *testing.T){
 		for _,u := range units {
 			_,s := testservice.Validate(u)
 			So(s, ShouldBeEmpty)
+			s,_ = testservice.Analyse(u)
+			fmt.Println(s)
 		}
 		for _,u := range wrongunits {
 			_, s := testservice.Validate(u)
@@ -79,6 +82,9 @@ var wrongunits = []string{
 }
 var testservice *ucum.UcumEssenceService
 var units = []string{
+"s.m-1.g-1",
+"s/m/mg",
+"s/4.m",
 "10*3/ul",
 "m" ,
 "/m" ,

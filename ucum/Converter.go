@@ -30,7 +30,7 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 		if t == nil {
 	  		break
 		}
-		if _,instanceof := t.Comp.(Term); instanceof {
+		if _,instanceof := t.Comp.(*Term); instanceof {
 			temp, err := c.normaliseTerm( indent + " ", t.Comp.(*Term))
 			if err!=nil{
 				return nil, err
@@ -44,14 +44,14 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 				result.MultiplyValueDecimal(temp.Value)
 			}
 			result.Units = append(result.Units, temp.Units...)
-		}else if _,instanceof := t.Comp.(Factor); instanceof{
+		}else if _,instanceof := t.Comp.(*Factor); instanceof{
 			if div {
 				result.DivideValueInt(t.Comp.(Factor).Value)
 			}else{
 				result.MultiplyValueInt(t.Comp.(Factor).Value)
 			}
-		}else if _,instanceof := t.Comp.(Symbol); instanceof {
-			o := t.Comp.(Symbol)
+		}else if _,instanceof := t.Comp.(*Symbol); instanceof {
+			o := t.Comp.(*Symbol)
 			temp, err := c.normaliseSymbol(indent, o)
 			if err!=nil{
 				return nil, err
@@ -90,11 +90,11 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 	return result, nil
 }
 
-func (c *Converter)normaliseSymbol(indent string, sym Symbol)(*Canonical, error) {
+func (c *Converter)normaliseSymbol(indent string, sym *Symbol)(*Canonical, error) {
 	d,_ := NewDecimal("1")
 	result,_ :=  NewCanonical(d)
-	if _,instanceof := sym.Unit.(*BaseUnit); instanceof {
-		cf,_ := NewCanonicalUnit(sym.Unit.(*BaseUnit), sym.Exponent)
+	if bu,instanceof := sym.Unit.(*BaseUnit); instanceof {
+		cf,_ := NewCanonicalUnit(bu, sym.Exponent)
 		result.Units = append(result.Units, cf)
 	}else{
 		can, err := c.expandDefinedUnit(indent, sym.Unit.(DefinedUnit))

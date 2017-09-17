@@ -37,6 +37,7 @@ func TestService(t *testing.T){
 		})
 		RunValidationTest(t, testStructures, "Validation test 1")
 		RunDisplayNameGenerationTest(t, testStructures, "DisplayNameGenerationTest 1")
+		RunConversionTest(t, testStructures, "ConversionTest 1")
 	})
 }
 
@@ -57,6 +58,19 @@ func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, 
 			Convey(v.Id + ": " + v.Unit, func() {
 				analysed, _ := service.Analyse(v.Unit)
 				So(analysed, ShouldEqual, v.Display)
+			})
+		}
+	})
+}
+
+func RunConversionTest(t *testing.T, testStructures *TestStructures, name string){
+	Convey(name, func() {
+		for _,v := range testStructures.conversionCases{
+			Convey(v.Id + ": " + v.Value, func() {
+				d,err := ucum.NewDecimal(v.Value)
+				So(err, ShouldBeNil)
+				res, _ := service.Convert(d, v.SrcUnit, v.DstUnit)
+				So(res.AsDecimal(), ShouldEqual, v.Outcome)
 			})
 		}
 	})
