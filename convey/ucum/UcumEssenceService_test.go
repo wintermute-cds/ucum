@@ -35,9 +35,9 @@ func TestService(t *testing.T){
 			So(err, ShouldBeNil)
 			So(testStructures, ShouldNotBeNil)
 		})
-		RunValidationTest(t, testStructures, "Validation test 1")
-		RunDisplayNameGenerationTest(t, testStructures, "DisplayNameGenerationTest 1")
-		RunConversionTest(t, testStructures, "ConversionTest 1")
+		RunValidationTest(t, testStructures, "Validation test")
+		RunDisplayNameGenerationTest(t, testStructures, "DisplayNameGenerationTest")
+		RunConversionTest(t, testStructures, "ConversionTest")
 		RunMultiplicationTest(t, testStructures, "RunMultiplicationTest")
 	})
 }
