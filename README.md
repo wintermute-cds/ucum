@@ -1,4 +1,4 @@
-# Ucum-Golang (Not ready yet)
+# Ucum-Golang Version 0.1
 Golang library providing UCUM Services
 
 (inspired by Graham Grieve's UCUM Java library: https://github.com/FHIR/Ucum-java )
@@ -14,3 +14,5 @@ The library provides a set of services around UCUM:
 To use the library, download ucum-essence from http://unitsofmeasure.org, and then create a UCUMEssenceService:
 
 ucumSvc = NewUcumEssenceService(definitionFile);
+
+- Status: all tests run fine

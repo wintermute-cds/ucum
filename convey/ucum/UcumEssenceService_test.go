@@ -38,6 +38,7 @@ func TestService(t *testing.T){
 		RunValidationTest(t, testStructures, "Validation test 1")
 		RunDisplayNameGenerationTest(t, testStructures, "DisplayNameGenerationTest 1")
 		RunConversionTest(t, testStructures, "ConversionTest 1")
+		RunMultiplicationTest(t, testStructures, "RunMultiplicationTest")
 	})
 }
 
@@ -69,8 +70,30 @@ func RunConversionTest(t *testing.T, testStructures *TestStructures, name string
 			Convey(v.Id + ": " + v.Value, func() {
 				d,err := ucum.NewDecimal(v.Value)
 				So(err, ShouldBeNil)
+				o,err := ucum.NewDecimal(v.Outcome)
+				So(err, ShouldBeNil)
 				res, _ := service.Convert(d, v.SrcUnit, v.DstUnit)
-				So(res.AsDecimal(), ShouldEqual, v.Outcome)
+				So(res.AsDecimal(), ShouldEqual, o.AsDecimal())
+			})
+		}
+	})
+}
+
+func RunMultiplicationTest(t *testing.T, testStructures *TestStructures, name string){
+	Convey(name, func() {
+		for _,v := range testStructures.multiplicationCases{
+			Convey(v.Id , func() {
+				d,err := ucum.NewDecimal(v.V1)
+				So(err, ShouldBeNil)
+				o1 := ucum.NewPair(d, v.U1)
+				d,err = ucum.NewDecimal(v.V2)
+				So(err, ShouldBeNil)
+				o2 := ucum.NewPair(d, v.U2)
+				o3, err := service.Multiply(o1, o2)
+				So(err, ShouldBeNil)
+				d, err = ucum.NewDecimal(v.VRes)
+				test := o3.Value.ComparesTo(d)
+				So( test, ShouldEqual, 0)
 			})
 		}
 	})

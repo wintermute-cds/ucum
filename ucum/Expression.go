@@ -16,12 +16,12 @@ func ComposeExpression(item interface{}, canonicalValue bool)string{
 	if item == nil {
 		return "1"
 	}
-	var buffer *bytes.Buffer
+	var buffer bytes.Buffer
 	ec := &ExpressionComposer{}
 	if _,instanceof := item.(*Term); instanceof {
-		ec.composeTerm(buffer, item.(*Term))
+		ec.composeTerm(&buffer, item.(*Term))
 	}else if _,instanceof := item.(*Canonical); instanceof {
-		ec.composeCanonical(buffer, item.(*Canonical), canonicalValue)
+		ec.composeCanonical(&buffer, item.(*Canonical), canonicalValue)
 	}else{
 		panic("Can only compose expression from Term or Canonical")
 	}

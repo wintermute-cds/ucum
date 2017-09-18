@@ -46,11 +46,11 @@ type XMLMultiplication struct {
 }
 
 type XMLMultiplicationCase struct {
-	Id string			`xml:"id, attr"`
-	V1 string			`xml:"v1, attr"`
-	U1 string			`xml:"u1, attr"`
-	V2 string			`xml:"v2, attr"`
-	U2 string			`xml:"u2, attr"`
-	VRes string			`xml:"vRes, attr"`
-	URes string			`xml:"uRes, attr"`
+	Id string			`xml:"id,attr"`
+	V1 string			`xml:"v1,attr"`
+	U1 string			`xml:"u1,attr"`
+	V2 string			`xml:"v2,attr"`
+	U2 string			`xml:"u2,attr"`
+	VRes string			`xml:"vRes,attr"`
+	URes string			`xml:"uRes,attr"`
 }

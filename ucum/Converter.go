@@ -28,7 +28,7 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 	t := term
 	for{
 		if t == nil {
-	  		break
+			break
 		}
 		if _,instanceof := t.Comp.(*Term); instanceof {
 			temp, err := c.normaliseTerm( indent + " ", t.Comp.(*Term))
@@ -46,9 +46,9 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 			result.Units = append(result.Units, temp.Units...)
 		}else if _,instanceof := t.Comp.(*Factor); instanceof{
 			if div {
-				result.DivideValueInt(t.Comp.(Factor).Value)
+				result.DivideValueInt(t.Comp.(*Factor).Value)
 			}else{
-				result.MultiplyValueInt(t.Comp.(Factor).Value)
+				result.MultiplyValueInt(t.Comp.(*Factor).Value)
 			}
 		}else if _,instanceof := t.Comp.(*Symbol); instanceof {
 			o := t.Comp.(*Symbol)
@@ -93,15 +93,16 @@ func (c *Converter)normaliseTerm(indent string, term *Term)(*Canonical, error){
 func (c *Converter)normaliseSymbol(indent string, sym *Symbol)(*Canonical, error) {
 	d,_ := NewDecimal("1")
 	result,_ :=  NewCanonical(d)
-	if bu,instanceof := sym.Unit.(*BaseUnit); instanceof {
+	bu,instanceof := sym.Unit.(*BaseUnit);
+	if  instanceof {
 		cf,_ := NewCanonicalUnit(bu, sym.Exponent)
 		result.Units = append(result.Units, cf)
-	}else{
-		can, err := c.expandDefinedUnit(indent, sym.Unit.(DefinedUnit))
-		if err!=nil{
+	}else {
+		can, err := c.expandDefinedUnit(indent, sym.Unit.(*DefinedUnit))
+		if err != nil {
 			return nil, err
 		}
-		for _,c := range can.Units {
+		for _, c := range can.Units {
 			c.Exponent = c.Exponent * sym.Exponent
 		}
 		result.Units = append(result.Units, can.Units...)
@@ -109,27 +110,27 @@ func (c *Converter)normaliseSymbol(indent string, sym *Symbol)(*Canonical, error
 			for i := 0; i < sym.Exponent; i++ {
 				result.MultiplyValueDecimal(can.Value)
 			}
-		}else{
+		} else {
 			for i := 0; i > sym.Exponent; i-- {
 				result.DivideValueDecimal(can.Value)
 			}
 		}
-		if sym.Prefix != nil {
-			if sym.Exponent > 0 {
-				for i := 0; i < sym.Exponent; i++ {
-					result.MultiplyValueDecimal(sym.Prefix.Value)
-				}
-			}else{
-				for i := 0; i > sym.Exponent; i-- {
-					result.DivideValueDecimal(sym.Prefix.Value)
-				}
+	}
+	if sym.Prefix != nil {
+		if sym.Exponent > 0 {
+			for i := 0; i < sym.Exponent; i++ {
+				result.MultiplyValueDecimal(sym.Prefix.Value)
+			}
+		}else{
+			for i := 0; i > sym.Exponent; i-- {
+				result.DivideValueDecimal(sym.Prefix.Value)
 			}
 		}
 	}
 	return result, nil
 }
 
-func (c *Converter)expandDefinedUnit(indent string, unit DefinedUnit)(*Canonical,error){
+func (c *Converter)expandDefinedUnit(indent string, unit *DefinedUnit)(*Canonical,error){
 	u := unit.Value.Unit
 	if unit.IsSpecial{
 		if !c.Handlers.Exists(unit.Code){
