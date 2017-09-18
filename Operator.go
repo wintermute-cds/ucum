@@ -2,7 +2,7 @@ package ucum
 
 type Operator int
 
-const(
+const (
 	_ Operator = iota
 	MULTIPLICATION
 	DIVISION

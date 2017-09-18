@@ -1,50 +1,49 @@
 package ucum
 
 import (
-	"strings"
-	"io"
 	"encoding/xml"
+	"io"
+	"strings"
 	"time"
 )
 
 type DefinitionParser struct {
 }
 
-func (d *DefinitionParser)UnmarshalTerminology(reader io.Reader)(*UcumModel, error){
+func (d *DefinitionParser) UnmarshalTerminology(reader io.Reader) (*UcumModel, error) {
 	xmlUCUM := &XMLRoot{}
 	decoder := xml.NewDecoder(reader)
-	if err := decoder.Decode(xmlUCUM); err!=nil {
+	if err := decoder.Decode(xmlUCUM); err != nil {
 		return nil, err
 	}
 	return xmlUCUM.UcumModel()
 }
 
-
-type XMLRoot struct{
-	Version string	`xml:"version,attr"`
-	Revision string		`xml:"revision,attr"`
-	RevisionDate string	`xml:"revision-date,attr"`
-	Prefixes []XMLPrefix	`xml:"prefix"`
-	BaseUnits []XMLBaseUnit	`xml:"base-unit"`
-	DefinedUnits []XMLDefinedUnit	`xml:"unit"`
+type XMLRoot struct {
+	Version      string           `xml:"version,attr"`
+	Revision     string           `xml:"revision,attr"`
+	RevisionDate string           `xml:"revision-date,attr"`
+	Prefixes     []XMLPrefix      `xml:"prefix"`
+	BaseUnits    []XMLBaseUnit    `xml:"base-unit"`
+	DefinedUnits []XMLDefinedUnit `xml:"unit"`
 }
 
-func (x *XMLRoot)UcumModel()(*UcumModel, error){
+func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 	var err error
 	dateTime, err := x.ProcessRevisionDate(x.RevisionDate[7:32])
 	if err != nil {
 		return nil, err
 	}
 	ucumModel := &UcumModel{
-		Version: x.Version,
-		Revision: x.Revision,
+		Version:      x.Version,
+		Revision:     x.Revision,
 		RevisionDate: dateTime,
-		Prefixes : make([]*Prefix,0),
-		BaseUnits : make([]*BaseUnit,0),
-		DefinedUnits : make([]*DefinedUnit,0),
+		Prefixes:     make([]*Prefix, 0),
+		BaseUnits:    make([]*BaseUnit, 0),
+		DefinedUnits: make([]*DefinedUnit, 0),
 	}
 	for _, xmlItem := range x.Prefixes {
-		names := make([]string,0)
+		names := make([]string, 0)
 		name := xmlItem.Name
 		names = append(names, name)
 		//value, err := NewDecimalAndPrecision(xmlItem.Value, 24)
@@ -62,7 +61,7 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		ucumModel.Prefixes = append(ucumModel.Prefixes, prefix)
 	}
 	for _, xmlItem := range x.BaseUnits {
-		names := make([]string,0)
+		names := make([]string, 0)
 		name := xmlItem.Name
 		names = append(names, name)
 		if err != nil {
@@ -79,14 +78,14 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		ucumModel.BaseUnits = append(ucumModel.BaseUnits, baseUnit)
 	}
 	for _, xmlItem := range x.DefinedUnits {
-		names := make([]string,0)
+		names := make([]string, 0)
 		name := xmlItem.Name
 		names = append(names, name)
 		value := &Value{}
 		xmlItem2 := xmlItem.Value
 		value.Unit = xmlItem2.Unit
 		value.UnitUC = xmlItem2.UnitUC
-		if strings.Trim(xmlItem2.Value, " ")!="" {
+		if strings.Trim(xmlItem2.Value, " ") != "" {
 			value.Value, err = NewDecimal(xmlItem2.Value)
 			if err != nil {
 				return nil, err
@@ -105,12 +104,12 @@ func (x *XMLRoot)UcumModel()(*UcumModel, error){
 		unit.Kind = UNIT
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
 	}
-	return ucumModel,err
+	return ucumModel, err
 }
 
-func (x *XMLRoot)ProcessRevisionDate(revisionDate string)(time.Time, error){
-	time_,err := time.Parse(time.RFC3339, revisionDate)
-	if err!=nil {
+func (x *XMLRoot) ProcessRevisionDate(revisionDate string) (time.Time, error) {
+	time_, err := time.Parse(time.RFC3339, revisionDate)
+	if err != nil {
 		//suppress error
 		//ucum-essence.xml has no known date-time notation.
 		//I changed it in the current file, but wrong dates may slip through in the future.
@@ -124,48 +123,46 @@ func (x *XMLRoot)ProcessRevisionDate(revisionDate string)(time.Time, error){
 	return time_, nil
 }
 
-type XMLPrefix struct{
+type XMLPrefix struct {
 	XMLConcept
-	Value XMLValue	`xml:"value"` //"1e2" //precision 24
+	Value XMLValue `xml:"value"` //"1e2" //precision 24
 }
 
-type XMLConcept struct{
-	Code string		`xml:"Code,attr"`
-	CodeUC string	`xml:"CODE,attr"`
-	Name string	`xml:"name"`
-	PrintSymbol string	`xml:"printSymbol"`
+type XMLConcept struct {
+	Code        string `xml:"Code,attr"`
+	CodeUC      string `xml:"CODE,attr"`
+	Name        string `xml:"name"`
+	PrintSymbol string `xml:"printSymbol"`
 }
 
-type XMLDecimal struct{
-	Decimal int
-	Digits string
-	Negative bool
-	Precision int
+type XMLDecimal struct {
+	Decimal    int
+	Digits     string
+	Negative   bool
+	Precision  int
 	Scientific bool
 }
 
-type XMLUnit struct{
+type XMLUnit struct {
 	XMLConcept
-	Property string	`xml:"property"`
+	Property string `xml:"property"`
 }
 
-type XMLBaseUnit struct{
+type XMLBaseUnit struct {
 	XMLUnit
-	Dim rune		`xml:"dim"`
+	Dim rune `xml:"dim"`
 }
 
-type XMLDefinedUnit struct{
+type XMLDefinedUnit struct {
 	XMLUnit
-	Class string	`xml:"class,attr"`
-	IsSpecial string	`xml:"isSpecial,attr"`
-	Metric string		`xml:"isMetric,attr"`
-	Value XMLValue	`xml:"value"`
+	Class     string   `xml:"class,attr"`
+	IsSpecial string   `xml:"isSpecial,attr"`
+	Metric    string   `xml:"isMetric,attr"`
+	Value     XMLValue `xml:"value"`
 }
 
-
-type XMLValue struct{
-	Unit string		`xml:"Unit,attr"`
-	UnitUC string	`xml:"UNIT,attr"`
-	Value string	`xml:"value,attr"`
+type XMLValue struct {
+	Unit   string `xml:"Unit,attr"`
+	UnitUC string `xml:"UNIT,attr"`
+	Value  string `xml:"value,attr"`
 }
-

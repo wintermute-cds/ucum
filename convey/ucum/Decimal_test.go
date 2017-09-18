@@ -1,28 +1,26 @@
 package ucum
 
 import (
-	"testing"
-	"github.com/smartystreets/goconvey/convey"
 	"UCUM_Golang/ucum"
-	"strconv"
-	"github.com/smartystreets/assertions/should"
-	"math"
-	"reflect"
-	"math/big"
+	"database/sql/driver"
 	"encoding/json"
 	"encoding/xml"
-	"strings"
-	"time"
-	"database/sql/driver"
+	"github.com/smartystreets/assertions/should"
+	"github.com/smartystreets/goconvey/convey"
+	"math"
+	"math/big"
+	"reflect"
 	"sort"
+	"strconv"
+	"strings"
+	"testing"
+	"time"
 )
 
-const MAX_INT = 1 << 31 - 1
+const MAX_INT = 1<<31 - 1
 const MIN_INT = -1 << 31
 
-
-
-func TestStringAsIntegerDecimal(t *testing.T){
+func TestStringAsIntegerDecimal(t *testing.T) {
 	var integerTable = []int{
 		0, 1, 2, 64, MAX_INT, -1, -2, -64, MIN_INT,
 	}
@@ -39,71 +37,71 @@ func TestStringAsIntegerDecimal(t *testing.T){
 
 func TestDecimalAsScientific(t *testing.T) {
 	var DecimalScientificMap = map[string]string{
-		"1": "1.000000e+00",
-		"0":  "0.000000e+00",
-		"-0":  "0.000000e+00",
-		"10":  "1.000000e+01",
-		"99":  "9.900000e+01",
-		"-1": "-1.000000e+00",
-		"-10": "-1.000000e+01",
-		"-99": "-9.900000e+01",
-		"1.1": "1.100000e+00",
+		"1":     "1.000000e+00",
+		"0":     "0.000000e+00",
+		"-0":    "0.000000e+00",
+		"10":    "1.000000e+01",
+		"99":    "9.900000e+01",
+		"-1":    "-1.000000e+00",
+		"-10":   "-1.000000e+01",
+		"-99":   "-9.900000e+01",
+		"1.1":   "1.100000e+00",
 		"-1.1":  "-1.100000e+00",
 		"11.1":  "1.110000e+01",
-		"1.11": "1.110000e+00",
+		"1.11":  "1.110000e+00",
 		"1.111": "1.111000e+00",
-		"0.1": "1.000000e-01",
-		"00.1": "1.000000e-01",
-		".1": "1.000000e-01",
-		"1.0": "1.000000e+00",
-		"1.00": "1.000000e+00",
+		"0.1":   "1.000000e-01",
+		"00.1":  "1.000000e-01",
+		".1":    "1.000000e-01",
+		"1.0":   "1.000000e+00",
+		"1.00":  "1.000000e+00",
 		"1.000000000000000000000000000000000000000": "1.000000e+00",
-		"-11.1": "-1.110000e+01",
-		"-1.11": "-1.110000e+00",
-		"-1.111":  "-1.111000e+00",
-		"-0.1":  "-1.000000e-01",
+		"-11.1":  "-1.110000e+01",
+		"-1.11":  "-1.110000e+00",
+		"-1.111": "-1.111000e+00",
+		"-0.1":   "-1.000000e-01",
 		"-00.1":  "-1.000000e-01",
-		"-.1": "-1.000000e-01",
-		"-1.0":  "-1.000000e+00",
-		"-1.00": "-1.000000e+00",
-		"-1.000000000000000000000000000000000000000":  "-1.000000e+00",
-		"0.0": "0.000000e+00",
-		"0.0000":  "0.000000e+00",
-		"0.100": "1.000000e-01",
-		"100": "1.000000e+02",
-		"0.01": "1.000000e-02",
-		"0.001": "1.000000e-03",
-		"0.0001": "1.000000e-04",
-		"00.0001":  "1.000000e-04",
-		"000.0001": "1.000000e-04",
-		"-0.01": "-1.000000e-02",
-		"10.01":  "1.001000e+01",
-		"0.00001": "1.000000e-05",
-		"0.000001": "1.000000e-06",
-		"0.0000001": "1.000000e-07",
-		"0.000000001": "1.000000e-09",
-		"0.00000000001":  "1.000000e-11",
-		"0.0000000000001": "1.000000e-13",
-		"0.000000000000001": "1.000000e-15",
-		"0.00000000000000001":  "1.000000e-17",
-		"10.1": "1.010000e+01",
-		"100.1":  "1.001000e+02",
-		"1000.1":  "1.000100e+03",
-		"10000.1": "1.000010e+04",
-		"100000.1": "1.000001e+05",
-		"1000000.1":  "1.000000e+06",
-		"10000000.1":  "1.000000e+07",
-		"100000000.1":  "1.000000e+08",
-		"1000000000.1":  "1.000000e+09",
-		"10000000000.1":  "1.000000e+10",
-		"100000000000.1":  "1.000000e+11",
-		"1000000000000.1": "1.000000e+12",
-		"10000000000000.1":  "1.000000e+13",
-		"100000000000000.1":  "1.000000e+14",
+		"-.1":    "-1.000000e-01",
+		"-1.0":   "-1.000000e+00",
+		"-1.00":  "-1.000000e+00",
+		"-1.000000000000000000000000000000000000000": "-1.000000e+00",
+		"0.0":                 "0.000000e+00",
+		"0.0000":              "0.000000e+00",
+		"0.100":               "1.000000e-01",
+		"100":                 "1.000000e+02",
+		"0.01":                "1.000000e-02",
+		"0.001":               "1.000000e-03",
+		"0.0001":              "1.000000e-04",
+		"00.0001":             "1.000000e-04",
+		"000.0001":            "1.000000e-04",
+		"-0.01":               "-1.000000e-02",
+		"10.01":               "1.001000e+01",
+		"0.00001":             "1.000000e-05",
+		"0.000001":            "1.000000e-06",
+		"0.0000001":           "1.000000e-07",
+		"0.000000001":         "1.000000e-09",
+		"0.00000000001":       "1.000000e-11",
+		"0.0000000000001":     "1.000000e-13",
+		"0.000000000000001":   "1.000000e-15",
+		"0.00000000000000001": "1.000000e-17",
+		"10.1":                "1.010000e+01",
+		"100.1":               "1.001000e+02",
+		"1000.1":              "1.000100e+03",
+		"10000.1":             "1.000010e+04",
+		"100000.1":            "1.000001e+05",
+		"1000000.1":           "1.000000e+06",
+		"10000000.1":          "1.000000e+07",
+		"100000000.1":         "1.000000e+08",
+		"1000000000.1":        "1.000000e+09",
+		"10000000000.1":       "1.000000e+10",
+		"100000000000.1":      "1.000000e+11",
+		"1000000000000.1":     "1.000000e+12",
+		"10000000000000.1":    "1.000000e+13",
+		"100000000000000.1":   "1.000000e+14",
 	}
 	convey.Convey("TestDecimalToScientific", t, func() {
-		for k,v := range DecimalScientificMap {
-			d,err := ucum.NewDecimal(k)
+		for k, v := range DecimalScientificMap {
+			d, err := ucum.NewDecimal(k)
 			convey.So(err, should.BeNil)
 			s := d.AsScientific()
 			convey.So(s, should.Equal, v)
@@ -113,135 +111,135 @@ func TestDecimalAsScientific(t *testing.T) {
 
 func TestScientificAsDecimal(t *testing.T) {
 	var ScientificDecimalMap = map[string]string{
-		"1e0":"1",
-		"0e0":"0",
-		"1.0e1":"10",
-		"9.9e1":"99",
-		"-1e0":"-1",
-		"-1.0e1":"-10",
-		"-9.9e1":"-99",
-		"1.1e0":"1.1",
-		"-1.1e0":"-1.1",
-		"1.11e1":"11.1",
-		"1.11e0":"1.11",
-		"1.111e0":"1.111",
-		"1e-1":"0.1",
-		"1.0e0":"1",
-		"1.00e0":"1",
-		"1.000000000000000000000000000000000000000e0":"1",
-		"-1.11e1":"-11.1",
-		"-1.11e0":"-1.11",
-		"-1.111e0":"-1.111",
-		"-1e-1":"-0.1",
-		"-1.0e0":"-1",
-		"-1.00e0":"-1",
-		"-1.000000000000000000000000000000000000000e0":"-1",
-		"0.0e0":"0",
-		"0.0000e0":"0",
-		"1.00e-1":"0.1",
-		"1.00e2":"100",
-		"1e-2":"0.01",
-		"1e-3":"0.001",
-		"1e-4":"0.0001",
-		"-1e-2":"-0.01",
-		"1.001e1":"10.01",
-		"1e-5":"0.00001",
-		"1e-6": "0.000001",
-		"1e-7":"0.0000001",
-		"1e-9":"0.000000001",
-		"1e-11":"0.00000000001",
-		"1e-13":"0.0000000000001",
-		"1e-15": "0.000000000000001",
-		"1e-17":"0.00000000000000001",
-		"1.01e1": "10.1",
-		"1.001e2": "100.1",
-		"1.0001e3":"1000.1",
-		"1.00001e4":"10000.1",
-		"1.000001e5":"100000.1",
-		"1.0000001e6":"1000000.1",
-		"1.00000001e7": "10000000.1",
-		"1.000000001e8":"100000000.1",
-		"1.0000000001e9":"1000000000.1",
-		"1.00000000001e10":"10000000000.1",
-		"1.000000000001e11":"100000000000.1",
-		"1.0000000000001e12":"1000000000000.1",
-		"1.00000000000001e13":"10000000000000.1",
+		"1e0":     "1",
+		"0e0":     "0",
+		"1.0e1":   "10",
+		"9.9e1":   "99",
+		"-1e0":    "-1",
+		"-1.0e1":  "-10",
+		"-9.9e1":  "-99",
+		"1.1e0":   "1.1",
+		"-1.1e0":  "-1.1",
+		"1.11e1":  "11.1",
+		"1.11e0":  "1.11",
+		"1.111e0": "1.111",
+		"1e-1":    "0.1",
+		"1.0e0":   "1",
+		"1.00e0":  "1",
+		"1.000000000000000000000000000000000000000e0": "1",
+		"-1.11e1":  "-11.1",
+		"-1.11e0":  "-1.11",
+		"-1.111e0": "-1.111",
+		"-1e-1":    "-0.1",
+		"-1.0e0":   "-1",
+		"-1.00e0":  "-1",
+		"-1.000000000000000000000000000000000000000e0": "-1",
+		"0.0e0":                "0",
+		"0.0000e0":             "0",
+		"1.00e-1":              "0.1",
+		"1.00e2":               "100",
+		"1e-2":                 "0.01",
+		"1e-3":                 "0.001",
+		"1e-4":                 "0.0001",
+		"-1e-2":                "-0.01",
+		"1.001e1":              "10.01",
+		"1e-5":                 "0.00001",
+		"1e-6":                 "0.000001",
+		"1e-7":                 "0.0000001",
+		"1e-9":                 "0.000000001",
+		"1e-11":                "0.00000000001",
+		"1e-13":                "0.0000000000001",
+		"1e-15":                "0.000000000000001",
+		"1e-17":                "0.00000000000000001",
+		"1.01e1":               "10.1",
+		"1.001e2":              "100.1",
+		"1.0001e3":             "1000.1",
+		"1.00001e4":            "10000.1",
+		"1.000001e5":           "100000.1",
+		"1.0000001e6":          "1000000.1",
+		"1.00000001e7":         "10000000.1",
+		"1.000000001e8":        "100000000.1",
+		"1.0000000001e9":       "1000000000.1",
+		"1.00000000001e10":     "10000000000.1",
+		"1.000000000001e11":    "100000000000.1",
+		"1.0000000000001e12":   "1000000000000.1",
+		"1.00000000000001e13":  "10000000000000.1",
 		"1.000000000000001e14": "100000000000000.1",
 	}
 
-		convey.Convey("TestDecimalToString", t, func() {
-			for k, v := range ScientificDecimalMap {
-				d, err := ucum.NewDecimal(k)
-				convey.So(err, should.BeNil)
-				s := d.AsDecimal()
-				convey.So(s, should.Equal, v)
-			}
-		})
+	convey.Convey("TestDecimalToString", t, func() {
+		for k, v := range ScientificDecimalMap {
+			d, err := ucum.NewDecimal(k)
+			convey.So(err, should.BeNil)
+			s := d.AsDecimal()
+			convey.So(s, should.Equal, v)
+		}
+	})
 }
 
 func TestDecimalToString(t *testing.T) {
 	var DecimalToStringMap = map[string]string{
-		"1": "1",
-		"0": "0",
-		"-0": "0",
-		"10": "10",
-		"99": "99",
-		"-1": "-1",
-		"-10": "-10",
-		"-99": "-99",
-		"1.1": "1.1",
-		"-1.1": "-1.1",
-		"11.1": "11.1",
-		"1.11": "1.11",
+		"1":     "1",
+		"0":     "0",
+		"-0":    "0",
+		"10":    "10",
+		"99":    "99",
+		"-1":    "-1",
+		"-10":   "-10",
+		"-99":   "-99",
+		"1.1":   "1.1",
+		"-1.1":  "-1.1",
+		"11.1":  "11.1",
+		"1.11":  "1.11",
 		"1.111": "1.111",
-		"0.1": "0.1",
-		"00.1": "0.1",
-		".1": "0.1",
-		"1.0": "1",
-		"1.00": "1",
+		"0.1":   "0.1",
+		"00.1":  "0.1",
+		".1":    "0.1",
+		"1.0":   "1",
+		"1.00":  "1",
 		"1.000000000000000000000000000000000000000": "1",
-		"-11.1": "-11.1",
-		"-1.11": "-1.11",
+		"-11.1":  "-11.1",
+		"-1.11":  "-1.11",
 		"-1.111": "-1.111",
-		"-0.1": "-0.1",
-		"-00.1": "-0.1",
-		"-.1": "-0.1",
-		"-1.0": "-1",
-		"-1.00": "-1",
+		"-0.1":   "-0.1",
+		"-00.1":  "-0.1",
+		"-.1":    "-0.1",
+		"-1.0":   "-1",
+		"-1.00":  "-1",
 		"-1.000000000000000000000000000000000000000": "-1",
-		"0.0": "0",
-		"0.0000": "0",
-		"0.100": "0.1",
-		"100": "100",
-		"0.01": "0.01",
-		"0.001": "0.001",
-		"0.0001": "0.0001",
-		"00.0001": "0.0001",
-		"000.0001": "0.0001",
-		"-0.01": "-0.01",
-		"10.01": "10.01",
-		"0.00001": "0.00001",
-		"0.000001": "0.000001",
-		"0.0000001": "0.0000001",
-		"0.000000001": "0.000000001",
-		"0.00000000001": "0.00000000001",
-		"0.0000000000001": "0.0000000000001",
-		"0.000000000000001": "0.000000000000001",
+		"0.0":                 "0",
+		"0.0000":              "0",
+		"0.100":               "0.1",
+		"100":                 "100",
+		"0.01":                "0.01",
+		"0.001":               "0.001",
+		"0.0001":              "0.0001",
+		"00.0001":             "0.0001",
+		"000.0001":            "0.0001",
+		"-0.01":               "-0.01",
+		"10.01":               "10.01",
+		"0.00001":             "0.00001",
+		"0.000001":            "0.000001",
+		"0.0000001":           "0.0000001",
+		"0.000000001":         "0.000000001",
+		"0.00000000001":       "0.00000000001",
+		"0.0000000000001":     "0.0000000000001",
+		"0.000000000000001":   "0.000000000000001",
 		"0.00000000000000001": "0.00000000000000001",
-		"10.1": "10.1",
-		"100.1": "100.1",
-		"1000.1": "1000.1",
-		"10000.1": "10000.1",
-		"100000.1": "100000.1",
-		"1000000.1": "1000000.1",
-		"10000000.1": "10000000.1",
-		"100000000.1": "100000000.1",
-		"1000000000.1": "1000000000.1",
-		"10000000000.1": "10000000000.1",
-		"100000000000.1": "100000000000.1",
-		"1000000000000.1": "1000000000000.1",
-		"10000000000000.1": "10000000000000.1",
-		"100000000000000.1": "100000000000000.1",
+		"10.1":                "10.1",
+		"100.1":               "100.1",
+		"1000.1":              "1000.1",
+		"10000.1":             "10000.1",
+		"100000.1":            "100000.1",
+		"1000000.1":           "1000000.1",
+		"10000000.1":          "10000000.1",
+		"100000000.1":         "100000000.1",
+		"1000000000.1":        "1000000000.1",
+		"10000000000.1":       "10000000000.1",
+		"100000000000.1":      "100000000000.1",
+		"1000000000000.1":     "1000000000000.1",
+		"10000000000000.1":    "10000000000000.1",
+		"100000000000000.1":   "100000000000000.1",
 	}
 	convey.Convey("TestDecimalToString", t, func() {
 		d, err := ucum.NewDecimal(strconv.Itoa(MIN_INT))
@@ -263,12 +261,12 @@ func TestDecimalToString(t *testing.T) {
 
 func TestTruncate(t *testing.T) {
 	var TruncateMap = map[string]string{
-		"1": "1",
-		"1.01": "1",
-		"-1.01": "-1",
-		"0.01": "0",
-		"-0.01": "0",
-		"0.1": "0",
+		"1":      "1",
+		"1.01":   "1",
+		"-1.01":  "-1",
+		"0.01":   "0",
+		"-0.01":  "0",
+		"0.1":    "0",
 		"0.0001": "0",
 		"100.000000000000000000000000000000000000000001": "100",
 	}
@@ -282,37 +280,37 @@ func TestTruncate(t *testing.T) {
 	})
 }
 
-func TestCompare(t *testing.T){
-	type compare struct{
+func TestCompare(t *testing.T) {
+	type compare struct {
 		compare1, compare2 string
-		outcome int
+		outcome            int
 	}
 	var list = []compare{
-		{"1", "1",0},
-		{"0", "0",0},
-		{"0", "1",-1},
-		{"1", "0",1},
-		{"10","10",0},
-		{"100","100",0},
-		{"0.1","0.1",0},
-		{"0.01","0.01",0},
-		{"0.01","0.0100",0},
-		{"1","1.00000000",0},
-		{"1.111111","1.111111",0},
-		{"1.111111","1.1111111",-1},
-		{"1.1111111","1.111111",1},
+		{"1", "1", 0},
+		{"0", "0", 0},
+		{"0", "1", -1},
+		{"1", "0", 1},
+		{"10", "10", 0},
+		{"100", "100", 0},
+		{"0.1", "0.1", 0},
+		{"0.01", "0.01", 0},
+		{"0.01", "0.0100", 0},
+		{"1", "1.00000000", 0},
+		{"1.111111", "1.111111", 0},
+		{"1.111111", "1.1111111", -1},
+		{"1.1111111", "1.111111", 1},
 	}
 	convey.Convey("TestCompare", t, func() {
-		for _,s := range list {
-			d1,_ := ucum.NewDecimal(s.compare1)
-			d2,_ := ucum.NewDecimal(s.compare2)
-			convey.So(d1.ComparesTo(d2),should.Equal,s.outcome)
+		for _, s := range list {
+			d1, _ := ucum.NewDecimal(s.compare1)
+			d2, _ := ucum.NewDecimal(s.compare2)
+			convey.So(d1.ComparesTo(d2), should.Equal, s.outcome)
 		}
 	})
 }
 
-func TestAddition(t *testing.T){
-	type add struct{
+func TestAddition(t *testing.T) {
+	type add struct {
 		s1, s2, result string
 	}
 	var list = []add{
@@ -338,17 +336,17 @@ func TestAddition(t *testing.T){
 		{"2.0", "0.001", "2.001"},
 	}
 	convey.Convey("TestAddition", t, func() {
-		for _,s := range list {
-			d1,_ := ucum.NewDecimal(s.s1)
-			d2,_ := ucum.NewDecimal(s.s2)
+		for _, s := range list {
+			d1, _ := ucum.NewDecimal(s.s1)
+			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Add(d2).String()
-			convey.So(result ,should.Equal, s.result)
+			convey.So(result, should.Equal, s.result)
 		}
 	})
 }
 
-func TestSubtract(t *testing.T){
-	type subtract struct{
+func TestSubtract(t *testing.T) {
+	type subtract struct {
 		s1, s2, result string
 	}
 	var list = []subtract{
@@ -373,17 +371,17 @@ func TestSubtract(t *testing.T){
 		{"-6", "-5", "-1"},
 	}
 	convey.Convey("TestSubtract", t, func() {
-		for _,s := range list {
-			d1,_ := ucum.NewDecimal(s.s1)
-			d2,_ := ucum.NewDecimal(s.s2)
+		for _, s := range list {
+			d1, _ := ucum.NewDecimal(s.s1)
+			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Subtract(d2).String()
-			convey.So(result ,should.Equal, s.result)
+			convey.So(result, should.Equal, s.result)
 		}
 	})
 }
 
-func TestMultiply(t *testing.T){
-	type multiply struct{
+func TestMultiply(t *testing.T) {
+	type multiply struct {
 		s1, s2, result string
 	}
 	var list = []multiply{
@@ -419,17 +417,17 @@ func TestMultiply(t *testing.T){
 		{"3532873468.2734", "23498342958.76423", "83016672387407213199.375780482"},
 	}
 	convey.Convey("TestMultiply", t, func() {
-		for _,s := range list {
-			d1,_ := ucum.NewDecimal(s.s1)
-			d2,_ := ucum.NewDecimal(s.s2)
+		for _, s := range list {
+			d1, _ := ucum.NewDecimal(s.s1)
+			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Multiply(d2).String()
-			convey.So(result ,should.Equal, s.result)
+			convey.So(result, should.Equal, s.result)
 		}
 	})
 }
 
-func TestDivide(t *testing.T){
-	type divide struct{
+func TestDivide(t *testing.T) {
+	type divide struct {
 		s1, s2, result string
 	}
 	var list = []divide{
@@ -467,17 +465,17 @@ func TestDivide(t *testing.T){
 		{"83016672387407213199.375780482", "23498342958.76423", "3532873468.2734"},
 	}
 	convey.Convey("TestDivide", t, func() {
-		for _,s := range list {
-			d1,_ := ucum.NewDecimal(s.s1)
-			d2,_ := ucum.NewDecimal(s.s2)
+		for _, s := range list {
+			d1, _ := ucum.NewDecimal(s.s1)
+			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Divide(d2).String()
-			convey.So(result ,should.Equal, s.result)
+			convey.So(result, should.Equal, s.result)
 		}
 	})
 }
 
-func TestDivInt(t *testing.T){
-	type divint struct{
+func TestDivInt(t *testing.T) {
+	type divint struct {
 		s1, s2, result string
 	}
 	var list = []divint{
@@ -493,17 +491,17 @@ func TestDivInt(t *testing.T){
 		{"10", "1.5", "6"},
 	}
 	convey.Convey("TestDivInt", t, func() {
-		for _,s := range list {
-			d1,_ := ucum.NewDecimal(s.s1)
-			d2,_ := ucum.NewDecimal(s.s2)
+		for _, s := range list {
+			d1, _ := ucum.NewDecimal(s.s1)
+			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.DivInt(d2).String()
-			convey.So(result ,should.Equal, s.result)
+			convey.So(result, should.Equal, s.result)
 		}
 	})
 }
 
-func TestModulo(t *testing.T){
-	type modulo struct{
+func TestModulo(t *testing.T) {
+	type modulo struct {
 		s1, s2, result string
 	}
 	var list = []modulo{
@@ -511,11 +509,11 @@ func TestModulo(t *testing.T){
 		{"7", "4", "3"},
 	}
 	convey.Convey("TestModulo", t, func() {
-		for _,s := range list {
-			d1,_ := ucum.NewDecimal(s.s1)
-			d2,_ := ucum.NewDecimal(s.s2)
+		for _, s := range list {
+			d1, _ := ucum.NewDecimal(s.s1)
+			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Modulo(d2).String()
-			convey.So(result ,should.Equal, s.result)
+			convey.So(result, should.Equal, s.result)
 		}
 	})
 }
@@ -644,7 +642,6 @@ func TestNewFromStringDeepEquals(t *testing.T) {
 	}
 }
 
-
 func TestBadJSON(t *testing.T) {
 	for _, testCase := range []string{
 		"]o_o[",
@@ -664,7 +661,6 @@ func TestBadJSON(t *testing.T) {
 	}
 }
 
-
 func TestBadXML(t *testing.T) {
 	for _, testCase := range []string{
 		"o_o",
@@ -676,8 +672,8 @@ func TestBadXML(t *testing.T) {
 		`0.333`,
 	} {
 		var doc struct {
-			XMLName xml.Name `xml:"account"`
-			Amount  ucum.Decimal  `xml:"amount"`
+			XMLName xml.Name     `xml:"account"`
+			Amount  ucum.Decimal `xml:"amount"`
 		}
 		err := xml.Unmarshal([]byte(testCase), &doc)
 		if err == nil {
@@ -1228,7 +1224,6 @@ func Benchmark_DivideNew(b *testing.B) {
 		}
 	}
 }
-
 
 // rules for rounded divide, rounded to integer
 // rounded_divide(d,d2) = q
@@ -2185,8 +2180,8 @@ func TestUnmarshalJSONNull(t *testing.T) {
 func TestXML(t *testing.T) {
 	for _, s := range testTable {
 		var doc struct {
-			XMLName xml.Name `xml:"account"`
-			Amount  ucum.Decimal  `xml:"amount"`
+			XMLName xml.Name     `xml:"account"`
+			Amount  ucum.Decimal `xml:"amount"`
 		}
 		docStr := `<account><amount>` + s + `</amount></account>`
 		err := xml.Unmarshal([]byte(docStr), &doc)
@@ -2334,8 +2329,3 @@ func TestDecimal_QuoRem2(t *testing.T) {
 func sign(d ucum.Decimal) int {
 	return d.GetValue().Sign()
 }
-
-
-
-
-

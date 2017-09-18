@@ -1,40 +1,40 @@
 package ucum
 
 import (
-	"time"
 	"regexp"
-	"strings"
 	"sort"
 	"strconv"
+	"strings"
+	"time"
 )
 
 type UcumModel struct {
-	Version string
-	Revision string
+	Version      string
+	Revision     string
 	RevisionDate time.Time
-	Prefixes []*Prefix
-	BaseUnits []*BaseUnit
+	Prefixes     []*Prefix
+	BaseUnits    []*BaseUnit
 	DefinedUnits []*DefinedUnit
 }
 
-func NewUcumModel(version, revision string, revisionDate time.Time)*UcumModel{
+func NewUcumModel(version, revision string, revisionDate time.Time) *UcumModel {
 	r := &UcumModel{}
 	r.Version = version
 	r.Revision = revision
 	r.RevisionDate = revisionDate
-	r.Prefixes = make([]*Prefix,0)
-	r.BaseUnits = make([]*BaseUnit,0)
-	r.DefinedUnits = make([]*DefinedUnit,0)
+	r.Prefixes = make([]*Prefix, 0)
+	r.BaseUnits = make([]*BaseUnit, 0)
+	r.DefinedUnits = make([]*DefinedUnit, 0)
 	return r
 }
 
-func (u *UcumModel)GetUnit(code string)Uniter{
-	for _,unit := range u.BaseUnits {
+func (u *UcumModel) GetUnit(code string) Uniter {
+	for _, unit := range u.BaseUnits {
 		if unit.Code == code {
 			return unit
 		}
 	}
-	for _,unit := range u.DefinedUnits {
+	for _, unit := range u.DefinedUnits {
 		if unit.Code == code {
 			return unit
 		}
@@ -42,8 +42,8 @@ func (u *UcumModel)GetUnit(code string)Uniter{
 	return nil
 }
 
-func (u *UcumModel)Search(kind ConceptKind, text string, isRegex bool)[]Concepter{
-	concepts := make([]Concepter,0)
+func (u *UcumModel) Search(kind ConceptKind, text string, isRegex bool) []Concepter {
+	concepts := make([]Concepter, 0)
 	if kind == 0 || kind == PREFIX {
 		concepts = append(concepts, u.searchPrefixes(text, isRegex)...)
 	}
@@ -53,70 +53,70 @@ func (u *UcumModel)Search(kind ConceptKind, text string, isRegex bool)[]Concepte
 	return concepts
 }
 
-func (u *UcumModel)searchPrefixes(text string, isRegex bool)[]Concepter{
-	concepts := make([]Concepter,0)
-	for _,c := range u.Prefixes{
-		if u.matchesConcept(c, text, isRegex){
+func (u *UcumModel) searchPrefixes(text string, isRegex bool) []Concepter {
+	concepts := make([]Concepter, 0)
+	for _, c := range u.Prefixes {
+		if u.matchesConcept(c, text, isRegex) {
 			concepts = append(concepts, c)
 		}
 	}
 	return concepts
 }
 
-func (u *UcumModel)getBaseUnit(code string)*BaseUnit {
-	for _, unit := range u.BaseUnits{
+func (u *UcumModel) getBaseUnit(code string) *BaseUnit {
+	for _, unit := range u.BaseUnits {
 		if unit.Code == code {
-			return unit;
+			return unit
 		}
 	}
-	return nil;
+	return nil
 }
 
-func (u *UcumModel)searchUnits(text string, isRegex bool, kind ConceptKind)[]Concepter{
-	concepts := make([]Concepter,0)
+func (u *UcumModel) searchUnits(text string, isRegex bool, kind ConceptKind) []Concepter {
+	concepts := make([]Concepter, 0)
 	if kind == BASEUNIT {
-		for _,unit := range u.BaseUnits{
-			if u.matchesUnit(unit, text, isRegex){
-				concepts = append(concepts,unit)
+		for _, unit := range u.BaseUnits {
+			if u.matchesUnit(unit, text, isRegex) {
+				concepts = append(concepts, unit)
 			}
 		}
 	}
 	if kind == UNIT {
-		for _,unit := range u.DefinedUnits{
-			if u.matchesUnit(unit, text, isRegex){
-				concepts = append(concepts,unit)
+		for _, unit := range u.DefinedUnits {
+			if u.matchesUnit(unit, text, isRegex) {
+				concepts = append(concepts, unit)
 			}
 		}
 	}
 	return concepts
 }
 
-func (u *UcumModel)matchesUnit(unit Uniter, text string, isRegex bool)bool{
-	return u.matches(unit.GetProperty(), text, isRegex)||u.matchesConcept(unit, text, isRegex)
+func (u *UcumModel) matchesUnit(unit Uniter, text string, isRegex bool) bool {
+	return u.matches(unit.GetProperty(), text, isRegex) || u.matchesConcept(unit, text, isRegex)
 }
 
-func (u *UcumModel)matches(value, text string, isRegEx bool)bool{
+func (u *UcumModel) matches(value, text string, isRegEx bool) bool {
 	if isRegEx {
-		b,_ := regexp.MatchString(value, text)
+		b, _ := regexp.MatchString(value, text)
 		return b
-	}else{
+	} else {
 		return strings.Contains(strings.ToLower(value), strings.ToLower(text))
 	}
 }
 
-func (u *UcumModel)matchesConcept(concept Concepter, text string, isRegex bool)bool{
-	for _,name := range concept.GetNames(){
-		if u.matches(name, text, isRegex){
+func (u *UcumModel) matchesConcept(concept Concepter, text string, isRegex bool) bool {
+	for _, name := range concept.GetNames() {
+		if u.matches(name, text, isRegex) {
 			return true
 		}
 	}
-	if u.matches(concept.GetCode(), text, isRegex){
+	if u.matches(concept.GetCode(), text, isRegex) {
 		return true
 	}
-	if u.matches(concept.GetCodeUC(), text, isRegex){
+	if u.matches(concept.GetCodeUC(), text, isRegex) {
 		return true
 	}
-	if u.matches(concept.GetPrintSymbol(), text, isRegex){
+	if u.matches(concept.GetPrintSymbol(), text, isRegex) {
 		return true
 	}
 	return false
@@ -133,60 +133,61 @@ type Concepter interface {
 	GetPrintSymbol() string
 }
 
-type Concept struct{
-	Code string
-	CodeUC string
-	Kind ConceptKind
-	Names []string
+type Concept struct {
+	Code        string
+	CodeUC      string
+	Kind        ConceptKind
+	Names       []string
 	PrintSymbol string
 }
 
-func NewConcept(kind ConceptKind, code string, codeUC string)(*Concept,error){
+func NewConcept(kind ConceptKind, code string, codeUC string) (*Concept, error) {
 	c := &Concept{
-		Kind : kind,
-		Code: code,
+		Kind:   kind,
+		Code:   code,
 		CodeUC: codeUC,
 	}
 	return c, nil
 }
 
-func (c Concept)GetDescription()string {
+func (c Concept) GetDescription() string {
 	description := strings.ToLower(c.Kind.String()) + " " + c.Code + " ('" + c.Names[0] + "')"
 	return description
 }
 
-func (c Concept)String()string{
+func (c Concept) String() string {
 	return c.Code + " = " + c.GetDescription()
 }
 
-func (c Concept)GetCode()string{
+func (c Concept) GetCode() string {
 	return c.Code
 }
-func (c Concept)GetCodeUC() string{
+func (c Concept) GetCodeUC() string {
 	return c.CodeUC
 }
-func (c Concept)GetPrintSymbol() string{
+func (c Concept) GetPrintSymbol() string {
 	return c.PrintSymbol
 }
 
-func (c Concept)GetKind()ConceptKind{
+func (c Concept) GetKind() ConceptKind {
 	return c.Kind
 }
-func (c Concept)GetNames()[]string{
+func (c Concept) GetNames() []string {
 	return c.Names
 }
+
 //Unit=====================================================
-type Uniter interface{
+type Uniter interface {
 	Concepter
 	GetProperty() string
 }
 
-type Unit struct{
+type Unit struct {
 	Concept
 	Property string
 }
 
-func NewUnit(kind ConceptKind, code string, codeUC string)(*Unit,error){
+func NewUnit(kind ConceptKind, code string, codeUC string) (*Unit, error) {
 	u := &Unit{}
 	u.Kind = kind
 	u.Code = code
@@ -194,25 +195,25 @@ func NewUnit(kind ConceptKind, code string, codeUC string)(*Unit,error){
 	return u, nil
 }
 
-func (u Unit)GetDescription()string {
+func (u Unit) GetDescription() string {
 	return strings.ToLower(u.Kind.String()) + " " + u.Code + " ('" + u.Names[0] + "')" + " (" + u.Property + ")"
 }
 
-func (u Unit)String()string{
+func (u Unit) String() string {
 	return u.Code + " = " + u.GetDescription()
 }
 
-func (u Unit)GetProperty()string{
+func (u Unit) GetProperty() string {
 	return u.Property
 }
 
 //BaseUnit=====================================================
-type BaseUnit struct{
+type BaseUnit struct {
 	Unit
 	Dim rune
 }
 
-func NewBaseUnit(kind ConceptKind, code string, codeUC string)(*BaseUnit,error){
+func NewBaseUnit(kind ConceptKind, code string, codeUC string) (*BaseUnit, error) {
 	b := &BaseUnit{}
 	b.Kind = BASEUNIT
 	b.Code = code
@@ -221,15 +222,15 @@ func NewBaseUnit(kind ConceptKind, code string, codeUC string)(*BaseUnit,error){
 }
 
 //DefinedUnit=====================================================
-type DefinedUnit struct{
+type DefinedUnit struct {
 	Unit
-	Class string
+	Class     string
 	IsSpecial bool
-	Metric bool
-	Value *Value
+	Metric    bool
+	Value     *Value
 }
 
-func NewDefinedUnit(kind ConceptKind, code string, codeUC string)(*DefinedUnit,error){
+func NewDefinedUnit(kind ConceptKind, code string, codeUC string) (*DefinedUnit, error) {
 	b := &DefinedUnit{}
 	b.Kind = UNIT
 	b.Code = code
@@ -237,17 +238,17 @@ func NewDefinedUnit(kind ConceptKind, code string, codeUC string)(*DefinedUnit,e
 	return b, nil
 }
 
-func (d DefinedUnit)GetDescription()string {
+func (d DefinedUnit) GetDescription() string {
 	return strings.ToLower(d.Kind.String()) + " " + d.Code + " ('" + d.Names[0] + "')" + " (" + d.Property + ")" + " = " + d.Value.GetDescription()
 }
 
 //Prefix=====================================================
-type Prefix struct{
+type Prefix struct {
 	Concept
 	Value Decimal
 }
 
-func NewPrefix(kind ConceptKind, code string, codeUC string)(*Prefix,error){
+func NewPrefix(kind ConceptKind, code string, codeUC string) (*Prefix, error) {
 	b := &Prefix{}
 	b.Kind = PREFIX
 	b.Code = code
@@ -255,19 +256,19 @@ func NewPrefix(kind ConceptKind, code string, codeUC string)(*Prefix,error){
 	return b, nil
 }
 
-func (p Prefix)GetDescription()string {
+func (p Prefix) GetDescription() string {
 	return strings.ToLower(p.Kind.String()) + " " + p.Code + " ('" + p.Names[0] + "')" + " = " + p.Value.String()
 }
 
 //Value=====================================================
-type Value struct{
-	Text string
-	Unit string
+type Value struct {
+	Text   string
+	Unit   string
 	UnitUC string
-	Value Decimal
+	Value  Decimal
 }
 
-func NewValue(unit, unitUC string, value Decimal)(*Value, error){
+func NewValue(unit, unitUC string, value Decimal) (*Value, error) {
 	v := &Value{}
 	v.Unit = unit
 	v.UnitUC = unitUC
@@ -275,7 +276,7 @@ func NewValue(unit, unitUC string, value Decimal)(*Value, error){
 	return v, nil
 }
 
-func (v Value)GetDescription()string {
+func (v Value) GetDescription() string {
 	if v.Value == Zero {
 		return v.Unit
 	}
@@ -288,7 +289,7 @@ type Canonical struct {
 	Value Decimal
 }
 
-func (c *Canonical)RemoveFromUnits(i int){
+func (c *Canonical) RemoveFromUnits(i int) {
 	c.Units[i] = c.Units[len(c.Units)-1]
 	c.Units[len(c.Units)-1] = nil
 	c.Units = c.Units[:len(c.Units)-1]
@@ -300,69 +301,66 @@ func (a ByCode) Len() int           { return len(a) }
 func (a ByCode) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByCode) Less(i, j int) bool { return a[i].base.Code < a[j].base.Code }
 
-func (c *Canonical)SortUnits(){
+func (c *Canonical) SortUnits() {
 	sort.Sort(ByCode(c.Units))
 }
 
-func NewCanonical(value Decimal)(*Canonical, error){
+func NewCanonical(value Decimal) (*Canonical, error) {
 	v := &Canonical{
-		Value:value,
-		Units : make([]*CanonicalUnit, 0),
+		Value: value,
+		Units: make([]*CanonicalUnit, 0),
 	}
 	return v, nil
 }
 
-func (c *Canonical)MultiplyValueDecimal(multiplicand Decimal){
+func (c *Canonical) MultiplyValueDecimal(multiplicand Decimal) {
 	c.Value = c.Value.Multiply(multiplicand)
 }
 
-func (c *Canonical)MultiplyValueInt(multiplicand int)error{
+func (c *Canonical) MultiplyValueInt(multiplicand int) error {
 	d, err := NewDecimal(strconv.Itoa(multiplicand))
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	c.Value = c.Value.Multiply(d)
 	return nil
 }
 
-func (c *Canonical)DivideValueDecimal(divisor Decimal){
+func (c *Canonical) DivideValueDecimal(divisor Decimal) {
 	c.Value = c.Value.Divide(divisor)
 }
 
-func (c *Canonical)DivideValueInt(divisor int)error{
+func (c *Canonical) DivideValueInt(divisor int) error {
 	d, err := NewDecimal(strconv.Itoa(divisor))
-	if err!=nil {
+	if err != nil {
 		return err
 	}
 	c.Value = c.Value.Divide(d)
 	return nil
 }
 
-
 //CanonicalUnit=====================================================
 type CanonicalUnit struct {
-	base *BaseUnit
+	base     *BaseUnit
 	Exponent int
 }
 
-func NewCanonicalUnit(base *BaseUnit, exponent int)(*CanonicalUnit, error){
+func NewCanonicalUnit(base *BaseUnit, exponent int) (*CanonicalUnit, error) {
 	v := &CanonicalUnit{}
 	v.base = base
 	v.Exponent = exponent
 	return v, nil
 }
 
-func (c *CanonicalUnit)Base()(*BaseUnit){
+func (c *CanonicalUnit) Base() *BaseUnit {
 	return c.base
 }
 
 //Component=====================================================
-type Componenter interface{
-
+type Componenter interface {
 }
 
-type Component struct{
-
+type Component struct {
 }
 
 //Factor=====================================================
@@ -371,9 +369,9 @@ type Factor struct {
 	Value int
 }
 
-func NewFactor(value int)(*Factor){
+func NewFactor(value int) *Factor {
 	v := &Factor{
-		Value:value,
+		Value: value,
 	}
 	return v
 }
@@ -381,24 +379,24 @@ func NewFactor(value int)(*Factor){
 //Symbol
 type Symbol struct {
 	Component
-	Unit Uniter
-	Prefix *Prefix
+	Unit     Uniter
+	Prefix   *Prefix
 	Exponent int
 }
 
-func NewSymbol(unit Uniter, prefix *Prefix, exponent int)(*Symbol, error){
+func NewSymbol(unit Uniter, prefix *Prefix, exponent int) (*Symbol, error) {
 	v := &Symbol{}
 	v.Unit = unit
 	v.Prefix = prefix
 	v.Exponent = exponent
-	return v,nil
+	return v, nil
 }
 
-func (s *Symbol)HasPrefix()(bool){
+func (s *Symbol) HasPrefix() bool {
 	return s.Prefix != nil
 }
 
-func (s *Symbol)InvertExponent(){
+func (s *Symbol) InvertExponent() {
 	s.Exponent = -s.Exponent
 }
 
@@ -406,34 +404,33 @@ func (s *Symbol)InvertExponent(){
 type Term struct {
 	Component
 	Comp Componenter
-	Op Operator
+	Op   Operator
 	Term *Term
 }
 
-func NewTerm()(*Term, error){
+func NewTerm() (*Term, error) {
 	return &Term{}, nil
 }
 
-func (t *Term)SetTermCheckOp(term *Term){
-	if term!=nil {
+func (t *Term) SetTermCheckOp(term *Term) {
+	if term != nil {
 		t.Term = term
 		t.Op = term.Op
-	}else{
+	} else {
 		t.Term = nil
 		t.Op = 0
 	}
 }
 
 //Pair=====================================================
-type Pair struct{
+type Pair struct {
 	Value Decimal
-	Code string
+	Code  string
 }
 
-func NewPair(value Decimal, code string)*Pair{
+func NewPair(value Decimal, code string) *Pair {
 	p := &Pair{}
 	p.Value = value
 	p.Code = code
 	return p
 }
-

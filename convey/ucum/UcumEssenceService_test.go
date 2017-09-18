@@ -1,25 +1,25 @@
 package ucum
 
 import (
-	"testing"
-	"os"
 	"UCUM_Golang/ucum"
-	. "github.com/smartystreets/goconvey/convey"
 	"encoding/xml"
+	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
+	"os"
+	"testing"
 )
 
 var test string
 var service *ucum.UcumEssenceService
 
 type TestStructures struct {
-	validationCases []XMLValidationCase
+	validationCases            []XMLValidationCase
 	displayNameGenerationCases []XMLDisplayNameGenerationCase
-	conversionCases []XMLConversionCase
-	multiplicationCases []XMLMultiplicationCase
+	conversionCases            []XMLConversionCase
+	multiplicationCases        []XMLMultiplicationCase
 }
 
-func TestService(t *testing.T){
+func TestService(t *testing.T) {
 	var testStructures *TestStructures
 	var err error
 	Convey("Service-creation", t, func() {
@@ -42,10 +42,10 @@ func TestService(t *testing.T){
 	})
 }
 
-func RunValidationTest(t *testing.T, testStructures *TestStructures, name string){
+func RunValidationTest(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
-		for _,v := range testStructures.validationCases{
-			Convey(v.Id + ": " + v.Unit, func() {
+		for _, v := range testStructures.validationCases {
+			Convey(v.Id+": "+v.Unit, func() {
 				validated, _ := service.Validate(v.Unit)
 				So(validated, ShouldEqual, v.Valid == "true")
 			})
@@ -53,10 +53,10 @@ func RunValidationTest(t *testing.T, testStructures *TestStructures, name string
 	})
 }
 
-func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, name string){
+func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
-		for _,v := range testStructures.displayNameGenerationCases{
-			Convey(v.Id + ": " + v.Unit, func() {
+		for _, v := range testStructures.displayNameGenerationCases {
+			Convey(v.Id+": "+v.Unit, func() {
 				analysed, _ := service.Analyse(v.Unit)
 				So(analysed, ShouldEqual, v.Display)
 			})
@@ -64,13 +64,13 @@ func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, 
 	})
 }
 
-func RunConversionTest(t *testing.T, testStructures *TestStructures, name string){
+func RunConversionTest(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
-		for _,v := range testStructures.conversionCases{
-			Convey(v.Id + ": " + v.Value, func() {
-				d,err := ucum.NewDecimal(v.Value)
+		for _, v := range testStructures.conversionCases {
+			Convey(v.Id+": "+v.Value, func() {
+				d, err := ucum.NewDecimal(v.Value)
 				So(err, ShouldBeNil)
-				o,err := ucum.NewDecimal(v.Outcome)
+				o, err := ucum.NewDecimal(v.Outcome)
 				So(err, ShouldBeNil)
 				res, _ := service.Convert(d, v.SrcUnit, v.DstUnit)
 				So(res.AsDecimal(), ShouldEqual, o.AsDecimal())
@@ -79,27 +79,27 @@ func RunConversionTest(t *testing.T, testStructures *TestStructures, name string
 	})
 }
 
-func RunMultiplicationTest(t *testing.T, testStructures *TestStructures, name string){
+func RunMultiplicationTest(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
-		for _,v := range testStructures.multiplicationCases{
-			Convey(v.Id , func() {
-				d,err := ucum.NewDecimal(v.V1)
+		for _, v := range testStructures.multiplicationCases {
+			Convey(v.Id, func() {
+				d, err := ucum.NewDecimal(v.V1)
 				So(err, ShouldBeNil)
 				o1 := ucum.NewPair(d, v.U1)
-				d,err = ucum.NewDecimal(v.V2)
+				d, err = ucum.NewDecimal(v.V2)
 				So(err, ShouldBeNil)
 				o2 := ucum.NewPair(d, v.U2)
 				o3, err := service.Multiply(o1, o2)
 				So(err, ShouldBeNil)
 				d, err = ucum.NewDecimal(v.VRes)
 				test := o3.Value.ComparesTo(d)
-				So( test, ShouldEqual, 0)
+				So(test, ShouldEqual, 0)
 			})
 		}
 	})
 }
 
-func UnmarshalTerminology(xmlFileName string)(*TestStructures, error){
+func UnmarshalTerminology(xmlFileName string) (*TestStructures, error) {
 	xmlFile, err := os.Open(xmlFileName)
 	if err != nil {
 		return nil, err
@@ -113,28 +113,26 @@ func UnmarshalTerminology(xmlFileName string)(*TestStructures, error){
 	//	return nil, err
 	//}
 	t := &TestStructures{}
-	t.validationCases = make([]XMLValidationCase,0)
-	t.displayNameGenerationCases = make([]XMLDisplayNameGenerationCase,0)
-	t.conversionCases = make([]XMLConversionCase,0)
-	t.multiplicationCases = make([]XMLMultiplicationCase,0)
+	t.validationCases = make([]XMLValidationCase, 0)
+	t.displayNameGenerationCases = make([]XMLDisplayNameGenerationCase, 0)
+	t.conversionCases = make([]XMLConversionCase, 0)
+	t.multiplicationCases = make([]XMLMultiplicationCase, 0)
 	for _, xmlItem := range xmlTest.Validations.Cases {
 		validationCase := xmlItem
-		t.validationCases = append (t.validationCases,validationCase)
+		t.validationCases = append(t.validationCases, validationCase)
 	}
 	for _, xmlItem := range xmlTest.DisplayNameGenerations.Cases {
 		displayNameGenerationCase := xmlItem
-		t.displayNameGenerationCases = append (t.displayNameGenerationCases,displayNameGenerationCase)
+		t.displayNameGenerationCases = append(t.displayNameGenerationCases, displayNameGenerationCase)
 	}
 	for _, xmlItem := range xmlTest.Conversions.Cases {
 		conversionCase := xmlItem
-		t.conversionCases = append (t.conversionCases,conversionCase)
+		t.conversionCases = append(t.conversionCases, conversionCase)
 	}
 	for _, xmlItem := range xmlTest.Multiplications.Cases {
 		multiplicationCase := xmlItem
-		t.multiplicationCases = append (t.multiplicationCases,multiplicationCase)
+		t.multiplicationCases = append(t.multiplicationCases, multiplicationCase)
 	}
 
 	return t, nil
 }
-
-

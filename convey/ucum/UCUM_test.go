@@ -1,12 +1,12 @@
 package ucum
 
 import (
-	"testing"
 	"UCUM_Golang/ucum"
 	"github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
-func TestInterfaceImplementation_UCUM(t *testing.T){
+func TestInterfaceImplementation_UCUM(t *testing.T) {
 	var _ ucum.Concepter = (*ucum.Unit)(nil)
 	var _ ucum.Concepter = (*ucum.Prefix)(nil)
 	var _ ucum.Concepter = (*ucum.BaseUnit)(nil)

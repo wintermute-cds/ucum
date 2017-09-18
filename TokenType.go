@@ -2,7 +2,7 @@ package ucum
 
 type TokenType int
 
-const(
+const (
 	_ TokenType = iota
 	NONE
 	NUMBER

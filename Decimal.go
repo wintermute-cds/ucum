@@ -1,14 +1,13 @@
 package ucum
 
-
 import (
-"database/sql/driver"
-"encoding/binary"
-"fmt"
-"math"
-"math/big"
-"strconv"
-"strings"
+	"database/sql/driver"
+	"encoding/binary"
+	"fmt"
+	"math"
+	"math/big"
+	"strconv"
+	"strings"
 )
 
 // DivisionPrecision is the number of decimal places in the result when it
@@ -54,15 +53,15 @@ type Decimal struct {
 	// If we cared about being able to represent every possible decimal, we
 	// could make exp a *big.Int but it would hurt performance and numbers
 	// like that are unrealistic.
-	exp int32
+	exp       int32
 	precision int
 }
 
-func (d Decimal)GetValue() *big.Int{
+func (d Decimal) GetValue() *big.Int {
 	return d.value
 }
 
-func (d Decimal)GetExp() int32{
+func (d Decimal) GetExp() int32 {
 	return d.exp
 }
 
@@ -141,21 +140,20 @@ func NewFromString(value string) (Decimal, error) {
 	}
 
 	return Decimal{
-		value: dValue,
-		exp:   int32(exp),
-		precision:dPrecision,
+		value:     dValue,
+		exp:       int32(exp),
+		precision: dPrecision,
 	}, nil
 }
 
-func (d Decimal)AsScientific()(string){
+func (d Decimal) AsScientific() string {
 	f, _ := d.Float64()
 	s := fmt.Sprintf("%e", f)
 	return s
 }
-func (d Decimal)AsDecimal()(string){
+func (d Decimal) AsDecimal() string {
 	return d.String()
 }
-
 
 // NewFromFloat converts a float64 to Decimal.
 //
@@ -511,7 +509,7 @@ func (d Decimal) Coefficient() *big.Int {
 }
 
 // IntPart returns the integer component of the decimal.
-func (d Decimal)AsInteger()(int64){
+func (d Decimal) AsInteger() int64 {
 	return d.IntPart()
 }
 func (d Decimal) IntPart() int64 {
@@ -653,14 +651,15 @@ func (d Decimal) RoundBank(places int32) Decimal {
 }
 
 func (d Decimal) Trunc() Decimal {
-	if d.GreaterThan(Zero){
+	if d.GreaterThan(Zero) {
 		return d.Floor()
-	}else if d.LessThan(Zero){
+	} else if d.LessThan(Zero) {
 		return d.Ceil()
-	}else{
+	} else {
 		return Zero
 	}
 }
+
 // Floor returns the nearest integer value less than or equal to d.
 func (d Decimal) Floor() Decimal {
 	d.ensureInitialized()
@@ -1014,4 +1013,3 @@ func (d Decimal) DivOld(d2 Decimal, prec int) Decimal {
 	}
 	return ret
 }
-

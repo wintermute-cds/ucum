@@ -2,7 +2,7 @@ package ucum
 
 type ConceptKind int
 
-const(
+const (
 	_ ConceptKind = iota
 	PREFIX
 	BASEUNIT
