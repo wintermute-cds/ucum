@@ -47,8 +47,21 @@ func TestService(t *testing.T) {
 		RunSearchBaseUnitsTests(t, testStructures, "RunSearchBaseUnitsTests")
 		RunSearchUnitsTests(t, testStructures, "RunSearchUnitsTests")
 		RunGetPropertiesTests(t, testStructures, "RunGetPropertiesTests")
+		RunValidateInPropertyTests(t, testStructures, "RunValidateInPropertyTests")
 	})
 }
+
+func RunValidateInPropertyTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		for _, v := range service.Model.DefinedUnits {
+			Convey(v.Unit.Property + "-" + v.Names[0], func() {
+				validated := service.ValidateInProperty(v.Code, v.Property )
+				So(validated, ShouldBeEmpty)
+			})
+		}
+	})
+}
+
 
 func RunGetPropertiesTests(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
