@@ -1,12 +1,11 @@
 package ucum
 
 import (
-	"UCUM_Golang/ucum"
+	"ucum"
 	"database/sql/driver"
 	"encoding/json"
 	"encoding/xml"
-	"github.com/smartystreets/assertions/should"
-	"github.com/smartystreets/goconvey/convey"
+	. "github.com/smartystreets/goconvey/convey"
 	"math"
 	"math/big"
 	"reflect"
@@ -24,13 +23,13 @@ func TestStringAsIntegerDecimal(t *testing.T) {
 	var integerTable = []int{
 		0, 1, 2, 64, MAX_INT, -1, -2, -64, MIN_INT,
 	}
-	convey.Convey("TestStringAsIntegerDecimal", t, func() {
+	Convey("TestStringAsIntegerDecimal", t, func() {
 		for _, integer := range integerTable {
 			d, err := ucum.NewDecimal(strconv.Itoa(integer))
-			convey.So(err, should.BeNil)
+			So(err, ShouldBeNil)
 			i := d.AsInteger()
-			convey.So(err, should.BeNil)
-			convey.So(i, should.Equal, integer)
+			So(err, ShouldBeNil)
+			So(i, ShouldEqual, integer)
 		}
 	})
 }
@@ -99,12 +98,12 @@ func TestDecimalAsScientific(t *testing.T) {
 		"10000000000000.1":    "1.000000e+13",
 		"100000000000000.1":   "1.000000e+14",
 	}
-	convey.Convey("TestDecimalToScientific", t, func() {
+	Convey("TestDecimalToScientific", t, func() {
 		for k, v := range DecimalScientificMap {
 			d, err := ucum.NewDecimal(k)
-			convey.So(err, should.BeNil)
+			So(err, ShouldBeNil)
 			s := d.AsScientific()
-			convey.So(s, should.Equal, v)
+			So(s, ShouldEqual, v)
 		}
 	})
 }
@@ -167,12 +166,12 @@ func TestScientificAsDecimal(t *testing.T) {
 		"1.000000000000001e14": "100000000000000.1",
 	}
 
-	convey.Convey("TestDecimalToString", t, func() {
+	Convey("TestDecimalToString", t, func() {
 		for k, v := range ScientificDecimalMap {
 			d, err := ucum.NewDecimal(k)
-			convey.So(err, should.BeNil)
+			So(err, ShouldBeNil)
 			s := d.AsDecimal()
-			convey.So(s, should.Equal, v)
+			So(s, ShouldEqual, v)
 		}
 	})
 }
@@ -241,20 +240,20 @@ func TestDecimalToString(t *testing.T) {
 		"10000000000000.1":    "10000000000000.1",
 		"100000000000000.1":   "100000000000000.1",
 	}
-	convey.Convey("TestDecimalToString", t, func() {
+	Convey("TestDecimalToString", t, func() {
 		d, err := ucum.NewDecimal(strconv.Itoa(MIN_INT))
-		convey.So(err, should.BeNil)
+		So(err, ShouldBeNil)
 		s := d.String()
-		convey.So(s, should.Equal, strconv.Itoa(MIN_INT))
+		So(s, ShouldEqual, strconv.Itoa(MIN_INT))
 		d, err = ucum.NewDecimal(strconv.Itoa(MAX_INT))
-		convey.So(err, should.BeNil)
+		So(err, ShouldBeNil)
 		s = d.String()
-		convey.So(s, should.Equal, strconv.Itoa(MAX_INT))
+		So(s, ShouldEqual, strconv.Itoa(MAX_INT))
 		for k, v := range DecimalToStringMap {
 			d, err = ucum.NewDecimal(k)
-			convey.So(err, should.BeNil)
+			So(err, ShouldBeNil)
 			s = d.String()
-			convey.So(s, should.Equal, v)
+			So(s, ShouldEqual, v)
 		}
 	})
 }
@@ -270,12 +269,12 @@ func TestTruncate(t *testing.T) {
 		"0.0001": "0",
 		"100.000000000000000000000000000000000000000001": "100",
 	}
-	convey.Convey("TestTruncate", t, func() {
+	Convey("TestTruncate", t, func() {
 		for k, v := range TruncateMap {
 			d, err := ucum.NewDecimal(k)
-			convey.So(err, should.BeNil)
+			So(err, ShouldBeNil)
 			s := d.Trunc().String()
-			convey.So(s, should.Equal, v)
+			So(s, ShouldEqual, v)
 		}
 	})
 }
@@ -300,11 +299,11 @@ func TestCompare(t *testing.T) {
 		{"1.111111", "1.1111111", -1},
 		{"1.1111111", "1.111111", 1},
 	}
-	convey.Convey("TestCompare", t, func() {
+	Convey("TestCompare", t, func() {
 		for _, s := range list {
 			d1, _ := ucum.NewDecimal(s.compare1)
 			d2, _ := ucum.NewDecimal(s.compare2)
-			convey.So(d1.ComparesTo(d2), should.Equal, s.outcome)
+			So(d1.ComparesTo(d2), ShouldEqual, s.outcome)
 		}
 	})
 }
@@ -335,12 +334,12 @@ func TestAddition(t *testing.T) {
 		{"2", "0.001", "2.001"},
 		{"2.0", "0.001", "2.001"},
 	}
-	convey.Convey("TestAddition", t, func() {
+	Convey("TestAddition", t, func() {
 		for _, s := range list {
 			d1, _ := ucum.NewDecimal(s.s1)
 			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Add(d2).String()
-			convey.So(result, should.Equal, s.result)
+			So(result, ShouldEqual, s.result)
 		}
 	})
 }
@@ -370,12 +369,12 @@ func TestSubtract(t *testing.T) {
 		{"-5", "-6", "1"},
 		{"-6", "-5", "-1"},
 	}
-	convey.Convey("TestSubtract", t, func() {
+	Convey("TestSubtract", t, func() {
 		for _, s := range list {
 			d1, _ := ucum.NewDecimal(s.s1)
 			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Subtract(d2).String()
-			convey.So(result, should.Equal, s.result)
+			So(result, ShouldEqual, s.result)
 		}
 	})
 }
@@ -416,12 +415,12 @@ func TestMultiply(t *testing.T) {
 		{"35328734682734000000000", "2349834295876423000000000", "83016672387407213199375780482000000000000000000"},
 		{"3532873468.2734", "23498342958.76423", "83016672387407213199.375780482"},
 	}
-	convey.Convey("TestMultiply", t, func() {
+	Convey("TestMultiply", t, func() {
 		for _, s := range list {
 			d1, _ := ucum.NewDecimal(s.s1)
 			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Multiply(d2).String()
-			convey.So(result, should.Equal, s.result)
+			So(result, ShouldEqual, s.result)
 		}
 	})
 }
@@ -464,12 +463,12 @@ func TestDivide(t *testing.T) {
 		{"83016672387407213199375780482000000000000000000", "2349834295876423000000000", "35328734682734000000000"},
 		{"83016672387407213199.375780482", "23498342958.76423", "3532873468.2734"},
 	}
-	convey.Convey("TestDivide", t, func() {
+	Convey("TestDivide", t, func() {
 		for _, s := range list {
 			d1, _ := ucum.NewDecimal(s.s1)
 			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Divide(d2).String()
-			convey.So(result, should.Equal, s.result)
+			So(result, ShouldEqual, s.result)
 		}
 	})
 }
@@ -490,12 +489,12 @@ func TestDivInt(t *testing.T) {
 		{"1", "1.5", "0"},
 		{"10", "1.5", "6"},
 	}
-	convey.Convey("TestDivInt", t, func() {
+	Convey("TestDivInt", t, func() {
 		for _, s := range list {
 			d1, _ := ucum.NewDecimal(s.s1)
 			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.DivInt(d2).String()
-			convey.So(result, should.Equal, s.result)
+			So(result, ShouldEqual, s.result)
 		}
 	})
 }
@@ -508,12 +507,12 @@ func TestModulo(t *testing.T) {
 		{"10", "1", "0"},
 		{"7", "4", "3"},
 	}
-	convey.Convey("TestModulo", t, func() {
+	Convey("TestModulo", t, func() {
 		for _, s := range list {
 			d1, _ := ucum.NewDecimal(s.s1)
 			d2, _ := ucum.NewDecimal(s.s2)
 			result := d1.Modulo(d2).String()
-			convey.So(result, should.Equal, s.result)
+			So(result, ShouldEqual, s.result)
 		}
 	})
 }

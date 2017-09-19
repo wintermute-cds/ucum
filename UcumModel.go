@@ -97,7 +97,7 @@ func (u *UcumModel) matchesUnit(unit Uniter, text string, isRegex bool) bool {
 
 func (u *UcumModel) matches(value, text string, isRegEx bool) bool {
 	if isRegEx {
-		b, _ := regexp.MatchString(value, text)
+		b, _ := regexp.MatchString( text, value)
 		return b
 	} else {
 		return strings.Contains(strings.ToLower(value), strings.ToLower(text))

@@ -1884,9 +1884,7 @@
          CCID
          <sub>50</sub>
       </printSymbol>
-      <property>
-         biologic activity (infectivity) of an infectious agent preparation
-      </property>
+      <property>biologic activity (infectivity) of an infectious agent preparation</property>
       <value Unit="1" UNIT="1" value="1">1</value>
    </unit>
    <unit Code="[TCID_50]" CODE="[TCID_50]" isMetric="no" isArbitrary="yes" class="chemical">
@@ -1895,9 +1893,7 @@
          TCID
          <sub>50</sub>
       </printSymbol>
-      <property>
-         biologic activity (infectivity) of an infectious agent preparation
-      </property>
+      <property>biologic activity (infectivity) of an infectious agent preparation</property>
       <value Unit="1" UNIT="1" value="1">1</value>
    </unit>
    <unit Code="[EID_50]" CODE="[EID_50]" isMetric="no" isArbitrary="yes" class="chemical">

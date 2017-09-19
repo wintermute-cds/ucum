@@ -13,6 +13,9 @@ type Converter struct {
 func NewConverter(model *UcumModel, handlers *Registry) *Converter {
 	r := &Converter{}
 	r.Model = model
+	if handlers == nil {
+		handlers = NewRegistry()
+	}
 	r.Handlers = handlers
 	return r
 }

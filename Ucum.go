@@ -424,6 +424,9 @@ type UcumValidator struct {
 func NewUcumValidator(model *UcumModel, handlers *Registry) *UcumValidator {
 	v := &UcumValidator{}
 	v.Model = model
+	if handlers == nil {
+		handlers = NewRegistry()
+	}
 	v.Handlers = handlers
 	return v
 }
@@ -446,7 +449,7 @@ func (v *UcumValidator) checkCodes() {
 
 func (v *UcumValidator) checkUnits() {
 	for _, u := range v.Model.DefinedUnits {
-		if u.IsSpecial {
+		if !u.IsSpecial {
 			v.checkUnitCode(u.Value.Unit, false)
 		} else if !v.Handlers.Exists(u.Code) {
 			v.Result = append(v.Result, "No handler for "+u.Code)

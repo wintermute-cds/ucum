@@ -1,12 +1,14 @@
 package ucum
 
 import (
-	"UCUM_Golang/ucum"
+	"ucum"
 	"encoding/xml"
 	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
 	"os"
 	"testing"
+	"fmt"
+	"reflect"
 )
 
 var test string
@@ -24,13 +26,13 @@ func TestService(t *testing.T) {
 	var err error
 	Convey("Service-creation", t, func() {
 		Convey("Service-creation", func() {
-			definitions := os.Getenv("GOPATH") + "/src/UCUM_Golang/ucum/terminology_data/ucum-essence.xml"
+			definitions := os.Getenv("GOPATH") + "/src/ucum/terminology_data/ucum-essence.xml"
 			service, err = ucum.GetInstanceOfUcumEssenceService(definitions)
 			So(err, ShouldBeNil)
 			So(service, ShouldNotBeNil)
 		})
 		Convey("First test run", func() {
-			test = os.Getenv("GOPATH") + "/src/UCUM_Golang/convey/resources/UcumFunctionalTests.xml"
+			test = os.Getenv("GOPATH") + "/src/ucum/convey/resources/UcumFunctionalTests.xml"
 			testStructures, err = UnmarshalTerminology(test)
 			So(err, ShouldBeNil)
 			So(testStructures, ShouldNotBeNil)
@@ -39,6 +41,165 @@ func TestService(t *testing.T) {
 		RunDisplayNameGenerationTest(t, testStructures, "DisplayNameGenerationTest")
 		RunConversionTest(t, testStructures, "ConversionTest")
 		RunMultiplicationTest(t, testStructures, "RunMultiplicationTest")
+		RunUcumIdentificationTest(t, testStructures, "RunUcumIdentificationTest")
+		RunUcumValidateUCUMTest(t, testStructures, "RunUcumValidateUCUMTest")
+		RunSearchPrefixTests(t, testStructures, "RunSearchPrefixTests")
+		RunSearchBaseUnitsTests(t, testStructures, "RunSearchBaseUnitsTests")
+		RunSearchUnitsTests(t, testStructures, "RunSearchUnitsTests")
+		RunGetPropertiesTests(t, testStructures, "RunGetPropertiesTests")
+	})
+}
+
+func RunGetPropertiesTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		list := service.GetProperties()
+		So(len(list), ShouldBeGreaterThan, 300)
+	})
+}
+
+func RunSearchUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		list, err := service.Search(ucum.UNIT, "sr", false)
+		So(err, ShouldBeNil)
+		p1 := list[0]
+		list, err = service.Search(ucum.UNIT, "SR", false)
+		So(err, ShouldBeNil)
+		p2 := list[0]
+		So(reflect.DeepEqual(p1,p2), ShouldBeTrue)
+		list, err = service.Search(ucum.UNIT, "steradian", false)
+		So(err, ShouldBeNil)
+		p3 := list[0]
+		So(reflect.DeepEqual(p1,p3), ShouldBeTrue)
+		list, err = service.Search(ucum.UNIT, "solid angle", false)
+		So(err, ShouldBeNil)
+		p4 := list[0]
+		So(reflect.DeepEqual(p1,p4), ShouldBeTrue)
+		list, err = service.Search(ucum.UNIT, "^m([a-z]+)r", true)
+		So(err, ShouldBeNil)
+		So(len(list), ShouldEqual, 9)
+		list, err = service.Search(ucum.UNIT, "m([a-z]+)r", true)
+		So(err, ShouldBeNil)
+		So(len(list), ShouldEqual, 31)
+	})
+}
+
+
+func RunSearchBaseUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		list, err := service.Search(ucum.BASEUNIT, "meter", false)
+		So(err, ShouldBeNil)
+		p1 := list[0]
+		list, err = service.Search(ucum.BASEUNIT, "length", false)
+		So(err, ShouldBeNil)
+		p2 := list[0]
+		So(reflect.DeepEqual(p1,p2), ShouldBeTrue)
+		list, err = service.Search(ucum.BASEUNIT, "m", false)
+		So(err, ShouldBeNil)
+		p3 := list[0]
+		So(reflect.DeepEqual(p1,p3), ShouldBeTrue)
+		list, err = service.Search(ucum.BASEUNIT, "M", false)
+		So(err, ShouldBeNil)
+		p4 := list[0]
+		So(reflect.DeepEqual(p1,p4), ShouldBeTrue)
+		list, err = service.Search(ucum.BASEUNIT, "L", false)
+		So(err, ShouldBeNil)
+		p6 := list[0]
+		So(reflect.DeepEqual(p1,p6), ShouldBeTrue)
+		list, err = service.Search(ucum.BASEUNIT, "^m([a-z]+)r", true)
+		So(err, ShouldBeNil)
+		p5 := list[0]
+		So(reflect.DeepEqual(p1,p5), ShouldBeTrue)
+		So(len(list), ShouldEqual, 1)
+		f := false
+		for _, s := range list {
+			if s.GetNames()[0] == "meter" {
+				f = true
+			}
+		}
+		So(f, ShouldBeTrue)
+		list, err = service.Search(ucum.BASEUNIT, "m([a-z]+)r", true)
+		So(err, ShouldBeNil)
+		So(len(list), ShouldEqual, 2)
+		f = false
+		for _, s := range list {
+			if s.GetNames()[0] == "meter" {
+				f = true
+			}
+		}
+		So(f, ShouldBeTrue)
+		f = false
+		for _, s := range list {
+			if s.(*ucum.BaseUnit).Property == "temperature" {
+				f = true
+			}
+		}
+		So(f, ShouldBeTrue)
+	})
+}
+
+func RunSearchPrefixTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		list, err := service.Search(ucum.PREFIX, "micro", false)
+		So(err, ShouldBeNil)
+		p1 := list[0]
+		list, err = service.Search(ucum.PREFIX, "μ", false)
+		So(err, ShouldBeNil)
+		p2 := list[0]
+		So(reflect.DeepEqual(p1,p2), ShouldBeTrue)
+		list, err = service.Search(ucum.PREFIX, "u", false)
+		So(err, ShouldBeNil)
+		p3 := list[0]
+		So(reflect.DeepEqual(p1,p3), ShouldBeTrue)
+		list, err = service.Search(ucum.PREFIX, "U", false)
+		So(err, ShouldBeNil)
+		p4 := list[0]
+		So(reflect.DeepEqual(p1,p4), ShouldBeTrue)
+		list, err = service.Search(ucum.PREFIX, "^m([a-z]+)o", true)
+		So(err, ShouldBeNil)
+		p5 := list[0]
+		So(reflect.DeepEqual(p1,p5), ShouldBeTrue)
+		So(len(list), ShouldEqual, 1)
+		f := false
+		for _, s := range list {
+			if s.GetNames()[0] == "micro" {
+				f = true
+			}
+		}
+		So(f, ShouldBeTrue)
+		list, err = service.Search(ucum.PREFIX, "m([a-z]+)o", true)
+		So(err, ShouldBeNil)
+		So(len(list), ShouldEqual, 2)
+		f = false
+		for _, s := range list {
+			if s.GetNames()[0] == "micro" {
+				f = true
+			}
+		}
+		So(f, ShouldBeTrue)
+		f = false
+		for _, s := range list {
+			if s.GetNames()[0] == "femto" {
+				f = true
+			}
+		}
+		So(f, ShouldBeTrue)
+	})
+}
+
+func RunUcumValidateUCUMTest(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		s := service.ValidateUCUM()
+		for _, e := range s{
+			fmt.Println(e)
+		}
+	})
+}
+
+
+func RunUcumIdentificationTest(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		So(service.UcumIdentification().Version, ShouldNotBeEmpty)
+		So(service.UcumIdentification().ReleaseDate.String(), ShouldNotBeEmpty)
 	})
 }
 

@@ -96,7 +96,8 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		unit.CodeUC = xmlItem.CodeUC
 		unit.Names = names
 		unit.PrintSymbol = xmlItem.PrintSymbol
-		unit.Property = xmlItem.Property
+		property := strings.Trim(xmlItem.Property," ")
+		unit.Property = property
 		unit.Class = xmlItem.Class
 		unit.IsSpecial = xmlItem.IsSpecial == "yes"
 		unit.Metric = xmlItem.Metric == "yes"

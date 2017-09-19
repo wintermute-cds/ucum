@@ -30,13 +30,13 @@ func ComposeExpression(item interface{}, canonicalValue bool) string {
 
 func (e *ExpressionComposer) composeTerm(buffer *bytes.Buffer, term *Term) {
 	if term.Comp != nil {
-		e.composeComp(buffer, term.Comp.(Component))
+		e.composeComp(buffer, term.Comp)
 	}
 	if term.Op > 0 {
 		e.composeOp(buffer, term.Op)
 	}
 	if term.Term != nil {
-		e.composeTerm(buffer, term)
+		e.composeTerm(buffer, term.Term)
 	}
 }
 func (e *ExpressionComposer) composeComp(buffer *bytes.Buffer, comp Componenter) {
