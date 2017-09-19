@@ -15,4 +15,6 @@ To use the library, download ucum-essence from http://unitsofmeasure.org, and th
 
 ucumSvc = NewUcumEssenceService(definitionFile);
 
+Please find the library-API in the file Ucum.go
+
 - Status: all tests run fine
