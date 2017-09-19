@@ -194,6 +194,9 @@ func (p *ExpressionParser) parseTerm(l *Lexer, first bool) (*Term, error) {
 			}
 		}
 		if l.TokenType != NONE && l.TokenType != CLOSE {
+			//All units can be combined in an algebraic term using the operators for multiplication (period '.') and division (solidus '/').
+			//Multiple terms in an expression must be separated by an arithmetic operator - either the multiplication operator (.) or the division operator (/).
+			//While the multiplication operator (.) must appear between two unit terms, the division operator (/) may appear at the beginning of the expression, indicating inversion of the following term.
 			if l.TokenType == SOLIDUS {
 				res.Op = DIVISION
 				l.Consume()
@@ -224,6 +227,8 @@ func (p *ExpressionParser) parseComp(l *Lexer) (Componenter, error) {
 		return p.parseSymbol(l)
 	} else if l.TokenType == NONE {
 		return nil, fmt.Errorf("Error processing unit '" + l.Source + "': " + "unexpected end of expression looking for a symbol or a number" + "' at position " + strconv.Itoa(l.Start))
+		//Parentheses may be used to override normal left-to-right evaluation of an expreession.
+		// For example kg/m.s2 divides kg by m and multiplies the result by s2. kg/(m.s2) multiplies m by s2 and divides that by kg.
 	} else if l.TokenType == OPEN {
 		l.Consume()
 		res, err := p.parseTerm(l, true)
@@ -316,6 +321,9 @@ func (l *Lexer) Consume() error {
 		if err != nil {
 			return err
 		}
+		//All units can be combined in an algebraic term using the operators for multiplication (period '.') and division (solidus '/').
+		//Multiple terms in an expression must be separated by an arithmetic operator - either the multiplication operator (.) or the division operator (/).
+		//While the multiplication operator (.) must appear between two unit terms, the division operator (/) may appear at the beginning of the expression, indicating inversion of the following term.
 		if !(l.checkSingleChar(ch, '/', SOLIDUS) || l.checkSingleChar(ch, '.', PERIOD) ||
 			l.checkSingleChar(ch, '(', OPEN) || l.checkSingleChar(ch, ')', CLOSE) || annotation ||
 			checkNumber || checkNumberOrSymbol) {

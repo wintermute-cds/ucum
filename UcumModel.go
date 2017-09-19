@@ -123,6 +123,15 @@ func (u *UcumModel) matchesConcept(concept Concepter, text string, isRegex bool)
 }
 
 // Concept=====================================================
+/**
+Base of Unit and Prefix.
+Top class
+Code = String (case sensitive c/s)
+CodeUC = String, case insensitive c/i)
+Kind = ConceptKind (PREFIX, BASEUNIT or UNIT)
+Name = full (official) name of the concept
+PrintSymbol
+ */
 type Concepter interface {
 	GetDescription() string
 	String() string
@@ -177,6 +186,10 @@ func (c Concept) GetNames() []string {
 }
 
 //Unit=====================================================
+/**
+Parent is Concept
+Children are BaseUnit and DefinedUnit
+ */
 type Uniter interface {
 	Concepter
 	GetProperty() string
@@ -208,6 +221,8 @@ func (u Unit) GetProperty() string {
 }
 
 //BaseUnit=====================================================
+//Parent is Unit
+//DIM is character indicating the Property
 type BaseUnit struct {
 	Unit
 	Dim rune
@@ -222,6 +237,33 @@ func NewBaseUnit(kind ConceptKind, code string, codeUC string) (*BaseUnit, error
 }
 
 //DefinedUnit=====================================================
+/**
+Parent is Unit
+- Class "dimless" = dimensionless
+- Class SI "si" = the SI units (International System of Units)/
+SI units are mole, steradian, hertz, newton, pascal, joule, watt, ampère, volt, farad, ohm, siemens, weber, degree,
+tesla, henry, lumen, lux, becquerel, gray, sievert
+- Class ISO1000 "iso1000" = other units from ISO 1000
+- Class "const" = Natural units, velocity of light, Planck constant, etc.
+- Class "cgs" = The units of the older Centimeter-Gram-Second (CGS) system
+- Class "cust" = Customary units have once been used all over Europe.
+Units were taken from nature: anatomical structures (e.g., arm, foot, finger), botanical objects
+- Class "us-lengths" = The older U.S. units according to the definition of the inch in the U.S. Metric Law of 1866 and
+the definition of foot and yard that was valid from 1893 until 1959
+- Class "us-volumes" = “capacity” measures, which are different for fluid goods (wine) and dry goods (grain)
+- Class "brit-volumes" = British Imperial volumes according to the Weights and Measures Act of 1824
+- Class "avoirdupois" = The avoirdupois system is used in the U.S. as well as in coutries that use the British Imperial system.
+Avoirdupois is the default system of mass units used for all goods that “have weight”
+- Class "troy" = The troy system originates in Troyes, a City in the Champagne (France) that hosted a major European fair.
+- Class "apoth" = The apothecaries' system of mass units
+- Class "typeset" = There are three systems of typesetter's lengths in use today: Françcois-Ambroise Didot (1730-1804), Didot, U.S. type foundries
+- Class "heat" = Older units of heat (energy) and temperature
+- Class "clinical" = Units used mainly in clinical medicine
+- Class "chemical" = Units used mainly in chemical and biochemical laboratories
+- Class "levels" = Pseudo-units defined to express logarithms of ratios between two quantities of the same kind
+- Class "misc" = Not otherwise classified units
+- Class "infotech" = Units used in information technology
+ */
 type DefinedUnit struct {
 	Unit
 	Class     string
@@ -243,6 +285,10 @@ func (d DefinedUnit) GetDescription() string {
 }
 
 //Prefix=====================================================
+/**
+Parent is Concept
+Value = is the scalar value by which the unit atom is multiplied if combined with the prefix.
+ */
 type Prefix struct {
 	Concept
 	Value Decimal
@@ -284,6 +330,16 @@ func (v Value) GetDescription() string {
 }
 
 //Canonical=====================================================
+/**
+unit terms that are commonly used in medicine. Since the space of possible unit terms is infinite in theory and very large in practice,
+no attempt has been made on a systematic coverage of possible units. All necessary units can be built from the rules of
+The Unified Code for Units of Measure and there is no need of a particular term to be enumerated in order to be valid.
+
+The canonical form itself consists of 3 columns: (4.1) the magnitude value of the unit term in terms of the canonical unit;
+(4.2) a canonical unit term; (4.3) if applicable a special conversion function code.
+
+A canonical unit is a unit of measurement agreed upon as default in a certain context.
+ */
 type Canonical struct {
 	Units []*CanonicalUnit
 	Value Decimal
@@ -340,6 +396,9 @@ func (c *Canonical) DivideValueInt(divisor int) error {
 }
 
 //CanonicalUnit=====================================================
+/**
+base a canonical unit term;
+ */
 type CanonicalUnit struct {
 	base     *BaseUnit
 	Exponent int
@@ -364,6 +423,10 @@ type Component struct {
 }
 
 //Factor=====================================================
+/**
+Parent is component
+Connected with TokenType NUMBER
+ */
 type Factor struct {
 	Component
 	Value int
@@ -376,7 +439,11 @@ func NewFactor(value int) *Factor {
 	return v
 }
 
-//Symbol
+//Symbol=====================================================
+/**
+// Unit may be Base Unit or DefinedUnit
+// Prefix only if unit is metric
+ */
 type Symbol struct {
 	Component
 	Unit     Uniter
@@ -401,6 +468,12 @@ func (s *Symbol) InvertExponent() {
 }
 
 //Term=====================================================
+// op-term where op = /
+// component
+// component-op-term
+/**
+Parent is Component
+ */
 type Term struct {
 	Component
 	Comp Componenter
