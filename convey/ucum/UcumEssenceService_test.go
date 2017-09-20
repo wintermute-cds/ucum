@@ -48,20 +48,68 @@ func TestService(t *testing.T) {
 		RunSearchUnitsTests(t, testStructures, "RunSearchUnitsTests")
 		RunGetPropertiesTests(t, testStructures, "RunGetPropertiesTests")
 		RunValidateInPropertyTests(t, testStructures, "RunValidateInPropertyTests")
+		RunValidateCanonicalUnitsTests(t, testStructures, "RunValidateCanonicalUnitsTests")
+		RunGetCanonicalUnitsTests(t, testStructures, "RunGetCanonicalUnitsTests")
+		RunGetDefinedFormsTests(t, testStructures, "RunGetDefinedFormsTests")
+		RunIsComparableTests(t, testStructures, "RunIsComparableTests")
 	})
 }
+
+func RunIsComparableTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		validated, err := service.IsComparable("mm", "rad")
+		So(err, ShouldBeNil)
+		So(validated, ShouldBeFalse)
+		validated, err = service.IsComparable("mm", "cm")
+		So(err, ShouldBeNil)
+		So(validated, ShouldBeTrue)
+		validated, err = service.IsComparable("mm", "m")
+		So(err, ShouldBeNil)
+		So(validated, ShouldBeTrue)
+	})
+}
+
+
+func RunGetDefinedFormsTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		validated, err := service.GetDefinedForms("mm")
+		So(err, ShouldBeNil)
+		So(len(validated), ShouldEqual, 0)
+		validated, err = service.GetDefinedForms("rad")
+		So(err, ShouldBeNil)
+		So(len(validated), ShouldBeGreaterThan, 0)
+	})
+}
+
+
+func RunGetCanonicalUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		validated, err := service.GetCanonicalUnits("mm")
+		So(err, ShouldBeNil)
+		So(validated, ShouldEqual, "m")
+		validated = service.ValidateInProperty("cm", "length" )
+		So(validated, ShouldBeEmpty)
+	})
+}
+
 
 func RunValidateInPropertyTests(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
-		for _, v := range service.Model.DefinedUnits {
-			Convey(v.Unit.Property + "-" + v.Names[0], func() {
-				validated := service.ValidateInProperty(v.Code, v.Property )
-				So(validated, ShouldBeEmpty)
-			})
-		}
+		validated := service.ValidateInProperty("mm", "number" )
+		So(validated, ShouldEqual, "unit mm is of the property type length (m), not number as required.")
+		validated = service.ValidateInProperty("cm", "length" )
+		So(validated, ShouldBeEmpty)
 	})
 }
 
+func RunValidateCanonicalUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
+	Convey(name, func() {
+		validated := service.ValidateCanonicalUnits("mm", "l" )
+		So(validated, ShouldEqual, "unit mm has the base units m, not l as required.")
+		validated = service.ValidateCanonicalUnits("cm", "m" )
+		So(validated, ShouldBeEmpty)
+	})
+}
 
 func RunGetPropertiesTests(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {

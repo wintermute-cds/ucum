@@ -82,7 +82,7 @@ type UcumService interface {
 	 */
 	GetCanonicalUnits(unit error) (string, error)
 	/**
-	 * given two pairs of units, return true if they sahre the same canonical base
+	 * given two pairs of units, return true if they share the same canonical base
 	 *
 	 * @param units1
 	 * @param units2
@@ -327,12 +327,14 @@ func (u *UcumEssenceService) GetDefinedForms(code string) ([]*DefinedUnit, error
 	base := u.Model.getBaseUnit(code)
 	if base != nil {
 		for _, du := range u.Model.DefinedUnits {
-			s, err := u.GetCanonicalUnits(du.Code)
-			if err != nil {
-				return nil, err
-			}
-			if du.IsSpecial && code == s {
-				result = append(result, du)
+			if !du.IsSpecial {
+				s, err := u.GetCanonicalUnits(du.Code)
+				if err != nil {
+					return nil, err
+				}
+				if code == s {
+					result = append(result, du)
+				}
 			}
 		}
 	}
