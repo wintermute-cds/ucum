@@ -1,7 +1,7 @@
 # Ucum-Golang Version 0.9.beta
 Golang library providing UCUM Services
 
-*(inspired by Graham Grieve's UCUM Java library: https://github.com/FHIR/Ucum-java )*
+*(inspired by Grahame Grieve's UCUM Java library: https://github.com/FHIR/Ucum-java )*
 
 The library provides a set of services around UCUM:
 
@@ -17,4 +17,4 @@ ucumSvc = NewUcumEssenceService(definitionFile);
 
 Please find the library-API in the file Ucum.go
 
-- Status: all API tests run fine
+- Status: all API tests run fine.
