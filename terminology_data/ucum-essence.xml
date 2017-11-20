@@ -1,4 +1,4 @@
-<root xmlns="http://unitsofmeasure.org/ucum-essence" version="2.0.1" revision="$Revision: 439 $" revision-date="$Date: 2015-11-13T15:13:19-0500 (Fri, 13 Nov 2015) $">
+<root xmlns="http://unitsofmeasure.org/ucum-essence" version="2.0.1" revision="$Revision: 439 $" revision-date="$Date: 2015-11-13 15:13:19-0500 (Fri, 13 Nov 2015) $">
    <prefix Code="Y" CODE="YA">
       <name>yotta</name>
       <printSymbol>Y</printSymbol>

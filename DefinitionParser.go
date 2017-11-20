@@ -46,7 +46,6 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		names := make([]string, 0)
 		name := xmlItem.Name
 		names = append(names, name)
-		//value, err := NewDecimalAndPrecision(xmlItem.Value, 24)
 		value, err := NewDecimal(xmlItem.Value.Value)
 		if err != nil {
 			return nil, err
@@ -109,6 +108,10 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 }
 
 func (x *XMLRoot) ProcessRevisionDate(revisionDate string) (time.Time, error) {
+	//add the T for correct datetime parsing
+	if strings.Index(revisionDate, "T") == -1 {
+		revisionDate = revisionDate[:10] + "T" + revisionDate[11:]
+	}
 	time_, err := time.Parse(time.RFC3339, revisionDate)
 	if err != nil {
 		//suppress error
