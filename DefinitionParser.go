@@ -112,6 +112,12 @@ func (x *XMLRoot) ProcessRevisionDate(revisionDate string) (time.Time, error) {
 	if strings.Index(revisionDate, "T") == -1 {
 		revisionDate = revisionDate[:10] + "T" + revisionDate[11:]
 	}
+	//remove space between timezone and datetime
+	revisionDate = strings.Replace(revisionDate, " ", "", -1)
+	//add colon between timezone-hours and timezone-minutes
+	if len(revisionDate)>20 {
+		revisionDate = revisionDate[:22] + ":" + revisionDate[22:]
+	}
 	time_, err := time.Parse(time.RFC3339, revisionDate)
 	if err != nil {
 		//suppress error
