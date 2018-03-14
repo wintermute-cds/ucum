@@ -3,8 +3,7 @@ package ucum
 type ConceptKind int
 
 const (
-	_ ConceptKind = iota
-	PREFIX
+	PREFIX ConceptKind = iota
 	BASEUNIT
 	UNIT
 )

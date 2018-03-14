@@ -367,7 +367,7 @@ func (u *UcumEssenceService) GetCanonicalForm(value *Pair) (*Pair, error) {
 
 func (u *UcumEssenceService) Convert(value Decimal, sourceUnit, destUnit string) (Decimal, error) {
 	if value == Zero {
-		return Zero, fmt.Errorf("Convert: value must not be null")
+		return Zero, fmt.Errorf("Convert: value must not be 0 (zero)")
 	}
 	if sourceUnit == "" {
 		return Zero, fmt.Errorf("Convert: sourceUnit must not be empty")
