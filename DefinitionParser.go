@@ -41,6 +41,8 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		Prefixes:     make([]*Prefix, 0),
 		BaseUnits:    make([]*BaseUnit, 0),
 		DefinedUnits: make([]*DefinedUnit, 0),
+		BaseUnitsByCode : make(map[string]*BaseUnit),
+		DefinedUnitsByCode : make(map[string]*DefinedUnit),
 	}
 	for _, xmlItem := range x.Prefixes {
 		names := make([]string, 0)
@@ -75,6 +77,7 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		baseUnit.Dim = xmlItem.Dim
 		baseUnit.Kind = BASEUNIT
 		ucumModel.BaseUnits = append(ucumModel.BaseUnits, baseUnit)
+		ucumModel.BaseUnitsByCode[baseUnit.Code] = baseUnit
 	}
 	for _, xmlItem := range x.DefinedUnits {
 		names := make([]string, 0)
@@ -103,6 +106,7 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		unit.Value = value
 		unit.Kind = UNIT
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
+		ucumModel.DefinedUnitsByCode[unit.Code] = unit
 	}
 	return ucumModel, err
 }

@@ -73,12 +73,22 @@ func NewDecimalValueExp(value int64, exp int32) Decimal {
 	}
 }
 
-// NewFromBigInt returns a new Decimal from a big.Int, value * 10 ^ exp
+// NewFromBigInt returns a new Decimal from a int64, value * 10 ^ exp
 func NewFromBigInt(value *big.Int, exp int32) Decimal {
 	return Decimal{
 		value: big.NewInt(0).Set(value),
 		exp:   exp,
 	}
+}
+
+// NewFromInt64 returns a new Decimal from a big.Int, value * 10 ^ exp
+func NewFromInt64(value int64, exp int32) Decimal {
+	return NewDecimalValueExp(value, exp)
+}
+
+// NewFromInt returns a new Decimal from a int, value * 10 ^ exp
+func NewFromInt(value int, exp int32) Decimal {
+	return NewDecimalValueExp(int64(value), exp)
 }
 
 // NewFromString returns a new Decimal from a string representation.
@@ -173,7 +183,7 @@ func NewFromFloat(value float64) Decimal {
 
 	// slow path: float is a decimal
 	// HACK(vadim): do this the slow hacky way for now because the logic to
-	// convert a base-2 float to base-10 properly is not trivial
+	// convert a base-2 float to Base-10 properly is not trivial
 	str := strconv.FormatFloat(value, 'f', -1, 64)
 	dec, err := NewFromString(str)
 	if err != nil {

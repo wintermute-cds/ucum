@@ -82,7 +82,7 @@ func (e *ExpressionComposer) composeCanonical(buffer *bytes.Buffer, can *Canonic
 		} else {
 			buffer.WriteString(".")
 		}
-		buffer.WriteString(c.Base().Code)
+		buffer.WriteString(c.Base.Code)
 		if c.Exponent != 1 {
 			buffer.WriteString(strconv.Itoa(c.Exponent))
 		}
@@ -244,7 +244,7 @@ func (p *ExpressionParser) parseComp(l *Lexer) (Componenter, error) {
 	} else {
 		return nil, fmt.Errorf("Error processing unit '" + l.Source + "': " + "unexpected token looking for a symbol or a number" + "' at position " + strconv.Itoa(l.Start))
 	}
-	return nil, nil
+	// return nil, nil // we never get to here
 }
 
 func (p *ExpressionParser) parseSymbol(l *Lexer) (Componenter, error) {
@@ -315,8 +315,14 @@ func (l *Lexer) Consume() error {
 	l.Start = l.Index
 	if l.Index < len(l.Source) {
 		ch := l.nextChar()
-		annotation, err := l.checkAnnotation(ch)
+		checkAnnotation, err := l.checkAnnotation(ch)
+		if err != nil {
+			return err
+		}
 		checkNumber, err := l.checkNumber(ch)
+		if err != nil {
+			return err
+		}
 		checkNumberOrSymbol, err := l.checkNumberOrSymbol(ch)
 		if err != nil {
 			return err
@@ -325,7 +331,7 @@ func (l *Lexer) Consume() error {
 		//Multiple terms in an expression must be separated by an arithmetic operator - either the multiplication operator (.) or the division operator (/).
 		//While the multiplication operator (.) must appear between two unit terms, the division operator (/) may appear at the beginning of the expression, indicating inversion of the following term.
 		if !(l.checkSingleChar(ch, '/', SOLIDUS) || l.checkSingleChar(ch, '.', PERIOD) ||
-			l.checkSingleChar(ch, '(', OPEN) || l.checkSingleChar(ch, ')', CLOSE) || annotation ||
+			l.checkSingleChar(ch, '(', OPEN) || l.checkSingleChar(ch, ')', CLOSE) || checkAnnotation ||
 			checkNumber || checkNumberOrSymbol) {
 			return fmt.Errorf("Error processing unit '" + l.Source + "': unexpected character '" + string(ch) + "' at position " + strconv.Itoa(l.Start))
 		}
@@ -455,8 +461,8 @@ func (l *Lexer) checkBrackets(ch rune, isInBrackets bool) (bool, error) {
 }
 
 func (l *Lexer) isValidSymbolChar(ch rune, allowDigits, isInBrackets bool) bool {
-	return allowDigits && ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'z' || ch >= 'A' && ch <= 'Z' || ch == '[' ||
-		ch == ']' || ch == '%' || ch == '*' || ch == '^' || ch == '\'' || ch == '"' || ch == '_' || isInBrackets && ch == '.'
+	return (allowDigits && ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '[' ||
+		ch == ']' || ch == '%' || ch == '*' || ch == '^' || ch == '\'' || ch == '"' || ch == '_' || (isInBrackets && ch == '.')
 }
 
 func (l *Lexer) peekChar() rune {

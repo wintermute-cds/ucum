@@ -1,7 +1,7 @@
 package ucum
 
 import (
-	"ucum"
+	"github.com/bertverhees/ucum"
 	"encoding/xml"
 	. "github.com/smartystreets/goconvey/convey"
 	"io/ioutil"
@@ -26,13 +26,13 @@ func TestService(t *testing.T) {
 	var err error
 	Convey("Service-creation", t, func() {
 		Convey("Service-creation", func() {
-			definitions := os.Getenv("GOPATH") + "/src/ucum/terminology_data/ucum-essence.xml"
+			definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
 			service, err = ucum.GetInstanceOfUcumEssenceService(definitions)
 			So(err, ShouldBeNil)
 			So(service, ShouldNotBeNil)
 		})
 		Convey("First test run", func() {
-			test = os.Getenv("GOPATH") + "/src/ucum/convey/resources/UcumFunctionalTests.xml"
+			test = os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/convey/resources/UcumFunctionalTests.xml"
 			testStructures, err = UnmarshalTerminology(test)
 			So(err, ShouldBeNil)
 			So(testStructures, ShouldNotBeNil)
@@ -269,6 +269,9 @@ func RunValidationTest(t *testing.T, testStructures *TestStructures, name string
 		for _, v := range testStructures.validationCases {
 			Convey(v.Id+": "+v.Unit, func() {
 				validated, _ := service.Validate(v.Unit)
+				if validated != (v.Valid == "true") {
+					fmt.Println("stop")
+				}
 				So(validated, ShouldEqual, v.Valid == "true")
 			})
 		}

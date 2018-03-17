@@ -25,8 +25,7 @@ func (c *Converter) Convert(term *Term) (*Canonical, error) {
 }
 
 func (c *Converter) normaliseTerm(indent string, term *Term) (*Canonical, error) {
-	d, _ := NewDecimal("1")
-	result, _ := NewCanonical(d)
+	result, _ := NewCanonical(NewFromInt64(1, 0))
 	div := false
 	t := term
 	for {
@@ -76,7 +75,7 @@ func (c *Converter) normaliseTerm(indent string, term *Term) (*Canonical, error)
 		sf := result.Units[i]
 		for j := i - 1; j >= 0; j-- {
 			st := result.Units[j]
-			if reflect.DeepEqual(st.Base(), sf.Base()) {
+			if reflect.DeepEqual(st.Base, sf.Base) {
 				st.Exponent = sf.Exponent + st.Exponent
 				result.RemoveFromUnits(i)
 				break
@@ -94,8 +93,7 @@ func (c *Converter) normaliseTerm(indent string, term *Term) (*Canonical, error)
 }
 
 func (c *Converter) normaliseSymbol(indent string, sym *Symbol) (*Canonical, error) {
-	d, _ := NewDecimal("1")
-	result, _ := NewCanonical(d)
+	result, _ := NewCanonical(NewFromInt64(1, 0))
 	bu, instanceof := sym.Unit.(*BaseUnit)
 	if instanceof {
 		cf, _ := NewCanonicalUnit(bu, sym.Exponent)

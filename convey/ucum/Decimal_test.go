@@ -1,7 +1,7 @@
 package ucum
 
 import (
-	"ucum"
+	"github.com/bertverhees/ucum"
 	"database/sql/driver"
 	"encoding/json"
 	"encoding/xml"

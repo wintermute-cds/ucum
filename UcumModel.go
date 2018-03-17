@@ -3,7 +3,6 @@ package ucum
 import (
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -15,6 +14,10 @@ type UcumModel struct {
 	Prefixes     []*Prefix
 	BaseUnits    []*BaseUnit
 	DefinedUnits []*DefinedUnit
+	BaseUnitsByCode map[string]*BaseUnit
+	BaseUnitsByCodeUC map[string]*BaseUnit
+	DefinedUnitsByCode map[string]*DefinedUnit
+	DefinedUnitsByCodeUC map[string]*DefinedUnit
 }
 
 func NewUcumModel(version, revision string, revisionDate time.Time) *UcumModel {
@@ -25,19 +28,21 @@ func NewUcumModel(version, revision string, revisionDate time.Time) *UcumModel {
 	r.Prefixes = make([]*Prefix, 0)
 	r.BaseUnits = make([]*BaseUnit, 0)
 	r.DefinedUnits = make([]*DefinedUnit, 0)
+	r.BaseUnitsByCode = make(map[string]*BaseUnit)
+	r.BaseUnitsByCodeUC = make(map[string]*BaseUnit)
+	r.DefinedUnitsByCode = make(map[string]*DefinedUnit)
+	r.DefinedUnitsByCodeUC = make(map[string]*DefinedUnit)
 	return r
 }
 
 func (u *UcumModel) GetUnit(code string) Uniter {
-	for _, unit := range u.BaseUnits {
-		if unit.Code == code {
-			return unit
-		}
+	r1 := u.BaseUnitsByCode[code]
+	if r1 != nil {
+		return r1
 	}
-	for _, unit := range u.DefinedUnits {
-		if unit.Code == code {
-			return unit
-		}
+	r2 := u.DefinedUnitsByCode[code]
+	if r2 != nil {
+		return r2
 	}
 	return nil
 }
@@ -64,12 +69,7 @@ func (u *UcumModel) searchPrefixes(text string, isRegex bool) []Concepter {
 }
 
 func (u *UcumModel) getBaseUnit(code string) *BaseUnit {
-	for _, unit := range u.BaseUnits {
-		if unit.Code == code {
-			return unit
-		}
-	}
-	return nil
+	return u.BaseUnitsByCode[code]
 }
 
 func (u *UcumModel) searchUnits(text string, isRegex bool, kind ConceptKind) []Concepter {
@@ -124,6 +124,14 @@ func (u *UcumModel) matchesConcept(concept Concepter, text string, isRegex bool)
 
 // Concept=====================================================
 /**
+Hierarchy
+
+Concepter 	-> Concept 	-> Prefix 	-> Unit 	-> DefinedUnit
+												-> BaseUnit
+   |
+Uniter 	-> Unit 	-> DefinedUnit
+					-> BaseUnit
+
 Base of Unit and Prefix.
 Top class
 Code = String (case sensitive c/s)
@@ -160,7 +168,11 @@ func NewConcept(kind ConceptKind, code string, codeUC string) (*Concept, error) 
 }
 
 func (c Concept) GetDescription() string {
-	description := strings.ToLower(c.Kind.String()) + " " + c.Code + " ('" + c.Names[0] + "')"
+	name := ""
+	if len(c.Names) > 0 {
+		name = c.Names[0]
+	}
+	description := strings.ToLower(c.Kind.String()) + " " + c.Code + " ('" + name + "')"
 	return description
 }
 
@@ -209,7 +221,11 @@ func NewUnit(kind ConceptKind, code string, codeUC string) (*Unit, error) {
 }
 
 func (u Unit) GetDescription() string {
-	return strings.ToLower(u.Kind.String()) + " " + u.Code + " ('" + u.Names[0] + "')" + " (" + u.Property + ")"
+	name := ""
+	if len(u.Names) > 0 {
+		name = u.Names[0]
+	}
+	return strings.ToLower(u.Kind.String()) + " " + u.Code + " ('" + name + "')" + " (" + u.Property + ")"
 }
 
 func (u Unit) String() string {
@@ -228,7 +244,7 @@ type BaseUnit struct {
 	Dim rune
 }
 
-func NewBaseUnit(kind ConceptKind, code string, codeUC string) (*BaseUnit, error) {
+func NewBaseUnit(code string, codeUC string) (*BaseUnit, error) {
 	b := &BaseUnit{}
 	b.Kind = BASEUNIT
 	b.Code = code
@@ -272,7 +288,7 @@ type DefinedUnit struct {
 	Value     *Value
 }
 
-func NewDefinedUnit(kind ConceptKind, code string, codeUC string) (*DefinedUnit, error) {
+func NewDefinedUnit(code string, codeUC string) (*DefinedUnit, error) {
 	b := &DefinedUnit{}
 	b.Kind = UNIT
 	b.Code = code
@@ -281,7 +297,11 @@ func NewDefinedUnit(kind ConceptKind, code string, codeUC string) (*DefinedUnit,
 }
 
 func (d DefinedUnit) GetDescription() string {
-	return strings.ToLower(d.Kind.String()) + " " + d.Code + " ('" + d.Names[0] + "')" + " (" + d.Property + ")" + " = " + d.Value.GetDescription()
+	name := ""
+	if len(d.Names) > 0 {
+		name = d.Names[0]
+	}
+	return strings.ToLower(d.Kind.String()) + " " + d.Code + " ('" + name + "')" + " (" + d.Property + ")" + " = " + d.Value.GetDescription()
 }
 
 //Prefix=====================================================
@@ -294,7 +314,7 @@ type Prefix struct {
 	Value Decimal
 }
 
-func NewPrefix(kind ConceptKind, code string, codeUC string) (*Prefix, error) {
+func NewPrefix(code string, codeUC string) (*Prefix, error) {
 	b := &Prefix{}
 	b.Kind = PREFIX
 	b.Code = code
@@ -303,7 +323,11 @@ func NewPrefix(kind ConceptKind, code string, codeUC string) (*Prefix, error) {
 }
 
 func (p Prefix) GetDescription() string {
-	return strings.ToLower(p.Kind.String()) + " " + p.Code + " ('" + p.Names[0] + "')" + " = " + p.Value.String()
+	name := ""
+	if len(p.Names) > 0 {
+		name = p.Names[0]
+	}
+	return strings.ToLower(p.Kind.String()) + " " + p.Code + " ('" + name + "')" + " = " + p.Value.String()
 }
 
 //Value=====================================================
@@ -355,7 +379,7 @@ type ByCode []*CanonicalUnit
 
 func (a ByCode) Len() int           { return len(a) }
 func (a ByCode) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByCode) Less(i, j int) bool { return a[i].base.Code < a[j].base.Code }
+func (a ByCode) Less(i, j int) bool { return a[i].Base.Code < a[j].Base.Code }
 
 func (c *Canonical) SortUnits() {
 	sort.Sort(ByCode(c.Units))
@@ -373,26 +397,16 @@ func (c *Canonical) MultiplyValueDecimal(multiplicand Decimal) {
 	c.Value = c.Value.Multiply(multiplicand)
 }
 
-func (c *Canonical) MultiplyValueInt(multiplicand int) error {
-	d, err := NewDecimal(strconv.Itoa(multiplicand))
-	if err != nil {
-		return err
-	}
-	c.Value = c.Value.Multiply(d)
-	return nil
+func (c *Canonical) MultiplyValueInt(multiplicand int) {
+	c.Value = c.Value.Multiply(NewFromInt(multiplicand, 0))
 }
 
 func (c *Canonical) DivideValueDecimal(divisor Decimal) {
 	c.Value = c.Value.Divide(divisor)
 }
 
-func (c *Canonical) DivideValueInt(divisor int) error {
-	d, err := NewDecimal(strconv.Itoa(divisor))
-	if err != nil {
-		return err
-	}
-	c.Value = c.Value.Divide(d)
-	return nil
+func (c *Canonical) DivideValueInt(divisor int) {
+	c.Value = c.Value.Divide(NewFromInt(divisor, 0))
 }
 
 //CanonicalUnit=====================================================
@@ -400,20 +414,17 @@ func (c *Canonical) DivideValueInt(divisor int) error {
 base a canonical unit term;
  */
 type CanonicalUnit struct {
-	base     *BaseUnit
+	Base     *BaseUnit
 	Exponent int
 }
 
 func NewCanonicalUnit(base *BaseUnit, exponent int) (*CanonicalUnit, error) {
 	v := &CanonicalUnit{}
-	v.base = base
+	v.Base = base
 	v.Exponent = exponent
 	return v, nil
 }
 
-func (c *CanonicalUnit) Base() *BaseUnit {
-	return c.base
-}
 
 //Component=====================================================
 type Componenter interface {

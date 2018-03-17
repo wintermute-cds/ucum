@@ -251,10 +251,10 @@ func (u *UcumEssenceService) ValidateInProperty(unit, property string) string {
 	}
 	cu := ComposeExpression(can, false)
 	if len(can.Units) == 1 {
-		if property == can.Units[0].Base().Property {
+		if property == can.Units[0].Base.Property {
 			return ""
 		} else {
-			return "unit " + unit + " is of the property type " + can.Units[0].Base().Property + " (" + cu + "), not " + property + " as required."
+			return "unit " + unit + " is of the property type " + can.Units[0].Base.Property + " (" + cu + "), not " + property + " as required."
 		}
 	}
 	if property == "concentration" && (cu == "g/L" || cu == "mol/L") {
