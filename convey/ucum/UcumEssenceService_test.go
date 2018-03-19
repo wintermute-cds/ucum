@@ -269,9 +269,6 @@ func RunValidationTest(t *testing.T, testStructures *TestStructures, name string
 		for _, v := range testStructures.validationCases {
 			Convey(v.Id+": "+v.Unit, func() {
 				validated, _ := service.Validate(v.Unit)
-				if validated != (v.Valid == "true") {
-					fmt.Println("stop")
-				}
 				So(validated, ShouldEqual, v.Valid == "true")
 			})
 		}

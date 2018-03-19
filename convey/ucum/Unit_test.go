@@ -2,7 +2,6 @@ package ucum
 
 import (
 	"github.com/bertverhees/ucum"
-	"fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"testing"
@@ -17,14 +16,12 @@ func SetUpService() {
 	}
 }
 
-func TestUnits(t *testing.T) {
+func TestValidateUnits(t *testing.T) {
 	SetUpService()
 	Convey("Test Units on errormsg", t, func() {
 		for _, u := range units {
 			_, s := testservice.Validate(u)
 			So(s, ShouldBeEmpty)
-			s, _ = testservice.Analyse(u)
-			fmt.Println(s)
 		}
 		for _, u := range wrongunits {
 			_, s := testservice.Validate(u)
@@ -35,6 +32,16 @@ func TestUnits(t *testing.T) {
 		for _, u := range units {
 			term, _ := ucum.NewExpressionParser(testservice.Model).Parse(u)
 			So(term, ShouldNotBeNil)
+		}
+	})
+}
+
+func TestAnalyseUnits(t *testing.T) {
+	SetUpService()
+	Convey("Test Units on errormsg", t, func() {
+		for _, u := range units {
+			s, _ := testservice.Analyse(u)
+			So(s, ShouldNotBeEmpty)
 		}
 	})
 }

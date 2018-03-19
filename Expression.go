@@ -281,7 +281,7 @@ func (p *ExpressionParser) parseSymbol(l *Lexer) (Componenter, error) {
 		var err error
 		symbol.Exponent, err = l.TokenAsInt()
 		if err != nil {
-			return nil, fmt.Errorf("Error processing Tolen as numb er '" + l.Source + "': " + "The token '" + l.Token + "' is cannot be converted to integer" + " at position " + strconv.Itoa(l.Start))
+			return nil, fmt.Errorf("Error processing Token as number '" + l.Source + "': " + "The token '" + l.Token + "' is cannot be converted to integer" + " at position " + strconv.Itoa(l.Start))
 		}
 		l.Consume()
 	} else {
