@@ -1,4 +1,4 @@
-# Ucum-Golang Version 0.9.beta
+# Ucum-Golang Version 0.9.2.beta
 Golang library providing UCUM Services
 
 *(inspired by Grahame Grieve's UCUM Java library: https://github.com/FHIR/Ucum-java )*
