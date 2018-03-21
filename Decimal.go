@@ -86,6 +86,15 @@ func NewFromInt64(value int64, exp int32) Decimal {
 	return NewDecimalValueExp(value, exp)
 }
 
+// NewFromInt64Precision returns a new Decimal from a big.Int, value * 10 ^ exp
+func NewFromInt64Precision(value int64, exp int32, precision int) Decimal {
+	return Decimal{
+		value: big.NewInt(value),
+		exp:   exp,
+		precision:precision,
+	}
+}
+
 // NewFromInt returns a new Decimal from a int, value * 10 ^ exp
 func NewFromInt(value int, exp int32) Decimal {
 	return NewDecimalValueExp(int64(value), exp)
@@ -774,33 +783,33 @@ func (d Decimal) MarshalBinary() (data []byte, err error) {
 }
 
 // Scan implements the sql.Scanner interface for database deserialization.
-func (d *Decimal) Scan(value interface{}) error {
+func NewDecimalFromScan(value interface{}) (*Decimal, error) {
 	// first try to see if the data is stored in database as a Numeric datatype
 	switch v := value.(type) {
 
 	case float32:
-		*d = NewFromFloat(float64(v))
-		return nil
+		d := NewFromFloat(float64(v))
+		return &d,nil
 
 	case float64:
 		// numeric in sqlite3 sends us float64
-		*d = NewFromFloat(v)
-		return nil
+		d := NewFromFloat(v)
+		return &d,nil
 
 	case int64:
 		// at least in sqlite3 when the value is 0 in db, the data is sent
 		// to us as an int64 instead of a float64 ...
-		*d = NewDecimalValueExp(v, 0)
-		return nil
+		d := NewDecimalValueExp(v, 0)
+		return &d,nil
 
 	default:
 		// default is trying to interpret value stored as string
 		str, err := unquoteIfQuoted(v)
 		if err != nil {
-			return err
+			return nil,err
 		}
-		*d, err = NewFromString(str)
-		return err
+		d, err := NewFromString(str)
+		return &d,err
 	}
 }
 
@@ -995,7 +1004,12 @@ func (d *NullDecimal) Scan(value interface{}) error {
 		return nil
 	}
 	d.Valid = true
-	return d.Decimal.Scan(value)
+	var err error
+	decimal, err := NewDecimalFromScan(value)
+	if err == nil {
+		d.Decimal = *decimal
+	}
+	return err
 }
 
 // Value implements the driver.Valuer interface for database serialization.

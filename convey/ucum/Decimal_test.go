@@ -1468,11 +1468,12 @@ func TestDecimal_Scan(t *testing.T) {
 
 	// in normal operations the db driver (sqlite at least)
 	// will return an int64 if you specified a numeric format
-	a := ucum.Decimal{}
 	dbvalue := float64(54.33)
 	expected := ucum.NewFromFloat(dbvalue)
+	var a *ucum.Decimal
+	var err error
 
-	err := a.Scan(dbvalue)
+	a,err = ucum.NewDecimalFromScan(dbvalue)
 	if err != nil {
 		// Scan failed... no need to test result value
 		t.Errorf("a.Scan(54.33) failed with message: %s", err)
@@ -1489,7 +1490,7 @@ func TestDecimal_Scan(t *testing.T) {
 	dbvalueFloat32 := float32(54.33)
 	expected = ucum.NewFromFloat(float64(dbvalueFloat32))
 
-	err = a.Scan(dbvalueFloat32)
+	a,err = ucum.NewDecimalFromScan(dbvalueFloat32)
 	if err != nil {
 		// Scan failed... no need to test result value
 		t.Errorf("a.Scan(54.33) failed with message: %s", err)
@@ -1506,7 +1507,7 @@ func TestDecimal_Scan(t *testing.T) {
 	dbvalueInt := int64(0)
 	expected = ucum.NewDecimalValueExp(dbvalueInt, 0)
 
-	err = a.Scan(dbvalueInt)
+	a,err = ucum.NewDecimalFromScan(dbvalueInt)
 	if err != nil {
 		// Scan failed... no need to test result value
 		t.Errorf("a.Scan(0) failed with message: %s", err)
@@ -1527,7 +1528,7 @@ func TestDecimal_Scan(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = a.Scan(dbvalueStr)
+	a,err = ucum.NewDecimalFromScan(dbvalueStr)
 	if err != nil {
 		// Scan failed... no need to test result value
 		t.Errorf("a.Scan('535.666') failed with message: %s", err)
@@ -1545,7 +1546,7 @@ func TestDecimal_Scan(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = a.Scan(valueStr)
+	a,err = ucum.NewDecimalFromScan(valueStr)
 	if err != nil {
 		// Scan failed... no need to test result value
 		t.Errorf("a.Scan('535.666') failed with message: %s", err)
@@ -1557,7 +1558,7 @@ func TestDecimal_Scan(t *testing.T) {
 	}
 
 	type foo struct{}
-	err = a.Scan(foo{})
+	a,err = ucum.NewDecimalFromScan(foo{})
 	if err == nil {
 		t.Errorf("a.Scan(Foo{}) should have thrown an error but did not")
 	}
