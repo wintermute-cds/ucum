@@ -296,6 +296,9 @@ func RunConversionTest(t *testing.T, testStructures *TestStructures, name string
 				So(err, ShouldBeNil)
 				res, _ := service.Convert(d, v.SrcUnit, v.DstUnit)
 				So(res.AsDecimal(), ShouldEqual, o.AsDecimal())
+				fmt.Println(v.SrcUnit+":"+v.DstUnit)
+				fmt.Println(d.AsScientific()+":"+d.StringFixed(int32(d.GetPrecision()))+":"+d.String())
+				fmt.Println(o.AsScientific()+":"+o.StringFixed(int32(o.GetPrecision()))+":"+o.String())
 			})
 		}
 	})

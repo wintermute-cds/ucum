@@ -1384,6 +1384,21 @@ func TestDecimal_ExtremeValues(t *testing.T) {
 	})
 }
 
+func TestString(t *testing.T){
+	cd := func(value int64, exp int32, prec int)ucum.Decimal{
+		return ucum.NewFromInt64Precision(value, exp, prec)
+	}
+	d := cd(63,-1,1)
+	if d.String() != "6.3" {
+		t.Errorf("%s does not match 6.3",d.String())
+	}
+	d = cd(63,-1,2)
+	if d.StringFixed(2) != "6.30" {
+		t.Errorf("%s does not match 6.30",d.String())
+	}
+
+}
+
 func TestIntPart(t *testing.T) {
 	for _, testCase := range []struct {
 		Dec     string

@@ -65,6 +65,10 @@ func (d Decimal) GetExp() int32 {
 	return d.exp
 }
 
+func (d Decimal) GetPrecision() int {
+	return d.precision
+}
+
 // NewDecimalValueExp returns a new fixed-point decimal, value * 10 ^ exp.
 func NewDecimalValueExp(value int64, exp int32) Decimal {
 	return Decimal{
