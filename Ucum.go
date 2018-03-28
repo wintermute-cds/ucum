@@ -11,7 +11,7 @@ type UcumService interface {
 	/**
 	 * return Ucum Identification details for the version in use
 	 */
-	UcumIdentification() UcumVersionDetails
+	UcumIdentification() *UcumVersionDetails
 	/**
 	 * Check UCUM. Note that this stands as a test of the service
 	 * more than UCUM itself (for version 1.7, there are no known
@@ -34,7 +34,7 @@ type UcumService interface {
 	 * @param isRegex
 	 * @return
 	 */
-	Search(kind ConceptKind, text string, isRegex bool) []Concepter
+	Search(kind ConceptKind, text string, isRegex bool) ([]Concepter, error)
 	/**
 	 * return a list of the defined types of units in this UCUM version
 	 *
@@ -47,7 +47,7 @@ type UcumService interface {
 	 * @param units - the unit code to check
 	 * @return nil if valid, or an error message describing the problem
 	 */
-	Validate(unit string) string
+	Validate(unit string) (bool, string)
 	/**
 	 * given a unit, return a formal description of what the units stand for using
 	 * full names
@@ -80,7 +80,7 @@ type UcumService interface {
 	 * @throws UcumException
 	 * @throws OHFException
 	 */
-	GetCanonicalUnits(unit error) (string, error)
+	GetCanonicalUnits(unit string) (string, error)
 	/**
 	 * given two pairs of units, return true if they share the same canonical base
 	 *

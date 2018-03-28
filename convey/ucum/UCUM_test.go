@@ -13,6 +13,7 @@ func TestInterfaceImplementation_UCUM(t *testing.T) {
 	var _ ucum.Concepter = (*ucum.DefinedUnit)(nil)
 	var _ ucum.Uniter = (*ucum.BaseUnit)(nil)
 	var _ ucum.Uniter = (*ucum.DefinedUnit)(nil)
+	var _ ucum.UcumService = (*ucum.UcumEssenceService)(nil)
 	Convey("Formal inheritance test", t, func() {
 		So(true, ShouldBeTrue)
 	})
