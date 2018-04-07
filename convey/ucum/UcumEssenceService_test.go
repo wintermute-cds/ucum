@@ -2,9 +2,7 @@ package ucum
 
 import (
 	"github.com/bertverhees/ucum"
-	"encoding/xml"
 	. "github.com/smartystreets/goconvey/convey"
-	"io/ioutil"
 	"os"
 	"testing"
 	"fmt"
@@ -13,13 +11,6 @@ import (
 
 var test string
 var service *ucum.UcumEssenceService
-
-type TestStructures struct {
-	validationCases            []XMLValidationCase
-	displayNameGenerationCases []XMLDisplayNameGenerationCase
-	conversionCases            []XMLConversionCase
-	multiplicationCases        []XMLMultiplicationCase
-}
 
 func TestService(t *testing.T) {
 	var testStructures *TestStructures
@@ -277,7 +268,7 @@ func RunValidationTest(t *testing.T, testStructures *TestStructures, name string
 
 func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
-		for _, v := range testStructures.displayNameGenerationCases {
+		for _, v := range testStructures.DisplayNameGenerationCases {
 			Convey(v.Id+": "+v.Unit, func() {
 				analysed, _ := service.Analyse(v.Unit)
 				So(analysed, ShouldEqual, v.Display)
@@ -324,40 +315,3 @@ func RunMultiplicationTest(t *testing.T, testStructures *TestStructures, name st
 	})
 }
 
-func UnmarshalTerminology(xmlFileName string) (*TestStructures, error) {
-	xmlFile, err := os.Open(xmlFileName)
-	if err != nil {
-		return nil, err
-	}
-	defer xmlFile.Close()
-	byteValue, _ := ioutil.ReadAll(xmlFile)
-	var xmlTest XMLUcumTests
-	xml.Unmarshal(byteValue, &xmlTest)
-	//decoder := xml.NewDecoder(xmlFile)
-	//if err := decoder.Decode(xmlTest); err!=nil {
-	//	return nil, err
-	//}
-	t := &TestStructures{}
-	t.validationCases = make([]XMLValidationCase, 0)
-	t.displayNameGenerationCases = make([]XMLDisplayNameGenerationCase, 0)
-	t.conversionCases = make([]XMLConversionCase, 0)
-	t.multiplicationCases = make([]XMLMultiplicationCase, 0)
-	for _, xmlItem := range xmlTest.Validations.Cases {
-		validationCase := xmlItem
-		t.validationCases = append(t.validationCases, validationCase)
-	}
-	for _, xmlItem := range xmlTest.DisplayNameGenerations.Cases {
-		displayNameGenerationCase := xmlItem
-		t.displayNameGenerationCases = append(t.displayNameGenerationCases, displayNameGenerationCase)
-	}
-	for _, xmlItem := range xmlTest.Conversions.Cases {
-		conversionCase := xmlItem
-		t.conversionCases = append(t.conversionCases, conversionCase)
-	}
-	for _, xmlItem := range xmlTest.Multiplications.Cases {
-		multiplicationCase := xmlItem
-		t.multiplicationCases = append(t.multiplicationCases, multiplicationCase)
-	}
-
-	return t, nil
-}

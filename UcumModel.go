@@ -148,6 +148,11 @@ type Concepter interface {
 	GetNames() []string
 	GetCodeUC() string
 	GetPrintSymbol() string
+	SetCode(code string)
+	SetCodeUC(codeUC string)
+	SetPrintSymbol(printSymbol string)
+	SetKind(kind ConceptKind)
+	SetNames(names []string)
 }
 
 type Concept struct {
@@ -197,6 +202,22 @@ func (c Concept) GetNames() []string {
 	return c.Names
 }
 
+func (c Concept) SetCode(code string)  {
+	c.Code = code
+}
+func (c Concept) SetCodeUC(codeUC string)  {
+	c.CodeUC = codeUC
+}
+func (c Concept) SetPrintSymbol(printSymbol string)  {
+	c.PrintSymbol = printSymbol
+}
+
+func (c Concept) SetKind(kind ConceptKind)  {
+	c.Kind = kind
+}
+func (c Concept) SetNames(names []string)  {
+	c.Names = names
+}
 //Unit=====================================================
 /**
 Parent is Concept
@@ -205,6 +226,7 @@ Children are BaseUnit and DefinedUnit
 type Uniter interface {
 	Concepter
 	GetProperty() string
+	SetProperty(property string)
 }
 
 type Unit struct {
@@ -234,6 +256,10 @@ func (u Unit) String() string {
 
 func (u Unit) GetProperty() string {
 	return u.Property
+}
+
+func (u Unit) SetProperty(property string)  {
+	u.Property = property
 }
 
 //BaseUnit=====================================================
