@@ -257,7 +257,7 @@ func RunUcumIdentificationTest(t *testing.T, testStructures *TestStructures, nam
 
 func RunValidationTest(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
-		for _, v := range testStructures.validationCases {
+		for _, v := range testStructures.ValidationCases {
 			Convey(v.Id+": "+v.Unit, func() {
 				validated, _ := service.Validate(v.Unit)
 				So(validated, ShouldEqual, v.Valid == "true")

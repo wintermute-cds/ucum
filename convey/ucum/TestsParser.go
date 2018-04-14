@@ -81,13 +81,13 @@ func UnmarshalTerminology(xmlFileName string) (*TestStructures, error) {
 	//	return nil, err
 	//}
 	t := &TestStructures{}
-	t.validationCases = make([]XMLValidationCase, 0)
+	t.ValidationCases = make([]XMLValidationCase, 0)
 	t.DisplayNameGenerationCases = make([]XMLDisplayNameGenerationCase, 0)
 	t.conversionCases = make([]XMLConversionCase, 0)
 	t.multiplicationCases = make([]XMLMultiplicationCase, 0)
 	for _, xmlItem := range xmlTest.Validations.Cases {
 		validationCase := xmlItem
-		t.validationCases = append(t.validationCases, validationCase)
+		t.ValidationCases = append(t.ValidationCases, validationCase)
 	}
 	for _, xmlItem := range xmlTest.DisplayNameGenerations.Cases {
 		displayNameGenerationCase := xmlItem
