@@ -315,7 +315,7 @@ Value = is the scalar value by which the unit atom is multiplied if combined wit
  */
 type Prefix struct {
 	Concept
-	Value Decimal
+	Value *Decimal
 }
 
 func NewPrefix(code string, codeUC string) (*Prefix, error) {
@@ -339,10 +339,10 @@ type Value struct {
 	Text   string
 	Unit   string
 	UnitUC string
-	Value  Decimal
+	Value  *Decimal
 }
 
-func NewValue(unit, unitUC string, value Decimal) (*Value, error) {
+func NewValue(unit, unitUC string, value *Decimal) (*Value, error) {
 	v := &Value{}
 	v.Unit = unit
 	v.UnitUC = unitUC
@@ -370,7 +370,7 @@ A canonical unit is a unit of measurement agreed upon as default in a certain co
  */
 type Canonical struct {
 	Units []*CanonicalUnit
-	Value Decimal
+	Value *Decimal
 }
 
 func (c *Canonical) RemoveFromUnits(i int) {
@@ -389,7 +389,7 @@ func (c *Canonical) SortUnits() {
 	sort.Sort(ByCode(c.Units))
 }
 
-func NewCanonical(value Decimal) (*Canonical, error) {
+func NewCanonical(value *Decimal) (*Canonical, error) {
 	v := &Canonical{
 		Value: value,
 		Units: make([]*CanonicalUnit, 0),
@@ -397,7 +397,7 @@ func NewCanonical(value Decimal) (*Canonical, error) {
 	return v, nil
 }
 
-func (c *Canonical) MultiplyValueDecimal(multiplicand Decimal) {
+func (c *Canonical) MultiplyValueDecimal(multiplicand *Decimal) {
 	c.Value = c.Value.Multiply(multiplicand)
 }
 
@@ -405,7 +405,7 @@ func (c *Canonical) MultiplyValueInt(multiplicand int) {
 	c.Value = c.Value.Multiply(NewFromInt(multiplicand, 0))
 }
 
-func (c *Canonical) DivideValueDecimal(divisor Decimal) {
+func (c *Canonical) DivideValueDecimal(divisor *Decimal) {
 	c.Value = c.Value.Divide(divisor)
 }
 
@@ -512,11 +512,11 @@ func (t *Term) SetTermCheckOp(term *Term) {
 
 //Pair=====================================================
 type Pair struct {
-	Value Decimal
+	Value *Decimal
 	Code  string
 }
 
-func NewPair(value Decimal, code string) *Pair {
+func NewPair(value *Decimal, code string) *Pair {
 	p := &Pair{}
 	p.Value = value
 	p.Code = code

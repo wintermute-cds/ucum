@@ -25,7 +25,7 @@ func (c *Converter) Convert(term *Term) (*Canonical, error) {
 }
 
 func (c *Converter) normaliseTerm(indent string, term *Term) (*Canonical, error) {
-	result, _ := NewCanonical(NewFromInt64(1, 0))
+	result, _ := NewCanonical(NewFromInt64(1))
 	div := false
 	t := term
 	for {
@@ -93,7 +93,7 @@ func (c *Converter) normaliseTerm(indent string, term *Term) (*Canonical, error)
 }
 
 func (c *Converter) normaliseSymbol(indent string, sym *Symbol) (*Canonical, error) {
-	result, _ := NewCanonical(NewFromInt64(1, 0))
+	result, _ := NewCanonical(NewFromInt64(1))
 	bu, instanceof := sym.Unit.(*BaseUnit)
 	if instanceof {
 		cf, _ := NewCanonicalUnit(bu, sym.Exponent)

@@ -295,6 +295,38 @@ func RunConversionTest(t *testing.T, testStructures *TestStructures, name string
 	})
 }
 
+func TestConvert(t *testing.T){
+	Convey("TestConvert", t,func() {
+		decimal := ucum.NewFromInt64Precision(63, -1, 1)
+		fmt.Println(decimal)
+		fmt.Println(decimal.Exponent())
+		fmt.Println(decimal.GetPrecision())
+		fmt.Println(decimal.AsInteger())
+		fmt.Println(decimal.GetValue().String())
+		fmt.Println(decimal.GetValue().IsInt64())
+		fmt.Println("--------")
+		fmt.Println("Income")
+		fmt.Println(decimal)
+		definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+		service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
+		if err != nil {
+			fmt.Errorf(err.Error())
+		}
+		result, err := service.Convert(decimal, "s.mm-1", "s.m-1")
+		if err != nil {
+			fmt.Errorf(err.Error())
+		}
+		So(decimal.Multiply(ucum.NewFromInt(1000,0)), ShouldEqual, result)
+		fmt.Println(result)
+		fmt.Println(result.Exponent())
+		fmt.Println(result.GetPrecision())
+		fmt.Println(result.AsInteger())
+		fmt.Println(result.GetValue().String())
+		fmt.Println(result.GetValue().IsInt64())
+		fmt.Println("--------")
+	})
+}
+
 func RunMultiplicationTest(t *testing.T, testStructures *TestStructures, name string) {
 	Convey(name, func() {
 		for _, v := range testStructures.multiplicationCases {

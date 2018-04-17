@@ -11,7 +11,7 @@ func (c *CelsiusHandler) GetUnits() string {
 	return "K"
 }
 
-func (c *CelsiusHandler) GetValue() Decimal {
+func (c *CelsiusHandler) GetValue() *Decimal {
 	d, _ := NewDecimal("1")
 	return d
 }

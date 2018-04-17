@@ -901,10 +901,10 @@ func TestDecimal_BankRoundAndStringFixed(t *testing.T) {
 }
 
 func TestDecimal_Uninitialized(t *testing.T) {
-	a := ucum.Decimal{}
-	b := ucum.Decimal{}
+	a := &ucum.Decimal{}
+	b := &ucum.Decimal{}
 
-	decs := []ucum.Decimal{
+	decs := []*ucum.Decimal{
 		a,
 		a.Rescale(10),
 		a.Abs(),
@@ -1154,8 +1154,8 @@ func TestDecimal_Div(t *testing.T) {
 }
 
 type DivTestCase struct {
-	d    ucum.Decimal
-	d2   ucum.Decimal
+	d    *ucum.Decimal
+	d2   *ucum.Decimal
 	prec int32
 }
 
@@ -1385,7 +1385,7 @@ func TestDecimal_ExtremeValues(t *testing.T) {
 }
 
 func TestString(t *testing.T){
-	cd := func(value int64, exp int32, prec int)ucum.Decimal{
+	cd := func(value int64, exp int32, prec int)*ucum.Decimal{
 		return ucum.NewFromInt64Precision(value, exp, prec)
 	}
 	d := cd(63,-1,1)
@@ -1433,7 +1433,7 @@ func TestDecimal_Min(t *testing.T) {
 	for _, test := range testCases {
 		expected, input := test[0], test[1:]
 		expectedDecimal := ucum.NewFromFloat(expected)
-		decimalInput := []ucum.Decimal{}
+		decimalInput := []*ucum.Decimal{}
 		for _, inp := range input {
 			d := ucum.NewFromFloat(inp)
 			decimalInput = append(decimalInput, d)
@@ -1461,7 +1461,7 @@ func TestDecimal_Max(t *testing.T) {
 	for _, test := range testCases {
 		expected, input := test[0], test[1:]
 		expectedDecimal := ucum.NewFromFloat(expected)
-		decimalInput := []ucum.Decimal{}
+		decimalInput := []*ucum.Decimal{}
 		for _, inp := range input {
 			d := ucum.NewFromFloat(inp)
 			decimalInput = append(decimalInput, d)
@@ -1766,13 +1766,13 @@ func TestDecimal_Coefficient(t *testing.T) {
 	}
 }
 
-type DecimalSlice []ucum.Decimal
+type DecimalSlice []*ucum.Decimal
 
 func (p DecimalSlice) Len() int           { return len(p) }
 func (p DecimalSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p DecimalSlice) Less(i, j int) bool { return p[i].Cmp(p[j]) < 0 }
 func Benchmark_Cmp(b *testing.B) {
-	decimals := DecimalSlice([]ucum.Decimal{})
+	decimals := DecimalSlice([]*ucum.Decimal{})
 	for i := 0; i < 1000000; i++ {
 		decimals = append(decimals, ucum.NewDecimalValueExp(int64(i), 0))
 	}
@@ -1924,13 +1924,13 @@ func TestBinary(t *testing.T) {
 
 		// Restore from binary
 		var d2 ucum.Decimal
-		err = (&d2).UnmarshalBinary(b)
+		err = (d2).UnmarshalBinary(b)
 		if err != nil {
 			t.Errorf("error unmarshalling from binary: %v", err)
 		}
 
 		// The restored decimal should equal the original
-		if !d1.Equals(d2) {
+		if !d1.Equals(&d2) {
 			t.Errorf("expected %v when restoring, got %v", d1, d2)
 		}
 	}
@@ -1965,12 +1965,12 @@ func TestGobEncode(t *testing.T) {
 			t.Errorf("something about the gobencode is not working properly \n%v\n%v", b1, b2)
 		}
 
-		var d3 ucum.Decimal
+		d3 := &ucum.Decimal{}
 		err = d3.GobDecode(b1)
 		if err != nil {
 			t.Errorf("Error gobdecoding %v, got %v", b1, d3)
 		}
-		var d4 ucum.Decimal
+		d4 := &ucum.Decimal{}
 		err = d4.GobDecode(b2)
 		if err != nil {
 			t.Errorf("Error gobdecoding %v, got %v", b2, d4)
@@ -1989,7 +1989,7 @@ func TestGobEncode(t *testing.T) {
 }
 
 func TestSum(t *testing.T) {
-	vals := make([]ucum.Decimal, 10)
+	vals := make([]*ucum.Decimal, 10)
 	var i = int64(0)
 
 	for key := range vals {
@@ -2004,7 +2004,7 @@ func TestSum(t *testing.T) {
 }
 
 func TestAvg(t *testing.T) {
-	vals := make([]ucum.Decimal, 10)
+	vals := make([]*ucum.Decimal, 10)
 	var i = int64(0)
 
 	for key := range vals {
@@ -2035,7 +2035,7 @@ func TestNewFromFloat(t *testing.T) {
 	}
 
 	for _, n := range shouldPanicOn {
-		var d ucum.Decimal
+		var d *ucum.Decimal
 		if !didPanic(func() { d = ucum.NewFromFloat(n) }) {
 			t.Fatalf("Expected panic when creating a Decimal from %v, got %v instead", n, d.String())
 		}
@@ -2104,7 +2104,7 @@ func TestNewFromFloatWithExponent(t *testing.T) {
 	}
 
 	for _, n := range shouldPanicOn {
-		var d ucum.Decimal
+		var d *ucum.Decimal
 		if !didPanic(func() { d = ucum.NewFromFloatWithExponent(n, 0) }) {
 			t.Fatalf("Expected panic when creating a Decimal from %v, got %v instead", n, d.String())
 		}
@@ -2341,6 +2341,6 @@ func TestDecimal_QuoRem2(t *testing.T) {
 	}
 }
 
-func sign(d ucum.Decimal) int {
+func sign(d *ucum.Decimal) int {
 	return d.GetValue().Sign()
 }

@@ -122,7 +122,7 @@ type UcumService interface {
 	 * @throws UcumException
 	 * @throws OHFException
 	 */
-	Convert(value Decimal, sourceUnit, destUnit string) (Decimal, error)
+	Convert(value *Decimal, sourceUnit, destUnit string) (*Decimal, error)
 	/**
 	 * multiply two value/units pairs together and return the result in canonical units
 	 *
@@ -358,22 +358,22 @@ func (u *UcumEssenceService) GetCanonicalForm(value *Pair) (*Pair, error) {
 		return nil, err
 	}
 	cu := ComposeExpression(can, false)
-	if value.Value == Zero {
+	if value.Value == nil {
 		return NewPair(Zero, cu), nil
 	} else {
 		return NewPair(value.Value.Multiply(can.Value), cu), nil
 	}
 }
 
-func (u *UcumEssenceService) Convert(value Decimal, sourceUnit, destUnit string) (Decimal, error) {
-	if value == Zero {
-		return Zero, fmt.Errorf("Convert: value must not be 0 (zero)")
+func (u *UcumEssenceService) Convert(value *Decimal, sourceUnit, destUnit string) (*Decimal, error) {
+	if value == nil {
+		return nil, fmt.Errorf("Convert: value must not nil")
 	}
 	if sourceUnit == "" {
-		return Zero, fmt.Errorf("Convert: sourceUnit must not be empty")
+		return nil, fmt.Errorf("Convert: sourceUnit must not be empty")
 	}
 	if destUnit == "" {
-		return Zero, fmt.Errorf("Convert: destUnit must not be empty")
+		return nil, fmt.Errorf("Convert: destUnit must not be empty")
 	}
 	if sourceUnit == destUnit {
 		return value, nil
@@ -381,24 +381,24 @@ func (u *UcumEssenceService) Convert(value Decimal, sourceUnit, destUnit string)
 	converter := NewConverter(u.Model, u.Handlers)
 	srcEp, err := NewExpressionParser(u.Model).Parse(sourceUnit)
 	if err != nil {
-		return Zero, err
+		return nil, err
 	}
 	drcEp, err := NewExpressionParser(u.Model).Parse(destUnit)
 	if err != nil {
-		return Zero, err
+		return nil, err
 	}
 	src, err := converter.Convert(srcEp)
 	if err != nil {
-		return Zero, err
+		return nil, err
 	}
 	dst, err := converter.Convert(drcEp)
 	if err != nil {
-		return Zero, err
+		return nil, err
 	}
 	s := ComposeExpression(src, false)
 	d := ComposeExpression(dst, false)
 	if s != d {
-		return Zero, fmt.Errorf("Unable to convert between units " + sourceUnit + " and " + destUnit + " as they do not have matching canonical forms (" + s + " and " + d + " respectively)")
+		return nil, fmt.Errorf("Unable to convert between units " + sourceUnit + " and " + destUnit + " as they do not have matching canonical forms (" + s + " and " + d + " respectively)")
 	}
 	canValue := value.Multiply(src.Value)
 	dr := canValue.Divide(dst.Value)
