@@ -1,9 +1,11 @@
 package ucum
 
+import "github.com/bertverhees/ucum/decimal"
+
 type HoldingHandler struct {
 	Code  string
 	Units string
-	Value *Decimal
+	Value decimal.Decimal
 }
 
 func (c *HoldingHandler) GetCode() string {
@@ -14,11 +16,11 @@ func (c *HoldingHandler) GetUnits() string {
 	return c.Units
 }
 
-func (c *HoldingHandler) GetValue() *Decimal {
+func (c *HoldingHandler) GetValue() decimal.Decimal {
 	return c.Value
 }
 
-func NewHoldingHandler(code, units string, value *Decimal) *HoldingHandler {
+func NewHoldingHandler(code, units string, value decimal.Decimal) *HoldingHandler {
 	result := &HoldingHandler{}
 	result.Code = code
 	result.Units = units

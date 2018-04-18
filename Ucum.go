@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"github.com/bertverhees/ucum/decimal"
 )
 
 type UcumService interface {
@@ -122,7 +123,7 @@ type UcumService interface {
 	 * @throws UcumException
 	 * @throws OHFException
 	 */
-	Convert(value *Decimal, sourceUnit, destUnit string) (*Decimal, error)
+	Convert(value *decimal.Decimal, sourceUnit, destUnit string) (*decimal.Decimal, error)
 	/**
 	 * multiply two value/units pairs together and return the result in canonical units
 	 *
@@ -358,14 +359,14 @@ func (u *UcumEssenceService) GetCanonicalForm(value *Pair) (*Pair, error) {
 		return nil, err
 	}
 	cu := ComposeExpression(can, false)
-	if value.Value == nil {
-		return NewPair(Zero, cu), nil
+	if value.Value == decimal.Zero {
+		return NewPair(decimal.Zero, cu), nil
 	} else {
-		return NewPair(value.Value.Multiply(can.Value), cu), nil
+		return NewPair(value.Value.Mul(can.Value), cu), nil
 	}
 }
 
-func (u *UcumEssenceService) Convert(value *Decimal, sourceUnit, destUnit string) (*Decimal, error) {
+func (u *UcumEssenceService) Convert(value *decimal.Decimal, sourceUnit, destUnit string) (*decimal.Decimal, error) {
 	if value == nil {
 		return nil, fmt.Errorf("Convert: value must not nil")
 	}
@@ -400,13 +401,13 @@ func (u *UcumEssenceService) Convert(value *Decimal, sourceUnit, destUnit string
 	if s != d {
 		return nil, fmt.Errorf("Unable to convert between units " + sourceUnit + " and " + destUnit + " as they do not have matching canonical forms (" + s + " and " + d + " respectively)")
 	}
-	canValue := value.Multiply(src.Value)
-	dr := canValue.Divide(dst.Value)
-	return dr, nil
+	canValue := value.Mul(src.Value)
+	dr := canValue.Div(dst.Value)
+	return &dr, nil
 }
 
 func (u *UcumEssenceService) Multiply(o1, o2 *Pair) (*Pair, error) {
-	res := NewPair(o1.Value.Multiply(o2.Value), o1.Code+"."+o2.Code)
+	res := NewPair(o1.Value.Mul(o2.Value), o1.Code+"."+o2.Code)
 	return u.GetCanonicalForm(res)
 }
 

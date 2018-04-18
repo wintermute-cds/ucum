@@ -73,7 +73,7 @@ func (e *ExpressionComposer) composeOp(buffer *bytes.Buffer, op Operator) {
 }
 func (e *ExpressionComposer) composeCanonical(buffer *bytes.Buffer, can *Canonical, canonicalValue bool) {
 	if canonicalValue {
-		buffer.WriteString(can.Value.AsDecimal())
+		buffer.WriteString(can.Value.String())
 	}
 	first := true
 	for _, c := range can.Units {

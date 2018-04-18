@@ -3,6 +3,7 @@ package ucum
 import (
 	"fmt"
 	"reflect"
+	"github.com/bertverhees/ucum/decimal"
 )
 
 type Converter struct {
@@ -25,7 +26,7 @@ func (c *Converter) Convert(term *Term) (*Canonical, error) {
 }
 
 func (c *Converter) normaliseTerm(indent string, term *Term) (*Canonical, error) {
-	result, _ := NewCanonical(NewFromInt64(1))
+	result, _ := NewCanonical(decimal.New(1, 0))
 	div := false
 	t := term
 	for {
@@ -93,7 +94,7 @@ func (c *Converter) normaliseTerm(indent string, term *Term) (*Canonical, error)
 }
 
 func (c *Converter) normaliseSymbol(indent string, sym *Symbol) (*Canonical, error) {
-	result, _ := NewCanonical(NewFromInt64(1))
+	result, _ := NewCanonical(decimal.New(1, 0))
 	bu, instanceof := sym.Unit.(*BaseUnit)
 	if instanceof {
 		cf, _ := NewCanonicalUnit(bu, sym.Exponent)

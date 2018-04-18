@@ -5,6 +5,7 @@ import (
 	"io"
 	"strings"
 	"time"
+	"github.com/bertverhees/ucum/decimal"
 )
 
 type DefinitionParser struct {
@@ -48,8 +49,8 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		names := make([]string, 0)
 		name := xmlItem.Name
 		names = append(names, name)
-		value, err := NewDecimal(xmlItem.Value.Value)
-		if err != nil {
+		value, err := decimal.NewFromString(xmlItem.Value.Value)
+		if err!=nil {
 			return nil, err
 		}
 		prefix := &Prefix{}
@@ -88,7 +89,7 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		value.Unit = xmlItem2.Unit
 		value.UnitUC = xmlItem2.UnitUC
 		if strings.Trim(xmlItem2.Value, " ") != "" {
-			value.Value, err = NewDecimal(xmlItem2.Value)
+			value.Value, err = decimal.NewFromString(xmlItem2.Value)
 			if err != nil {
 				return nil, err
 			}
