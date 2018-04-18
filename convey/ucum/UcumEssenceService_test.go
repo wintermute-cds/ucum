@@ -7,6 +7,7 @@ import (
 	"testing"
 	"fmt"
 	"reflect"
+	"github.com/bertverhees/ucum/decimal"
 )
 
 var test string
@@ -281,15 +282,14 @@ func RunConversionTest(t *testing.T, testStructures *TestStructures, name string
 	Convey(name, func() {
 		for _, v := range testStructures.conversionCases {
 			Convey(v.Id+": "+v.Value, func() {
-				d, err := ucum.NewDecimal(v.Value)
+				d, err := decimal.NewFromString(v.Value)
 				So(err, ShouldBeNil)
-				o, err := ucum.NewDecimal(v.Outcome)
+				o, err := decimal.NewFromString(v.Outcome)
 				So(err, ShouldBeNil)
 				res, _ := service.Convert(d, v.SrcUnit, v.DstUnit)
-				So(res.AsDecimal(), ShouldEqual, o.AsDecimal())
+				So(res.Cmp(o), ShouldEqual, 0)
 				fmt.Println(v.SrcUnit+":"+v.DstUnit)
-				fmt.Println(d.AsScientific()+":"+d.StringFixed(int32(d.GetPrecision()))+":"+d.String())
-				fmt.Println(o.AsScientific()+":"+o.StringFixed(int32(o.GetPrecision()))+":"+o.String())
+				fmt.Println(d.String()+":"+o.String())
 			})
 		}
 	})
@@ -297,30 +297,28 @@ func RunConversionTest(t *testing.T, testStructures *TestStructures, name string
 
 func TestConvert(t *testing.T){
 	Convey("TestConvert", t,func() {
-		decimal := ucum.NewFromInt64Precision(63, -1, 1)
-		fmt.Println(decimal)
-		fmt.Println(decimal.Exponent())
-		fmt.Println(decimal.GetPrecision())
-		fmt.Println(decimal.AsInteger())
-		fmt.Println(decimal.GetValue().String())
-		fmt.Println(decimal.GetValue().IsInt64())
+		dec := decimal.New(63, -1)
+		fmt.Println(dec)
+		fmt.Println(dec.Exponent())
+		fmt.Println(dec.IntPart())
+		fmt.Println(dec.GetValue().String())
+		fmt.Println(dec.GetValue().IsInt64())
 		fmt.Println("--------")
 		fmt.Println("Income")
-		fmt.Println(decimal)
+		fmt.Println(dec)
 		definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
 		service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 		if err != nil {
 			fmt.Errorf(err.Error())
 		}
-		result, err := service.Convert(decimal, "s.mm-1", "s.m-1")
+		result, err := service.Convert(dec, "s.mm-1", "s.m-1")
 		if err != nil {
 			fmt.Errorf(err.Error())
 		}
-		So(decimal.Multiply(ucum.NewFromInt(1000,0)), ShouldEqual, result)
+		So(dec.Mul(decimal.New(1000,0)), ShouldEqual, result)
 		fmt.Println(result)
 		fmt.Println(result.Exponent())
-		fmt.Println(result.GetPrecision())
-		fmt.Println(result.AsInteger())
+		fmt.Println(result.IntPart())
 		fmt.Println(result.GetValue().String())
 		fmt.Println(result.GetValue().IsInt64())
 		fmt.Println("--------")
@@ -331,16 +329,16 @@ func RunMultiplicationTest(t *testing.T, testStructures *TestStructures, name st
 	Convey(name, func() {
 		for _, v := range testStructures.multiplicationCases {
 			Convey(v.Id, func() {
-				d, err := ucum.NewDecimal(v.V1)
+				d, err := decimal.NewFromString(v.V1)
 				So(err, ShouldBeNil)
 				o1 := ucum.NewPair(d, v.U1)
-				d, err = ucum.NewDecimal(v.V2)
+				d, err = decimal.NewFromString(v.V2)
 				So(err, ShouldBeNil)
 				o2 := ucum.NewPair(d, v.U2)
 				o3, err := service.Multiply(o1, o2)
 				So(err, ShouldBeNil)
-				d, err = ucum.NewDecimal(v.VRes)
-				test := o3.Value.ComparesTo(d)
+				d, err = decimal.NewFromString(v.VRes)
+				test := o3.Value.Cmp(d)
 				So(test, ShouldEqual, 0)
 			})
 		}

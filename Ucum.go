@@ -123,7 +123,7 @@ type UcumService interface {
 	 * @throws UcumException
 	 * @throws OHFException
 	 */
-	Convert(value *decimal.Decimal, sourceUnit, destUnit string) (*decimal.Decimal, error)
+	Convert(value decimal.Decimal, sourceUnit, destUnit string) (decimal.Decimal, error)
 	/**
 	 * multiply two value/units pairs together and return the result in canonical units
 	 *
@@ -366,15 +366,15 @@ func (u *UcumEssenceService) GetCanonicalForm(value *Pair) (*Pair, error) {
 	}
 }
 
-func (u *UcumEssenceService) Convert(value *decimal.Decimal, sourceUnit, destUnit string) (*decimal.Decimal, error) {
-	if value == nil {
-		return nil, fmt.Errorf("Convert: value must not nil")
+func (u *UcumEssenceService) Convert(value decimal.Decimal, sourceUnit, destUnit string) (decimal.Decimal, error) {
+	if value == decimal.Zero {
+		return decimal.Decimal{}, fmt.Errorf("Convert: value must not nil")
 	}
 	if sourceUnit == "" {
-		return nil, fmt.Errorf("Convert: sourceUnit must not be empty")
+		return decimal.Decimal{}, fmt.Errorf("Convert: sourceUnit must not be empty")
 	}
 	if destUnit == "" {
-		return nil, fmt.Errorf("Convert: destUnit must not be empty")
+		return decimal.Decimal{}, fmt.Errorf("Convert: destUnit must not be empty")
 	}
 	if sourceUnit == destUnit {
 		return value, nil
@@ -382,28 +382,28 @@ func (u *UcumEssenceService) Convert(value *decimal.Decimal, sourceUnit, destUni
 	converter := NewConverter(u.Model, u.Handlers)
 	srcEp, err := NewExpressionParser(u.Model).Parse(sourceUnit)
 	if err != nil {
-		return nil, err
+		return decimal.Decimal{}, err
 	}
 	drcEp, err := NewExpressionParser(u.Model).Parse(destUnit)
 	if err != nil {
-		return nil, err
+		return decimal.Decimal{}, err
 	}
 	src, err := converter.Convert(srcEp)
 	if err != nil {
-		return nil, err
+		return decimal.Decimal{}, err
 	}
 	dst, err := converter.Convert(drcEp)
 	if err != nil {
-		return nil, err
+		return decimal.Decimal{}, err
 	}
 	s := ComposeExpression(src, false)
 	d := ComposeExpression(dst, false)
 	if s != d {
-		return nil, fmt.Errorf("Unable to convert between units " + sourceUnit + " and " + destUnit + " as they do not have matching canonical forms (" + s + " and " + d + " respectively)")
+		return decimal.Decimal{}, fmt.Errorf("Unable to convert between units " + sourceUnit + " and " + destUnit + " as they do not have matching canonical forms (" + s + " and " + d + " respectively)")
 	}
 	canValue := value.Mul(src.Value)
 	dr := canValue.Div(dst.Value)
-	return &dr, nil
+	return dr, nil
 }
 
 func (u *UcumEssenceService) Multiply(o1, o2 *Pair) (*Pair, error) {
