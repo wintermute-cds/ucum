@@ -89,7 +89,7 @@ func (e *ExpressionComposer) composeCanonical(buffer *bytes.Buffer, can *Canonic
 	}
 }
 
-// FORMALSTRUCTTURECOMPOSER==================================================================================================
+// FORMALSTRUCTTURECOMPOSER================================================================================================
 
 type FormalStructureComposer struct {
 }

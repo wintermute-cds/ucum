@@ -1,5 +1,6 @@
 package ucum
 
+
 import "github.com/bertverhees/ucum/decimal"
 
 type SpecialUnitHandlerer interface {
