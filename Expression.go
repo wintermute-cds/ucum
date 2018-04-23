@@ -330,10 +330,15 @@ func (l *Lexer) Consume() error {
 		//All units can be combined in an algebraic term using the operators for multiplication (period '.') and division (solidus '/').
 		//Multiple terms in an expression must be separated by an arithmetic operator - either the multiplication operator (.) or the division operator (/).
 		//While the multiplication operator (.) must appear between two unit terms, the division operator (/) may appear at the beginning of the expression, indicating inversion of the following term.
-		if !(l.checkSingleChar(ch, '/', SOLIDUS) || l.checkSingleChar(ch, '.', PERIOD) ||
-			l.checkSingleChar(ch, '(', OPEN) || l.checkSingleChar(ch, ')', CLOSE) || checkAnnotation ||
-			checkNumber || checkNumberOrSymbol) {
-			return fmt.Errorf("Error processing unit '" + l.Source + "': unexpected character '" + string(ch) + "' at position " + strconv.Itoa(l.Start))
+		if !(
+			l.checkSingleChar(ch, '/', SOLIDUS) ||
+			l.checkSingleChar(ch, '.', PERIOD) ||
+			l.checkSingleChar(ch, '(', OPEN) ||
+			l.checkSingleChar(ch, ')', CLOSE) ||
+			checkAnnotation ||
+			checkNumber ||
+			checkNumberOrSymbol) {
+				return fmt.Errorf("Error processing unit '" + l.Source + "': unexpected character '" + string(ch) + "' at position " + strconv.Itoa(l.Start))
 		}
 	}
 	return nil

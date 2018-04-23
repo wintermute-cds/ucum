@@ -12,43 +12,25 @@ import (
 
 var test string
 var service *ucum.UcumEssenceService
+var testStructures *TestStructures
 
-func TestService(t *testing.T) {
-	var testStructures *TestStructures
+func InitService() {
 	var err error
-	Convey("Service-creation", t, func() {
-		Convey("Service-creation", func() {
-			definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
-			service, err = ucum.GetInstanceOfUcumEssenceService(definitions)
-			So(err, ShouldBeNil)
-			So(service, ShouldNotBeNil)
-		})
-		Convey("First test run", func() {
-			test = os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/convey/resources/UcumFunctionalTests.xml"
-			testStructures, err = UnmarshalTerminology(test)
-			So(err, ShouldBeNil)
-			So(testStructures, ShouldNotBeNil)
-		})
-		RunValidationTest(t, testStructures, "Validation test")
-		RunDisplayNameGenerationTest(t, testStructures, "DisplayNameGenerationTest")
-		RunConversionTest(t, testStructures, "ConversionTest")
-		RunMultiplicationTest(t, testStructures, "RunMultiplicationTest")
-		RunUcumIdentificationTest(t, testStructures, "RunUcumIdentificationTest")
-		RunUcumValidateUCUMTest(t, testStructures, "RunUcumValidateUCUMTest")
-		RunSearchPrefixTests(t, testStructures, "RunSearchPrefixTests")
-		RunSearchBaseUnitsTests(t, testStructures, "RunSearchBaseUnitsTests")
-		RunSearchUnitsTests(t, testStructures, "RunSearchUnitsTests")
-		RunGetPropertiesTests(t, testStructures, "RunGetPropertiesTests")
-		RunValidateInPropertyTests(t, testStructures, "RunValidateInPropertyTests")
-		RunValidateCanonicalUnitsTests(t, testStructures, "RunValidateCanonicalUnitsTests")
-		RunGetCanonicalUnitsTests(t, testStructures, "RunGetCanonicalUnitsTests")
-		RunGetDefinedFormsTests(t, testStructures, "RunGetDefinedFormsTests")
-		RunIsComparableTests(t, testStructures, "RunIsComparableTests")
-	})
+	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	service, err = ucum.GetInstanceOfUcumEssenceService(definitions)
+	if err != nil {
+		fmt.Errorf("Error instantiating service:"+err.Error())
+	}
+	test = os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/convey/resources/UcumFunctionalTests.xml"
+	testStructures, err = UnmarshalTerminology(test)
+	if err != nil {
+		fmt.Errorf("Error unmarshaling:"+err.Error())
+	}
 }
 
-func RunIsComparableTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestIsComparableTests(t *testing.T) {
+	InitService()
+	Convey("TestIsComparableTests", t, func() {
 		validated, err := service.IsComparable("mm", "rad")
 		So(err, ShouldBeNil)
 		So(validated, ShouldBeFalse)
@@ -62,8 +44,9 @@ func RunIsComparableTests(t *testing.T, testStructures *TestStructures, name str
 }
 
 
-func RunGetDefinedFormsTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestGetDefinedFormsTests(t *testing.T) {
+	InitService()
+	Convey("TestGetDefinedFormsTests", t, func() {
 		validated, err := service.GetDefinedForms("mm")
 		So(err, ShouldBeNil)
 		So(len(validated), ShouldEqual, 0)
@@ -74,8 +57,9 @@ func RunGetDefinedFormsTests(t *testing.T, testStructures *TestStructures, name 
 }
 
 
-func RunGetCanonicalUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestGetCanonicalUnitsTests(t *testing.T) {
+	InitService()
+	Convey("TestGetCanonicalUnitsTests", t, func() {
 		validated, err := service.GetCanonicalUnits("mm")
 		So(err, ShouldBeNil)
 		So(validated, ShouldEqual, "m")
@@ -85,8 +69,9 @@ func RunGetCanonicalUnitsTests(t *testing.T, testStructures *TestStructures, nam
 }
 
 
-func RunValidateInPropertyTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestValidateInPropertyTests(t *testing.T) {
+	InitService()
+	Convey("TestValidateInPropertyTests", t, func() {
 		validated := service.ValidateInProperty("mm", "number" )
 		So(validated, ShouldEqual, "unit mm is of the property type length (m), not number as required.")
 		validated = service.ValidateInProperty("cm", "length" )
@@ -94,8 +79,9 @@ func RunValidateInPropertyTests(t *testing.T, testStructures *TestStructures, na
 	})
 }
 
-func RunValidateCanonicalUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestValidateCanonicalUnitsTests(t *testing.T) {
+	InitService()
+	Convey("TestValidateCanonicalUnitsTests", t, func() {
 		validated := service.ValidateCanonicalUnits("mm", "l" )
 		So(validated, ShouldEqual, "unit mm has the base units m, not l as required.")
 		validated = service.ValidateCanonicalUnits("cm", "m" )
@@ -103,15 +89,17 @@ func RunValidateCanonicalUnitsTests(t *testing.T, testStructures *TestStructures
 	})
 }
 
-func RunGetPropertiesTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestGetPropertiesTests(t *testing.T) {
+	InitService()
+	Convey("TestGetPropertiesTests", t, func() {
 		list := service.GetProperties()
 		So(len(list), ShouldBeGreaterThan, 300)
 	})
 }
 
-func RunSearchUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestSearchUnitsTests(t *testing.T) {
+	InitService()
+	Convey("TestSearchUnitsTests", t, func() {
 		list, err := service.Search(ucum.UNIT, "sr", false)
 		So(err, ShouldBeNil)
 		p1 := list[0]
@@ -137,8 +125,9 @@ func RunSearchUnitsTests(t *testing.T, testStructures *TestStructures, name stri
 }
 
 
-func RunSearchBaseUnitsTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestSearchBaseUnitsTests(t *testing.T) {
+	InitService()
+	Convey("TestSearchBaseUnitsTests", t, func() {
 		list, err := service.Search(ucum.BASEUNIT, "meter", false)
 		So(err, ShouldBeNil)
 		p1 := list[0]
@@ -190,8 +179,9 @@ func RunSearchBaseUnitsTests(t *testing.T, testStructures *TestStructures, name 
 	})
 }
 
-func RunSearchPrefixTests(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestSearchPrefixTests(t *testing.T) {
+	InitService()
+	Convey("TestSearchPrefixTests", t, func() {
 		list, err := service.Search(ucum.PREFIX, "micro", false)
 		So(err, ShouldBeNil)
 		p1 := list[0]
@@ -239,8 +229,9 @@ func RunSearchPrefixTests(t *testing.T, testStructures *TestStructures, name str
 	})
 }
 
-func RunUcumValidateUCUMTest(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestUcumValidateUCUMTest(t *testing.T) {
+	InitService()
+	Convey("TestUcumValidateUCUMTest", t, func() {
 		s := service.ValidateUCUM()
 		for _, e := range s{
 			fmt.Println(e)
@@ -249,15 +240,17 @@ func RunUcumValidateUCUMTest(t *testing.T, testStructures *TestStructures, name 
 }
 
 
-func RunUcumIdentificationTest(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestUcumIdentificationTest(t *testing.T) {
+	InitService()
+	Convey("TestUcumIdentificationTest", t, func() {
 		So(service.UcumIdentification().Version, ShouldNotBeEmpty)
 		So(service.UcumIdentification().ReleaseDate.String(), ShouldNotBeEmpty)
 	})
 }
 
-func RunValidationTest(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestValidationTest(t *testing.T) {
+	InitService()
+	Convey("TestValidationTest", t, func() {
 		for _, v := range testStructures.ValidationCases {
 			Convey(v.Id+": "+v.Unit, func() {
 				validated, _ := service.Validate(v.Unit)
@@ -267,8 +260,9 @@ func RunValidationTest(t *testing.T, testStructures *TestStructures, name string
 	})
 }
 
-func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestDisplayNameGenerationTest(t *testing.T) {
+	InitService()
+	Convey("TestDisplayNameGenerationTest", t, func() {
 		for _, v := range testStructures.DisplayNameGenerationCases {
 			Convey(v.Id+": "+v.Unit, func() {
 				analysed, _ := service.Analyse(v.Unit)
@@ -278,8 +272,9 @@ func RunDisplayNameGenerationTest(t *testing.T, testStructures *TestStructures, 
 	})
 }
 
-func RunConversionTest(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestConversionTest(t *testing.T) {
+	InitService()
+	Convey("TestConversionTest", t, func() {
 		for _, v := range testStructures.conversionCases {
 			Convey(v.Id+": "+v.Value, func() {
 				d, err := decimal.NewFromString(v.Value)
@@ -288,24 +283,15 @@ func RunConversionTest(t *testing.T, testStructures *TestStructures, name string
 				So(err, ShouldBeNil)
 				res, _ := service.Convert(d, v.SrcUnit, v.DstUnit)
 				So(res.Cmp(o), ShouldEqual, 0)
-				fmt.Println(v.SrcUnit+":"+v.DstUnit)
-				fmt.Println(d.String()+":"+o.String())
 			})
 		}
 	})
 }
 
 func TestConvert(t *testing.T){
+	InitService()
 	Convey("TestConvert", t,func() {
 		dec := decimal.New(63, -1)
-		fmt.Println(dec)
-		fmt.Println(dec.Exponent())
-		fmt.Println(dec.IntPart())
-		fmt.Println(dec.GetValue().String())
-		fmt.Println(dec.GetValue().IsInt64())
-		fmt.Println("--------")
-		fmt.Println("Income")
-		fmt.Println(dec)
 		definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
 		service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 		if err != nil {
@@ -316,17 +302,12 @@ func TestConvert(t *testing.T){
 			fmt.Errorf(err.Error())
 		}
 		So(dec.Mul(decimal.New(1000,0)), ShouldEqual, result)
-		fmt.Println(result)
-		fmt.Println(result.Exponent())
-		fmt.Println(result.IntPart())
-		fmt.Println(result.GetValue().String())
-		fmt.Println(result.GetValue().IsInt64())
-		fmt.Println("--------")
 	})
 }
 
-func RunMultiplicationTest(t *testing.T, testStructures *TestStructures, name string) {
-	Convey(name, func() {
+func TestMultiplicationTest(t *testing.T) {
+	InitService()
+	Convey("TestMultiplicationTest", t, func() {
 		for _, v := range testStructures.multiplicationCases {
 			Convey(v.Id, func() {
 				d, err := decimal.NewFromString(v.V1)
