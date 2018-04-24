@@ -467,7 +467,7 @@ func (l *Lexer) checkBrackets(ch rune, isInBrackets bool) (bool, error) {
 
 func (l *Lexer) isValidSymbolChar(ch rune, allowDigits, isInBrackets bool) bool {
 	return (allowDigits && ch >= '0' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '[' ||
-		ch == ']' || ch == '%' || ch == '*' || ch == '^' || ch == '\'' || ch == '"' || ch == '_' || (isInBrackets && ch == '.')
+		ch == ']' || ch == '%' || ch == '*' || ch == '^' || ch == '\'' || ch == '"' || ch == '_' || (isInBrackets && ch == '.') || (isInBrackets && ch == '/') || (isInBrackets && ch == '(') || (isInBrackets && ch == ')')
 }
 
 func (l *Lexer) peekChar() rune {
