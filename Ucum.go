@@ -145,6 +145,15 @@ type UcumService interface {
 	 * @return the preferred human display form
 	 */
 	GetCommonDisplay(code string) string
+
+	GetDerivedUnitsForClass(class string)[]Unit
+
+	ListAllClasses()[]string
+
+	GetDerivedUnitsForProperty(property string)[]BaseUnit
+
+	ListAllProperties()[]Unit
+
 }
 
 // UcumVersionDetails======================================================

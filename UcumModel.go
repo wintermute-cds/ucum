@@ -16,10 +16,12 @@ type UcumModel struct {
 	Prefixes     []*Prefix
 	BaseUnits    []*BaseUnit
 	DefinedUnits []*DefinedUnit
+	UcumClassInfos []*UcumClassInfo
 	BaseUnitsByCode map[string]*BaseUnit
 	BaseUnitsByCodeUC map[string]*BaseUnit
 	DefinedUnitsByCode map[string]*DefinedUnit
 	DefinedUnitsByCodeUC map[string]*DefinedUnit
+	Properties []string
 }
 
 func NewUcumModel(version, revision string, revisionDate time.Time) *UcumModel {
@@ -122,6 +124,11 @@ func (u *UcumModel) matchesConcept(concept Concepter, text string, isRegex bool)
 		return true
 	}
 	return false
+}
+
+type UcumClassInfo struct {
+	Name string
+	Description string
 }
 
 // Concept=====================================================
@@ -286,6 +293,56 @@ Avoirdupois is the default system of mass units used for all goods that “have 
 - Class "misc" = Not otherwise classified units
 - Class "infotech" = Units used in information technology
  */
+type DefinedUnitFilter struct {
+	DefinedUnits []*DefinedUnit
+}
+
+func NewDefinedUnitFilter(definedUnits []*DefinedUnit)*DefinedUnitFilter{
+	duf := &DefinedUnitFilter{}
+	duf.DefinedUnits = definedUnits
+	return duf
+}
+
+func (duf *DefinedUnitFilter)FilterByClass(class string)*DefinedUnitFilter{
+	dul := make([]*DefinedUnit,0)
+	for _,du := range duf.DefinedUnits{
+		if du.Class == class {
+			dul = append(dul, du)
+		}
+	}
+	return NewDefinedUnitFilter(dul)
+}
+
+func (duf *DefinedUnitFilter)FilterByProperty(property string)*DefinedUnitFilter{
+	dul := make([]*DefinedUnit,0)
+	for _,du := range duf.DefinedUnits{
+		if du.Property == property {
+			dul = append(dul, du)
+		}
+	}
+	return NewDefinedUnitFilter(dul)
+}
+
+func (duf *DefinedUnitFilter)FilterByIsSpecial(isSpecial bool)*DefinedUnitFilter{
+	dul := make([]*DefinedUnit,0)
+	for _,du := range duf.DefinedUnits{
+		if du.IsSpecial == isSpecial {
+			dul = append(dul, du)
+		}
+	}
+	return NewDefinedUnitFilter(dul)
+}
+
+func (duf *DefinedUnitFilter)FilterByIsMetric(isMetric bool)*DefinedUnitFilter{
+	dul := make([]*DefinedUnit,0)
+	for _,du := range duf.DefinedUnits{
+		if du.Metric == isMetric {
+			dul = append(dul, du)
+		}
+	}
+	return NewDefinedUnitFilter(dul)
+}
+
 type DefinedUnit struct {
 	Unit
 	Class     string

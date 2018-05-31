@@ -28,6 +28,7 @@ type XMLRoot struct {
 	Prefixes     []XMLPrefix      `xml:"prefix"`
 	BaseUnits    []XMLBaseUnit    `xml:"base-unit"`
 	DefinedUnits []XMLDefinedUnit `xml:"unit"`
+	UcumClassInfos []XMLUcumClassInfo `xml:"ucum-class"`
 }
 
 func (x *XMLRoot) UcumModel() (*UcumModel, error) {
@@ -43,8 +44,10 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		Prefixes:     make([]*Prefix, 0),
 		BaseUnits:    make([]*BaseUnit, 0),
 		DefinedUnits: make([]*DefinedUnit, 0),
+		UcumClassInfos: make([]*UcumClassInfo,0),
 		BaseUnitsByCode : make(map[string]*BaseUnit),
 		DefinedUnitsByCode : make(map[string]*DefinedUnit),
+		Properties: make([]string,0),
 	}
 	for _, xmlItem := range x.Prefixes {
 		names := make([]string, 0)
@@ -107,8 +110,27 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		unit.Metric = xmlItem.Metric == "yes"
 		unit.Value = value
 		unit.Kind = UNIT
+		found := false
+		for _,s := range ucumModel.Properties{
+			if s == unit.Property {
+				found = true
+				break
+			}
+		}
+		if !found {
+			ucumModel.Properties = append(ucumModel.Properties,unit.Property)
+		}
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
 		ucumModel.DefinedUnitsByCode[unit.Code] = unit
+	}
+	for _, xmlItem := range x.UcumClassInfos {
+		name := xmlItem.Name
+		description := xmlItem.Description
+		ucumClassInfo := &UcumClassInfo{
+			Name: name,
+			Description: description,
+		}
+		ucumModel.UcumClassInfos = append(ucumModel.UcumClassInfos, ucumClassInfo)
 	}
 	return ucumModel, err
 }
@@ -181,4 +203,9 @@ type XMLValue struct {
 	Unit   string `xml:"Unit,attr"`
 	UnitUC string `xml:"UNIT,attr"`
 	Value  string `xml:"value,attr"`
+}
+
+type XMLUcumClassInfo struct {
+	Name string			`xml:"name"`
+	Description string	`xml:"description"`
 }
