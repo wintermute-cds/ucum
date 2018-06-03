@@ -47,7 +47,7 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		UcumClassInfos: make([]*UcumClassInfo,0),
 		BaseUnitsByCode : make(map[string]*BaseUnit),
 		DefinedUnitsByCode : make(map[string]*DefinedUnit),
-		Properties: make([]string,0),
+		PropertyIndex: make(map[string]string),
 	}
 	for _, xmlItem := range x.Prefixes {
 		names := make([]string, 0)
@@ -84,6 +84,7 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		ucumModel.BaseUnits = append(ucumModel.BaseUnits, baseUnit)
 		ucumModel.BaseUnitsByCode[baseUnit.Code] = baseUnit
 	}
+	tmpProperties := make([]string,0)
 	for _, xmlItem := range x.DefinedUnits {
 		names := make([]string, 0)
 		name := xmlItem.Name
@@ -110,15 +111,23 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		unit.Metric = xmlItem.Metric == "yes"
 		unit.Value = value
 		unit.Kind = UNIT
+		//find property
 		found := false
-		for _,s := range ucumModel.Properties{
+		for _,s := range tmpProperties{
 			if s == unit.Property {
 				found = true
 				break
 			}
 		}
 		if !found {
-			ucumModel.Properties = append(ucumModel.Properties,unit.Property)
+			tmpProperties = append(tmpProperties,unit.Property)
+			if len(unit.Property)>2 {
+				for i, _ := range unit.Property {
+					if i < len(unit.Property)-3 {
+						ucumModel.PropertyIndex[unit.Property[i:i+3]] = unit.Property
+					}
+				}
+			}
 		}
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
 		ucumModel.DefinedUnitsByCode[unit.Code] = unit
