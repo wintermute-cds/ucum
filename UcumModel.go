@@ -21,7 +21,7 @@ type UcumModel struct {
 	BaseUnitsByCodeUC map[string]*BaseUnit
 	DefinedUnitsByCode map[string]*DefinedUnit
 	DefinedUnitsByCodeUC map[string]*DefinedUnit
-	PropertyIndex map[string]string
+	PropertyIndex map[string][]string
 }
 
 func NewUcumModel(version, revision string, revisionDate time.Time) *UcumModel {

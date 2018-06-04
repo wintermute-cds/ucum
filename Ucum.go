@@ -146,13 +146,13 @@ type UcumService interface {
 	 */
 	GetCommonDisplay(code string) string
 
-	GetDerivedUnitsForClass(class string)[]Unit
-
-	ListAllClasses()[]string
-
-	GetDerivedUnitsForProperty(property string)[]BaseUnit
-
-	ListAllProperties()[]Unit
+	//GetDerivedUnitsForClass(class string)[]Unit
+	//
+	//ListAllClasses()[]string
+	//
+	//GetDerivedUnitsForProperty(property string)[]BaseUnit
+	//
+	//ListAllProperties()[]Unit
 
 }
 
@@ -209,7 +209,7 @@ func (u *UcumEssenceService) ValidateUCUM() []string {
 
 func (u *UcumEssenceService) Search(kind ConceptKind, text string, isRegex bool) ([]Concepter, error) {
 	if text == "" {
-		return nil, fmt.Errorf("search", "text", "must not be empty")
+		return nil, fmt.Errorf("search text must not be empty")
 	}
 	return u.Model.Search(kind, text, isRegex), nil
 }
