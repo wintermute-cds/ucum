@@ -38,16 +38,19 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		return nil, err
 	}
 	ucumModel := &UcumModel{
-		Version:      x.Version,
-		Revision:     x.Revision,
-		RevisionDate: dateTime,
-		Prefixes:     make([]*Prefix, 0),
-		BaseUnits:    make([]*BaseUnit, 0),
-		DefinedUnits: make([]*DefinedUnit, 0),
-		UcumClassInfos: make([]*UcumClassInfo,0),
-		BaseUnitsByCode : make(map[string]*BaseUnit),
-		DefinedUnitsByCode : make(map[string]*DefinedUnit),
-		PropertyIndex: make(map[string][]string),
+		Version:               	x.Version,
+		Revision:              	x.Revision,
+		RevisionDate:          	dateTime,
+		Prefixes:              	make([]*Prefix, 0),
+		BaseUnits:             	make([]*BaseUnit, 0),
+		DefinedUnits:          	make([]*DefinedUnit, 0),
+		UcumClassInfoMap:      	make(map[string]*UcumClassInfo),
+		BaseUnitsByCode :      	make(map[string]*BaseUnit),
+		DefinedUnitsByCode :   	make(map[string]*DefinedUnit),
+		PropertySearchIndex:   	make(map[string][]string),
+		ClassSearchIndex: 	   	make(map[string][]string),
+		PropertyList:			make([]string,0),
+		ClassList:				make([]string,0),
 	}
 	for _, xmlItem := range x.Prefixes {
 		names := make([]string, 0)
@@ -84,7 +87,6 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		ucumModel.BaseUnits = append(ucumModel.BaseUnits, baseUnit)
 		ucumModel.BaseUnitsByCode[baseUnit.Code] = baseUnit
 	}
-	tmpProperties := make([]string,0)
 	for _, xmlItem := range x.DefinedUnits {
 		names := make([]string, 0)
 		name := xmlItem.Name
@@ -113,24 +115,26 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		unit.Kind = UNIT
 		//find property
 		found := false
-		for _,s := range tmpProperties{
+		for _,s := range ucumModel.PropertyList{
 			if s == unit.Property {
 				found = true
 				break
 			}
 		}
 		if !found {
-			tmpProperties = append(tmpProperties,unit.Property)
-			if len(unit.Property)>2 {
-				for i, _ := range unit.Property {
-					if i < len(unit.Property)-3 {
-						if ucumModel.PropertyIndex[unit.Property[i:i+3]] == nil {
-							ucumModel.PropertyIndex[unit.Property[i:i+3]] = make([]string,0)
-						}
-						ucumModel.PropertyIndex[unit.Property[i:i+3]] = append(ucumModel.PropertyIndex[unit.Property[i:i+3]],unit.Property)
-					}
-				}
+			ucumModel.PropertyList = append(ucumModel.PropertyList,unit.Property)
+			addSearchToIndex(ucumModel.PropertySearchIndex, unit.Property)
+		}
+		found = false
+		for _,s := range ucumModel.ClassList{
+			if s == unit.Class {
+				found = true
+				break
 			}
+		}
+		if !found {
+			ucumModel.ClassList = append(ucumModel.ClassList,unit.Class)
+			addSearchToIndex(ucumModel.ClassSearchIndex, unit.Class)
 		}
 		ucumModel.DefinedUnits = append(ucumModel.DefinedUnits, unit)
 		ucumModel.DefinedUnitsByCode[unit.Code] = unit
@@ -142,9 +146,49 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 			Name: name,
 			Description: description,
 		}
-		ucumModel.UcumClassInfos = append(ucumModel.UcumClassInfos, ucumClassInfo)
+		ucumModel.UcumClassInfoMap[ucumClassInfo.Name] = ucumClassInfo
 	}
 	return ucumModel, err
+}
+
+func addSearchToIndex(index map[string][]string, indexItem string){
+	addItem := func(i, max int, item string)bool{
+		if i < len(item)-(max-1) {
+			if index[strings.ToLower(item[i:i+max])] == nil {
+				index[item[i:i+max]] = make([]string,0)
+			}
+			found := false
+			for _,s := range index[strings.ToLower(item[i:i+max])]{
+				if s == item {
+					found = true
+					break
+				}
+			}
+			if !found {
+				index[strings.ToLower(item[i:i+max])] = append(index[strings.ToLower(item[i:i+max])], item)
+			}
+			return true
+		}else {
+			return false
+		}
+	}
+	tmpIndexItem := ""
+	for i, _ := range indexItem {
+		if indexItem[i] != '\n'{
+			tmpIndexItem = tmpIndexItem + string(indexItem[i])
+			//tmpIndexItem = strings.TrimSpace(tmpIndexItem)
+		}
+	}
+	tmpIndexItem = strings.TrimSpace(tmpIndexItem)
+	if len(tmpIndexItem)>2 {
+		for i, _ := range tmpIndexItem {
+			if !addItem( i, 3, tmpIndexItem) {
+				break
+			}
+			addItem( i, 4, tmpIndexItem)
+			addItem( i, 5, tmpIndexItem)
+		}
+	}
 }
 
 func (x *XMLRoot) ProcessRevisionDate(revisionDate string) (time.Time, error) {

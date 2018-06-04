@@ -10,18 +10,21 @@ import (
 )
 
 type UcumModel struct {
-	Version      string
-	Revision     string
-	RevisionDate time.Time
-	Prefixes     []*Prefix
-	BaseUnits    []*BaseUnit
-	DefinedUnits []*DefinedUnit
-	UcumClassInfos []*UcumClassInfo
-	BaseUnitsByCode map[string]*BaseUnit
-	BaseUnitsByCodeUC map[string]*BaseUnit
-	DefinedUnitsByCode map[string]*DefinedUnit
-	DefinedUnitsByCodeUC map[string]*DefinedUnit
-	PropertyIndex map[string][]string
+	Version               	string
+	Revision              	string
+	RevisionDate          	time.Time
+	Prefixes              	[]*Prefix
+	BaseUnits             	[]*BaseUnit
+	DefinedUnits          	[]*DefinedUnit
+	UcumClassInfoMap      	map[string]*UcumClassInfo
+	BaseUnitsByCode       	map[string]*BaseUnit
+	BaseUnitsByCodeUC     	map[string]*BaseUnit
+	DefinedUnitsByCode    	map[string]*DefinedUnit
+	DefinedUnitsByCodeUC  	map[string]*DefinedUnit
+	PropertySearchIndex   	map[string][]string
+	PropertyList			[]string
+	ClassSearchIndex 		map[string][]string
+	ClassList				[]string
 }
 
 func NewUcumModel(version, revision string, revisionDate time.Time) *UcumModel {

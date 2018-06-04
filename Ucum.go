@@ -146,14 +146,12 @@ type UcumService interface {
 	 */
 	GetCommonDisplay(code string) string
 
-	//GetDerivedUnitsForClass(class string)[]Unit
-	//
-	//ListAllClasses()[]string
-	//
-	//GetDerivedUnitsForProperty(property string)[]BaseUnit
-	//
-	//ListAllProperties()[]Unit
-
+	ListAllClasses()[]string
+	ListAllProperties()[]string
+	SearchClass(arg string)[]string
+	SearchProperty(arg string)[]string
+	GetClassInfo(class string)*UcumClassInfo
+	FilterDefinedModels(class string, property string, onIsMetric, isMetric bool, onIsSpecial, isSpecial bool)[]*DefinedUnit
 }
 
 // UcumVersionDetails======================================================
@@ -175,6 +173,43 @@ const UCUM_OID = "2.16.840.1.113883.6.8"
 type UcumEssenceService struct {
 	Model    *UcumModel
 	Handlers *Registry
+}
+
+func (u *UcumEssenceService)FilterDefinedModels(class string, property string, onIsMetric, isMetric bool, onIsSpecial, isSpecial bool)[]*DefinedUnit{
+	duf := NewDefinedUnitFilter(u.Model.DefinedUnits);
+	if class != "" {
+		duf = duf.FilterByClass(class)
+	}
+	if property != "" {
+		duf = duf.FilterByProperty(property)
+	}
+	if onIsMetric {
+		duf = duf.FilterByIsMetric(isMetric)
+	}
+	if onIsSpecial {
+		duf = duf.FilterByIsSpecial(isSpecial)
+	}
+	return duf.DefinedUnits
+}
+
+func (u *UcumEssenceService) ListAllClasses()[]string{
+	return u.Model.ClassList
+}
+
+func (u *UcumEssenceService) ListAllProperties()[]string{
+	return u.Model.PropertyList
+}
+
+func (u *UcumEssenceService) SearchClass(arg string)[]string{
+	return u.Model.ClassSearchIndex[arg]
+}
+
+func (u *UcumEssenceService) SearchProperty(arg string)[]string{
+	return u.Model.PropertySearchIndex[arg]
+}
+
+func (u *UcumEssenceService) GetClassInfo(class string)*UcumClassInfo{
+	return u.Model.UcumClassInfoMap[class]
 }
 
 var instanceOfUcumEssenceService *UcumEssenceService
