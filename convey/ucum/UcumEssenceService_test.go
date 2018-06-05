@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"github.com/bertverhees/ucum/decimal"
+	"strings"
 )
 
 var test string
@@ -324,5 +325,200 @@ func TestMultiplicationTest(t *testing.T) {
 			})
 		}
 	})
+}
+
+func TestListAllClasses(t *testing.T) {
+	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+	classes := service.ListAllClasses()
+	if len(classes) !=20 {
+		t.Error("Not the right number of classes found")
+	}
+}
+
+func TestSearchClasses(t *testing.T) {
+	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+	classes := service.SearchClass("len")
+	if len(classes) !=2 {
+		t.Error("Not the right number of classes found")
+	}
+}
+
+func TestListAllProperties(t *testing.T) {
+	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+	classes := service.ListAllProperties()
+	if len(classes) !=99 {
+		t.Error("Not the right number of properties found")
+	}
+}
+
+func TestSearchProperties(t *testing.T) {
+	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+	classes := service.SearchProperty("len")
+	if len(classes) !=3 {
+		t.Error("Not the right number of classes found")
+	}
+}
+
+func TestGetClassInfo(t *testing.T) {
+	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+	class := service.GetClassInfo("us-lengths")
+	if !strings.HasPrefix(class.Description, "The older U.S. units according"){
+		t.Error("Class description wrong")
+	}
+}
+
+func TestFilterDefinedUnits(t *testing.T){
+	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+	definedUnits := service.FilterDefinedModels("us-lengths", "", false, false, false, false, false, false)
+	if len(definedUnits) != 17 {
+		t.Error("Not the right number of defined units found on filtering on class")
+	}
+	definedUnits = service.FilterDefinedModels("us-lengths", "length", false, false, false, false, false, false)
+	if len(definedUnits) != 12 {
+		t.Error("Not the right number of defined units found on filtering on class and property")
+	}
+	definedUnits = service.FilterDefinedModels("", "length", false, false, false, false, false, false)
+	if len(definedUnits) != 43 {
+		t.Error("Not the right number of defined units found on filtering on class and property")
+	}
+	definedUnits = service.FilterDefinedModels("iso1000", "", false, false, false, false, false, false)
+	if len(definedUnits) != 25 {
+		t.Error("Not the right number of defined units found on filtering on class")
+	}
+	definedUnits = service.FilterDefinedModels("iso1000", "", true, false, false, false, false, false)
+	if len(definedUnits) != 17 {
+		t.Error("Not the right number of defined units found on filtering on class and metric")
+	}
+	definedUnits = service.FilterDefinedModels("iso1000", "time", true, false, false, false, false, false)
+	if len(definedUnits) != 12 {
+		t.Error("Not the right number of defined units found on filtering on class, property and metric")
+	}
+	definedUnits = service.FilterDefinedModels("iso1000", "time", false, false, false, false, false, false)
+	if len(definedUnits) != 12 {
+		t.Error("Not the right number of defined units found on filtering on class and property")
+	}
+	definedUnits = service.FilterDefinedModels("iso1000", "length", false, false, false, false, false, false)
+	if len(definedUnits) != 2 {
+		t.Error("Not the right number of defined units found on filtering on class and property")
+	}
+	definedUnits = service.FilterDefinedModels("iso1000", "length", true, false, false, false, false, false)
+	if len(definedUnits) != 1 {
+		t.Error("Not the right number of defined units found on filtering on class and property and metric")
+	}
+	definedUnits = service.FilterDefinedModels("iso1000", "length", true, true, false, false, false, false)
+	if len(definedUnits) != 1 {
+		t.Error("Not the right number of defined units found on filtering on class and property and metric")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, true, false, false, false, false)
+	if len(definedUnits) != 89 {
+		t.Error("Not the right number of defined units found on filtering on metric")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, true, true, true, false, false)
+	if len(definedUnits) != 10 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, true, true, false, false, false)
+	if len(definedUnits) != 79 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, false, true, true, false, false)
+	if len(definedUnits) != 11 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, false, true, false, false, false)
+	if len(definedUnits) != 203 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial")
+	}
+	definedUnits = service.FilterDefinedModels("", "", false, false, true, false, false, false)
+	if len(definedUnits) != 282 {
+		t.Error("Not the right number of defined units found on filtering on isSpecial")
+	}
+	definedUnits = service.FilterDefinedModels("", "", false, false, true, true, false, false)
+	if len(definedUnits) != 21 {
+		t.Error("Not the right number of defined units found on filtering on isSpecial")
+	}
+
+	definedUnits = service.FilterDefinedModels("", "", true, true, false, false, true, false)
+	if len(definedUnits) != 87 {
+		t.Error("Not the right number of defined units found on filtering on metric, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, true, true, true, true, false)
+	if len(definedUnits) != 10 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, true, true, false, true, false)
+	if len(definedUnits) != 77 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, false, true, true, true, false)
+	if len(definedUnits) != 11 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, false, true, false, true, false)
+	if len(definedUnits) != 164 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", false, false, true, false, true, false)
+	if len(definedUnits) != 241 {
+		t.Error("Not the right number of defined units found on filtering on isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", false, false, true, true, true, false)
+	if len(definedUnits) != 21 {
+		t.Error("Not the right number of defined units found on filtering on isSpecial, isArbitrary")
+	}
+
+	definedUnits = service.FilterDefinedModels("", "", true, true, false, false, true, true)
+	if len(definedUnits) != 2 {
+		t.Error("Not the right number of defined units found on filtering on metric, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, true, true, true, true, true)
+	if len(definedUnits) != 0 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, true, true, false, true, true)
+	if len(definedUnits) != 2 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, false, true, true, true, true)
+	if len(definedUnits) != 0 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", true, false, true, false, true, true)
+	if len(definedUnits) != 39 {
+		t.Error("Not the right number of defined units found on filtering on metric and isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", false, false, true, false, true, true)
+	if len(definedUnits) != 41 {
+		t.Error("Not the right number of defined units found on filtering on isSpecial, isArbitrary")
+	}
+	definedUnits = service.FilterDefinedModels("", "", false, false, true, true, true, true)
+	if len(definedUnits) != 0 {
+		t.Error("Not the right number of defined units found on filtering on isSpecial, isArbitrary")
+	}
+
 }
 

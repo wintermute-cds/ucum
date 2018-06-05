@@ -151,7 +151,7 @@ type UcumService interface {
 	SearchClass(arg string)[]string
 	SearchProperty(arg string)[]string
 	GetClassInfo(class string)*UcumClassInfo
-	FilterDefinedModels(class string, property string, onIsMetric, isMetric bool, onIsSpecial, isSpecial bool)[]*DefinedUnit
+	FilterDefinedModels(class string, property string, onIsMetric, isMetric bool, onIsSpecial, isSpecial bool, onIsArbitrary, isArbitrary bool)[]*DefinedUnit
 }
 
 // UcumVersionDetails======================================================
@@ -175,7 +175,7 @@ type UcumEssenceService struct {
 	Handlers *Registry
 }
 
-func (u *UcumEssenceService)FilterDefinedModels(class string, property string, onIsMetric, isMetric bool, onIsSpecial, isSpecial bool)[]*DefinedUnit{
+func (u *UcumEssenceService)FilterDefinedModels(class string, property string, onIsMetric, isMetric bool, onIsSpecial, isSpecial bool, onIsArbitrary, isArbitrary bool)[]*DefinedUnit{
 	duf := NewDefinedUnitFilter(u.Model.DefinedUnits);
 	if class != "" {
 		duf = duf.FilterByClass(class)
@@ -188,6 +188,9 @@ func (u *UcumEssenceService)FilterDefinedModels(class string, property string, o
 	}
 	if onIsSpecial {
 		duf = duf.FilterByIsSpecial(isSpecial)
+	}
+	if onIsArbitrary {
+		duf = duf.FilterByIsArbitrary(isArbitrary)
 	}
 	return duf.DefinedUnits
 }

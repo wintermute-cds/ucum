@@ -336,6 +336,16 @@ func (duf *DefinedUnitFilter)FilterByIsSpecial(isSpecial bool)*DefinedUnitFilter
 	return NewDefinedUnitFilter(dul)
 }
 
+func (duf *DefinedUnitFilter)FilterByIsArbitrary(isArbitrary bool)*DefinedUnitFilter{
+	dul := make([]*DefinedUnit,0)
+	for _,du := range duf.DefinedUnits{
+		if du.IsArbitrary == isArbitrary {
+			dul = append(dul, du)
+		}
+	}
+	return NewDefinedUnitFilter(dul)
+}
+
 func (duf *DefinedUnitFilter)FilterByIsMetric(isMetric bool)*DefinedUnitFilter{
 	dul := make([]*DefinedUnit,0)
 	for _,du := range duf.DefinedUnits{
@@ -350,6 +360,7 @@ type DefinedUnit struct {
 	Unit
 	Class     string
 	IsSpecial bool
+	IsArbitrary bool
 	Metric    bool
 	Value     *Value
 }

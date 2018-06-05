@@ -111,6 +111,7 @@ func (x *XMLRoot) UcumModel() (*UcumModel, error) {
 		unit.Class = xmlItem.Class
 		unit.IsSpecial = xmlItem.IsSpecial == "yes"
 		unit.Metric = xmlItem.Metric == "yes"
+		unit.IsArbitrary = xmlItem.IsArbitrary == "yes"
 		unit.Value = value
 		unit.Kind = UNIT
 		//find property
@@ -249,10 +250,11 @@ type XMLBaseUnit struct {
 
 type XMLDefinedUnit struct {
 	XMLUnit
-	Class     string   `xml:"class,attr"`
-	IsSpecial string   `xml:"isSpecial,attr"`
-	Metric    string   `xml:"isMetric,attr"`
-	Value     XMLValue `xml:"value"`
+	Class       string   `xml:"class,attr"`
+	IsSpecial   string   `xml:"isSpecial,attr"`
+	IsArbitrary string   `xml:"isArbitrary,attr"`
+	Metric      string   `xml:"isMetric,attr"`
+	Value       XMLValue `xml:"value"`
 }
 
 type XMLValue struct {
