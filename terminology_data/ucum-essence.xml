@@ -2204,4 +2204,84 @@
       <printSymbol>Ti</printSymbol>
       <value value="1099511627776">1099511627776</value>
    </prefix>
+   <ucum-class>
+      <name>dimless</name>
+      <description>Dimensionless unit atoms. The name is the full (official) name of the unit. The symbol recommended for use in print this is listed in the column “printSymbol.” “Code,” and “CODE” list the symbol in the case sensitive and the case insensitive variants respectively. The column “M” specifies whether this is a metric unit. The definition is a valid case sensitive expression of The Unified Code for Units of Measure that defines the unit atom.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>si</name>
+      <description>SI units are defined by the international Conférence Générale des Poids et Mesures (CGPM). The name is the full (official) name of the unit. The symbol recommended for use in print this is listed in the column “printSymbol.” “Code,” and “CODE” list the symbol in the case sensitive and the case insensitive variants respectively. The column “M” specifies whether this is a metric unit. The definition is a valid case sensitive expression of The Unified Code for Units of Measure that defines the unit atom.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>iso1000</name>
+      <description>Those unit atoms listed by ISO 2955 under the heading “other units from ISO 1000” and some units from ANSI X3.50. Full name and print symbol are defined by ISO 1000 and are out of scope of The Unified Code for Units of Measure.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>cgs</name>
+      <description>The units of the older Centimeter-Gram-Second (CGS) system. CGS units are still used in many physiological laboratories and in clinical diagnostics (e.g., cardiology). In addition CGS units ackquired a special dignity as this was the system of units used by the great physicists of the early 20th century, Albert Einstein, Max Planck, and many others who worked on the scientific revolution that had quite a cultural impact. The CGS system defined electric and magnetic phenomena differently which is why the units named “oersted” and “maxwell” have no proper SI counterpart. This table was compiled from various sources and is not complete and not very systematic.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>const</name>
+      <description>Fundamental constants of nature and units derived from these constants. This list is not complete. It does not list all constants but only those that are fundamental and from which many other constants can be derived. The source of this table is The NIST Reference on Constants, Units, and Uncertainty Version 2.1, 21 May 1998. NIST Physics Laboratory. http://physics.nist.gov/cuu/Constants/index.html</description>
+   </ucum-class>
+   <ucum-class>
+      <name>intcust</name>
+      <description>The unified U.S. and British Imperial customary units, so called “international” customary units.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>us-lengths</name>
+      <description>The older U.S. units according to the definition of the inch in the U.S. Metric Law of 1866 and the definition of foot and yard that was valid from 1893 until 1959. After the 1959 international agreement changed the definition of the yard in the US to be 0.9144 m exactly. </description>
+   </ucum-class>
+   <ucum-class>
+      <name>brit-length</name>
+      <description>Symbols for the older British Imperial lengths as of the British Weights and Measures Act of 1824. The older British Imperial system is predominantly of historical interest. However, it may be that some former members of the Commonwealth have retained this system after 1959, when the unified international definitions where established, and after 1963, when the British system was revised in England.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>us-volumes</name>
+      <description>The U.S. volumes, so called “capacity” measures, which are different for fluid goods (wine) and dry goods (grain). The U.S. fluid volumes have been defined based on Queen Anne's wine gallon which was in turn defined exactly as 231 cubic inch.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>brit-volumes</name>
+      <description>British Imperial volumes according to the Weights and Measures Act of 1824. The British Weights and Measures Act of 1824 removed the medieval distiction between wine and grain measures and defined one unified system of volumes based on a new Gallon.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>avoirdupois</name>
+      <description>The avoirdupois system of mass units. The avoirdupois system is used in the U.S. as well as in coutries that use the British Imperial system. Avoirdupois is the default system of mass units used for all goods that “have weight” (fr. avoir du poids). Interestingly all three systems of weight are based on the same grain of barley, standardized to 64.79891 mg exactly [NIST].</description>
+   </ucum-class>
+   <ucum-class>
+      <name>troy</name>
+      <description>The troy system of mass units. The troy system originates in Troyes, a City in the Champagne (France) that hosted a major European fair. The troy system was later used for measuring precious metals. The World Monetary Fund valued all currencies against the troy ounce of gold at least until the 1960s. The troy ounce is still used in worldwide trade with gold, even in countries that otherwise use metric units.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>apoth</name>
+      <description>The apothecaries' system of mass units. Some U.S. pharmacies still use this system of apothecaries' weights when measuring the amount of drugs. This system is very different from the avoirdupois system though based on the same grain.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>typeset</name>
+      <description>The units of length as used in typesetting. There are three systems of typesetter's lengths in use today. </description>
+   </ucum-class>
+   <ucum-class>
+      <name>heat</name>
+      <description>Older units of heat (energy) and temperature. The degree Fahrenheit was missing in ANSI X3.50. HL7's “ISO+/ANS+” code defined the degree Fahrenheit under the symbol “DEGF” which is reflected here. This is the reason why The Unified Code for Units of Measure does not define a new symbol “Fah” similar to “Cel” of ISO 2955 for the degree Celsius.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>clinical</name>
+      <description>Units used mainly in clinical medicine. Clinical medicine all over the world still uses  mm Hg to measure arterial blood pressure, and often the instruments used are real mercury columns. Likewise, the central venous blood pressure is often measured using simple water columns which is very practical for the routine. The units  m H2O and  m Hg are metric units even though they are “not accepted” for use with the SI for quite a while. Although more and more hospitals in Europe switch to using the pascal to measure partial pressures in blood gas analysis, the older units will not vanish any time soon.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>chemical</name>
+      <description>Units used mainly in chemical and biochemical laboratories. </description>
+   </ucum-class>
+   <ucum-class>
+      <name>levels</name>
+      <description>Pseudo-units defined to express logarithms of ratios between two quantities of the same kind. These units are “pseudo-units” because of their standardized definition as being logarithms of a ratio of two measurements with the same kind-of-quantity: first, the units cancel out, and second, the logarithm does not produce a new unit. These units were defined as “metric” because they are used as such, although a multiplication operation is not defined on these quantities.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>misc</name>
+      <description>Not otherwise classified units.</description>
+   </ucum-class>
+   <ucum-class>
+      <name>infotech</name>
+      <description>Units used in information technology. </description>
+   </ucum-class>
 </root>
