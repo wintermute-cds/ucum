@@ -57,7 +57,6 @@ func TestGetDefinedFormsTests(t *testing.T) {
 	})
 }
 
-
 func TestGetCanonicalUnitsTests(t *testing.T) {
 	InitService()
 	Convey("TestGetCanonicalUnitsTests", t, func() {
@@ -357,8 +356,8 @@ func TestListAllProperties(t *testing.T) {
 	if err != nil {
 		fmt.Errorf(err.Error())
 	}
-	classes := service.ListAllProperties()
-	if len(classes) !=99 {
+	properties := service.ListAllProperties()
+	if len(properties) !=99 {
 		t.Error("Not the right number of properties found")
 	}
 }
@@ -369,9 +368,9 @@ func TestSearchProperties(t *testing.T) {
 	if err != nil {
 		fmt.Errorf(err.Error())
 	}
-	classes := service.SearchProperty("len")
-	if len(classes) !=3 {
-		t.Error("Not the right number of classes found")
+	properties := service.SearchProperty("len")
+	if len(properties) !=3 {
+		t.Error("Not the right number of properties found")
 	}
 }
 
