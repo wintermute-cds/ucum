@@ -11,7 +11,7 @@ The library provides a set of services around UCUM:
 - prepare a human readable display of a unit 
 - multiply 2 quantities together
 
-To use the library, download ucum-essence from http://unitsofmeasure.org, and then create a UCUMEssenceService:
+To use the library, download the definitionFile: ucum-essence.xml from http://unitsofmeasure.org, and then create a UCUMEssenceService:
 
 ucumSvc = NewUcumEssenceService(definitionFile);
 
