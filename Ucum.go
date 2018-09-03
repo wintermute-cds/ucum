@@ -217,7 +217,7 @@ func (u *UcumEssenceService) GetClassInfo(class string)*UcumClassInfo{
 
 var instanceOfUcumEssenceService *UcumEssenceService
 
-func GetInstanceOfUcumEssenceService(xmlFileName string) (*UcumEssenceService, error) {
+func GetInstanceOfUcumEssenceServiceWithCharsetReader(xmlFileName string, charsetReader func(charset string, input io.Reader) (io.Reader, error)) (*UcumEssenceService, error) {
 	if instanceOfUcumEssenceService == nil {
 		instanceOfUcumEssenceService = new(UcumEssenceService)
 		xmlFile, err := os.Open(xmlFileName)
@@ -226,12 +226,16 @@ func GetInstanceOfUcumEssenceService(xmlFileName string) (*UcumEssenceService, e
 		}
 		defer xmlFile.Close()
 		d := new(DefinitionParser)
-		instanceOfUcumEssenceService.Model, err = d.UnmarshalTerminology(xmlFile)
+		instanceOfUcumEssenceService.Model, err = d.UnmarshalTerminologyWithCharsetReader(xmlFile, charsetReader)
 		if err != nil {
 			return nil, err
 		}
 	}
 	return instanceOfUcumEssenceService, nil
+}
+
+func GetInstanceOfUcumEssenceService(xmlFileName string) (*UcumEssenceService, error) {
+	return GetInstanceOfUcumEssenceServiceWithCharsetReader(xmlFileName, nil)
 }
 
 func (u *UcumEssenceService) UcumIdentification() *UcumVersionDetails {

@@ -13,8 +13,15 @@ type DefinitionParser struct {
 }
 
 func (d *DefinitionParser) UnmarshalTerminology(reader io.Reader) (*UcumModel, error) {
+	return d.UnmarshalTerminologyWithCharsetReader(reader, nil)
+}
+
+func (d *DefinitionParser) UnmarshalTerminologyWithCharsetReader(reader io.Reader, charsetReader func(charset string, input io.Reader) (io.Reader, error) ) (*UcumModel, error) {
 	xmlUCUM := &XMLRoot{}
 	decoder := xml.NewDecoder(reader)
+	if charsetReader != nil {
+		decoder.CharsetReader = charsetReader
+	}
 	if err := decoder.Decode(xmlUCUM); err != nil {
 		return nil, err
 	}
