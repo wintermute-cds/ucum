@@ -1,11 +1,12 @@
 package ucum
 
 import (
+	"io"
 	"fmt"
 	"os"
 	"strings"
 	"time"
-	"github.com/bertverhees/ucum/decimal"
+	"github.com/wintermute-cds/ucum/decimal"
 )
 
 type UcumService interface {

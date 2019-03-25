@@ -1,13 +1,13 @@
 package ucum
 
 import (
-	"github.com/bertverhees/ucum"
+	"github.com/wintermute-cds/ucum"
 	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"testing"
 	"fmt"
 	"reflect"
-	"github.com/bertverhees/ucum/decimal"
+	"github.com/wintermute-cds/ucum/decimal"
 	"strings"
 )
 
@@ -17,12 +17,12 @@ var testStructures *TestStructures
 
 func InitService() {
 	var err error
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	service, err = ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		fmt.Errorf("Error instantiating service:"+err.Error())
 	}
-	test = os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/convey/resources/UcumFunctionalTests.xml"
+	test = os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/convey/resources/UcumFunctionalTests.xml"
 	testStructures, err = UnmarshalTerminology(test)
 	if err != nil {
 		fmt.Errorf("Error unmarshaling:"+err.Error())
@@ -292,7 +292,7 @@ func TestConvert(t *testing.T){
 	InitService()
 	Convey("TestConvert", t,func() {
 		dec := decimal.New(63, -1)
-		definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+		definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 		service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 		if err != nil {
 			fmt.Errorf(err.Error())
@@ -327,7 +327,7 @@ func TestMultiplicationTest(t *testing.T) {
 }
 
 func TestListAllClasses(t *testing.T) {
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		fmt.Errorf(err.Error())
@@ -339,7 +339,7 @@ func TestListAllClasses(t *testing.T) {
 }
 
 func TestSearchClasses(t *testing.T) {
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		fmt.Errorf(err.Error())
@@ -351,7 +351,7 @@ func TestSearchClasses(t *testing.T) {
 }
 
 func TestListAllProperties(t *testing.T) {
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		fmt.Errorf(err.Error())
@@ -363,7 +363,7 @@ func TestListAllProperties(t *testing.T) {
 }
 
 func TestSearchProperties(t *testing.T) {
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		fmt.Errorf(err.Error())
@@ -375,7 +375,7 @@ func TestSearchProperties(t *testing.T) {
 }
 
 func TestGetClassInfo(t *testing.T) {
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		fmt.Errorf(err.Error())
@@ -387,7 +387,7 @@ func TestGetClassInfo(t *testing.T) {
 }
 
 func TestFilterDefinedUnits(t *testing.T){
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	service, err := ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		fmt.Errorf(err.Error())

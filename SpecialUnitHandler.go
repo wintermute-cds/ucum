@@ -1,7 +1,7 @@
 package ucum
 
 
-import "github.com/bertverhees/ucum/decimal"
+import "github.com/wintermute-cds/ucum/decimal"
 
 type SpecialUnitHandlerer interface {
 	GetCode() string

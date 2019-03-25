@@ -4,7 +4,7 @@ package ucum
 import (
 	"fmt"
 	"reflect"
-	"github.com/bertverhees/ucum/decimal"
+	"github.com/wintermute-cds/ucum/decimal"
 )
 
 type Converter struct {

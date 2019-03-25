@@ -1,7 +1,7 @@
 package ucum
 
 import (
-	"github.com/bertverhees/ucum"
+	"github.com/wintermute-cds/ucum"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
 )

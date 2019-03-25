@@ -1,7 +1,7 @@
 package ucum
 
 import (
-	"github.com/bertverhees/ucum"
+	"github.com/wintermute-cds/ucum"
 	. "github.com/smartystreets/goconvey/convey"
 	"os"
 	"testing"
@@ -9,7 +9,7 @@ import (
 
 func SetUpService() {
 	var err error
-	definitions := os.Getenv("GOPATH") + "/src/github.com/bertverhees/ucum/terminology_data/ucum-essence.xml"
+	definitions := os.Getenv("GOPATH") + "/src/github.com/wintermute-cds/ucum/terminology_data/ucum-essence.xml"
 	testservice, err = ucum.GetInstanceOfUcumEssenceService(definitions)
 	if err != nil {
 		panic(err.Error())

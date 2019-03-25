@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 	"time"
-	"github.com/bertverhees/ucum/decimal"
+	"github.com/wintermute-cds/ucum/decimal"
 )
 
 type UcumModel struct {
